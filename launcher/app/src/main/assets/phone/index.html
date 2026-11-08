@@ -783,7 +783,7 @@ body.dark .btn.dark{box-shadow:0 6px 16px rgba(0,0,0,.4)}
     var rel = j.release, ph = j.phase || 'idle', busy = ph === 'checking' || ph === 'downloading' || ph === 'installing';
     var avail = !!(rel && rel.newer);
     $('updName').textContent = 'Glass ' + (j.glass || '') + (j.assistant ? ' · Assistant ' + j.assistant : '');
-    $('updNote').textContent = !j.ready ? 'Updates aren’t set up in this copy of Glass'
+    $('updNote').textContent = !j.ready ? 'Updates come from the computer that set Glass up: ./glass update'
       : ph === 'idle' ? (avail ? 'Glass ' + rel.version + ' is ready · ' + mb(rel.size) : 'Glass looks for a new version only when you ask')
       : j.text;
     $('updBar').hidden = ph !== 'downloading';

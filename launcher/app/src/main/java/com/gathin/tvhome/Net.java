@@ -46,6 +46,7 @@ final class Net {
     }
 
     static String current(Context c) {
+        if (Sample.on) return Sample.NETWORK;
         WifiManager w = wm(c);
         try {
             WifiInfo i = w == null ? null : w.getConnectionInfo();
@@ -70,6 +71,7 @@ final class Net {
 
     @SuppressWarnings("deprecation")
     static List<Ap> list(Context c) {
+        if (Sample.on) return Sample.networks();
         WifiManager w = wm(c);
         List<Ap> out = new ArrayList<>();
         if (w == null) return out;

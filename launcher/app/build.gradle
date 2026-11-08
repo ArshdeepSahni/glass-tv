@@ -2,13 +2,35 @@ plugins {
     id 'com.android.application'
 }
 
+// Where Glass keeps its keys on this computer (as ./glass does, tools/glasscli/paths.py): GLASS_HOME, else
+// ~/Desktop/tv on the computer that made Glass, else ~/.glass.
+def glassHome() {
+    def env = System.getenv('GLASS_HOME')
+    if (env) return new File(env)
+    def legacy = new File(System.getProperty('user.home'), 'Desktop/tv')
+    if (new File(legacy, 'toolchain').isDirectory() || new File(legacy, '.updates.env').isFile() || new File(legacy, '.env').isFile()) return legacy
+    return new File(System.getProperty('user.home'), '.glass')
+}
+
+// The key Glass is signed with: GLASS_KEYSTORE (the release workflow's), else GLASS_HOME/glass.keystore (made by
+// ./glass setup), or the Android debug key on the computer that made Glass.
+def glassKeystore() {
+    def env = System.getenv('GLASS_KEYSTORE')
+    if (env) return new File(env)
+    def home = glassHome()
+    def legacy = new File(System.getProperty('user.home'), 'Desktop/tv')
+    if (home.absolutePath == legacy.absolutePath) return new File(System.getProperty('user.home'), '.android/debug.keystore')
+    return new File(home, 'glass.keystore')
+}
+
 // Glass's update service (Settings ▸ About this TV ▸ Check for updates): its address and key. The release workflow
-// passes them in the environment; a build on the Mac reads them from GLASS_UPDATES_FILE, else ~/Desktop/tv/.updates.env
-// (KEY=value lines, never in the repository). Without them the build still works and says updates aren't set up.
+// passes them in the environment; a build on a computer reads them from GLASS_UPDATES_FILE, else
+// GLASS_HOME/.updates.env (KEY=value lines, never in the repository). Without them the build still works and says
+// updates aren't set up.
 def updateSetting(String name) {
     def v = System.getenv(name)
     if (!v) {
-        def path = System.getenv('GLASS_UPDATES_FILE') ?: "${System.getProperty('user.home')}/Desktop/tv/.updates.env"
+        def path = System.getenv('GLASS_UPDATES_FILE') ?: new File(glassHome(), '.updates.env').path
         def f = new File(path)
         if (f.isFile()) {
             for (line in f.readLines()) {
@@ -33,8 +55,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 23
-        versionName '5.2.1 glass switcher'
+        versionCode 24
+        versionName '5.3 glass installer'
         buildConfigField 'String', 'UPDATE_URL', "\"${updateSetting('GLASS_UPDATE_URL')}\""
         buildConfigField 'String', 'UPDATE_TOKEN', "\"${updateSetting('GLASS_UPDATE_TOKEN')}\""
     }
@@ -44,11 +66,10 @@ android {
     }
 
     signingConfigs {
-        // The key the Glass on the TV is signed with (Android only takes an update signed alike). The release
-        // workflow passes it as GLASS_KEYSTORE; on the Mac it's the Mac's own Android debug key, which is the same
-        // key. A debug keystore: "android" for both passwords, alias AndroidDebugKey.
+        // The key the Glass on the TV is signed with (Android only takes an update signed alike): glassKeystore()
+        // above. A debug-style keystore: "android" for both passwords, alias AndroidDebugKey.
         glass {
-            storeFile file(System.getenv('GLASS_KEYSTORE') ?: "${System.getProperty('user.home')}/.android/debug.keystore")
+            storeFile glassKeystore()
             storePassword 'android'
             keyAlias 'AndroidDebugKey'
             keyPassword 'android'

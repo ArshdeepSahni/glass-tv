@@ -2,9 +2,28 @@ plugins {
     id 'com.android.application'
 }
 
-// Keys live only in ~/Desktop/tv/.env on the Mac (never in chat, never in the source archive).
+// Where Glass keeps its keys on this computer (as ./glass does, tools/glasscli/paths.py): GLASS_HOME, else
+// ~/Desktop/tv on the computer that made Glass, else ~/.glass.
+def glassHome() {
+    def e = System.getenv('GLASS_HOME')
+    if (e) return new File(e)
+    def legacy = new File(System.getProperty('user.home'), 'Desktop/tv')
+    if (new File(legacy, 'toolchain').isDirectory() || new File(legacy, '.updates.env').isFile() || new File(legacy, '.env').isFile()) return legacy
+    return new File(System.getProperty('user.home'), '.glass')
+}
+
+def glassKeystore() {
+    def e = System.getenv('GLASS_KEYSTORE')
+    if (e) return new File(e)
+    def home = glassHome()
+    def legacy = new File(System.getProperty('user.home'), 'Desktop/tv')
+    if (home.absolutePath == legacy.absolutePath) return new File(System.getProperty('user.home'), '.android/debug.keystore')
+    return new File(home, 'glass.keystore')
+}
+
+// The assistant's keys live only in GLASS_HOME/.env on this computer (never in a chat or the repository).
 def env = [:]
-def envFile = new File(System.getenv('GLASS_ENV') ?: "${System.getProperty('user.home')}/Desktop/tv/.env")
+def envFile = new File(System.getenv('GLASS_ENV') ?: new File(glassHome(), '.env').path)
 if (envFile.exists()) {
     envFile.eachLine { line ->
         def t = line.trim()
@@ -23,8 +42,8 @@ android {
         applicationId 'com.gathin.glass.assistant'
         minSdk 26
         targetSdk 28
-        versionCode 4
-        versionName '3.5 glass marquee'
+        versionCode 5
+        versionName '3.6 glass region'
         buildConfigField 'String', 'CF_ACCOUNT_ID', q('CF_ACCOUNT_ID')
         buildConfigField 'String', 'CF_API_TOKEN', q('CF_API_TOKEN')
         buildConfigField 'String', 'CF_DECIDE_MODEL', q('CF_DECIDE_MODEL', '@cf/meta/llama-3.1-8b-instruct-fast')
@@ -38,11 +57,10 @@ android {
     }
     buildFeatures { buildConfig true }
     signingConfigs {
-        // The key the Glass on the TV is signed with (Android only takes an update signed alike). The release
-        // workflow passes it as GLASS_KEYSTORE; on the Mac it's the Mac's own Android debug key, which is the same
-        // key. A debug keystore: "android" for both passwords, alias AndroidDebugKey.
+        // The key the Glass on the TV is signed with (Android only takes an update signed alike): glassKeystore()
+        // above. A debug-style keystore: "android" for both passwords, alias AndroidDebugKey.
         glass {
-            storeFile file(System.getenv('GLASS_KEYSTORE') ?: "${System.getProperty('user.home')}/.android/debug.keystore")
+            storeFile glassKeystore()
             storePassword 'android'
             keyAlias 'AndroidDebugKey'
             keyPassword 'android'

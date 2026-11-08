@@ -88,6 +88,7 @@ final class Media {
 
     /** The one to show: the first playing (the system lists the latest first), else the latest paused one. */
     static Now best() {
+        if (Sample.on) return Sample.playing(SAMPLE_PKG);
         Now paused = null;
         for (Now n : last) {
             if (n.title == null) continue;
@@ -98,10 +99,27 @@ final class Media {
     }
 
     static List<Now> all() {
+        if (Sample.on) return Collections.singletonList(Sample.playing(SAMPLE_PKG));
         return last;
     }
 
+    /** Sample content plays "in" Glass itself: no one's app shows. */
+    static final String SAMPLE_PKG = "com.gathin.tvhome";
+
+    /** Sample content went on or off: everything showing what's playing shows it again. */
+    static void changedBySample() {
+        revision++;
+        MAIN.post(() -> {
+            List<Runnable> copy;
+            synchronized (listeners) {
+                copy = new ArrayList<>(listeners);
+            }
+            for (Runnable r : copy) r.run();
+        });
+    }
+
     static Bitmap art(String pkg) {
+        if (Sample.on) return Sample.art();
         synchronized (arts) {
             return pkg == null ? null : arts.get(pkg);
         }

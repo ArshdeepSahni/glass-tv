@@ -374,7 +374,7 @@ final class Widgets {
                         rows.add(new Sheet.Row(n.playing() ? "pause" : "play", n.playing() ? "Pause" : "Play", null, () -> playPause(c)));
                         rows.add(new Sheet.Row("next", "Next", null, () -> mediaKey(c, KeyEvent.KEYCODE_MEDIA_NEXT)));
                         rows.add(new Sheet.Row("prev", "Previous", null, () -> mediaKey(c, KeyEvent.KEYCODE_MEDIA_PREVIOUS)));
-                        CharSequence app = Glass.label(c, n.pkg);
+                        CharSequence app = Sample.on ? Sample.APP : Glass.label(c, n.pkg);
                         rows.add(new Sheet.Row("apps", "Open " + (app != null ? app : "the app"), null, () -> desk.launch(n.pkg, v)));
                     }
                     break;
@@ -917,7 +917,7 @@ final class Widgets {
                 if (fpp != null) fpp.setImageDrawable(Glyph.of("play", t.ink3));
                 return;
             }
-            CharSequence an = Glass.label(c, n.pkg);
+            CharSequence an = Sample.on ? Sample.APP : Glass.label(c, n.pkg);
             app.setText(an != null ? an.toString().toUpperCase(Locale.getDefault()) : "");
             title.setText(n.title);
             artist.setText(n.artist != null ? n.artist : n.album != null ? n.album : "");
@@ -1195,6 +1195,7 @@ final class Widgets {
         }
 
         static String placeName(Context c) {
+            if (Sample.on) return Sample.PLACE;
             String[] p = place(c);
             return p == null ? null : p[0];
         }
@@ -1217,6 +1218,7 @@ final class Widgets {
 
         /** The last weather (at most 3 hours old), fetching a newer one in the background when it's due. */
         static Now now(Context c) {
+            if (Sample.on) return Sample.weather(c);
             SharedPreferences p = Glass.prefs(c);
             long at = p.getLong("wx_at", 0);
             String json = p.getString("wx_json", null);

@@ -6,7 +6,8 @@
 #                                    the assistant button and the screen saver (combines with --service)
 # After this the TV updates itself (Settings › About this TV › Check for updates). Android never puts an older
 # version over a newer one: to undo a release, release a fixed one with a higher versionCode.
-# The TV must be on (nothing here wakes it), with network debugging on; the first time it asks to allow this Mac.
+# The TV must be on (nothing here wakes it), with network debugging on; the first time it asks to allow this
+# computer. ./glass setup and ./glass update do all of this with a status screen.
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 FROM=dist; SETUP=no

@@ -967,7 +967,7 @@ final class SettingsSheet extends Sheet {
         boolean newer = r != null && r.newer();
         String as = Updates.installedName(c, Updates.ASSISTANT);
         info("Glass", Updates.installedName(c, c.getPackageName()) + (as != null ? "  ·  Assistant " + as : ""));
-        String sub = !Updates.ready() ? "Not set up in this copy of Glass"
+        String sub = !Updates.ready() ? "Updates come from the computer that set Glass up: ./glass update"
                 : "checking".equals(ph) || "current".equals(ph) || "failed".equals(ph) && !newer ? Updates.text
                 : "Glass looks for a new version only when you ask";
         link("Check for updates", sub, null, () -> Updates.check(c));

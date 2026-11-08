@@ -130,6 +130,7 @@ final class PhoneServer {
 
     /** The TV's address on the home network (Wi-Fi or cable), for the QR code; null when offline. */
     static String address(Context c) {
+        if (Sample.on) return Sample.ADDRESS;
         try {
             String best = null;
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
@@ -148,6 +149,7 @@ final class PhoneServer {
     }
 
     static String link(Context c, String token) {
+        if (Sample.on) token = token != null ? "glass" : null;   // the real token never shows in a picture
         String ip = address(c);
         return ip == null ? null : "http://" + ip + ":" + Phones.PORT + (token != null ? "/p/" + token : "");
     }
@@ -500,12 +502,13 @@ final class PhoneServer {
     }
 
     private static String tvName(Context c) {
+        if (Sample.on) return Sample.TV;
         String n = Settings.Global.getString(c.getContentResolver(), "device_name");
         return n == null || n.trim().isEmpty() ? "TV" : n.trim();
     }
 
     private static JSONObject state(Context c, Phones.Phone me) throws Exception {
-        JSONObject o = obj("ok", true, "tv", tvName(c), "glass", version(c), "me", me.name);
+        JSONObject o = obj("ok", true, "tv", tvName(c), "glass", version(c), "me", Sample.on ? Sample.phone(0) : me.name);
         JSONObject now = playing(c);
         if (now != null) o.put("playing", now);
         AudioManager am = c.getSystemService(AudioManager.class);
@@ -529,7 +532,8 @@ final class PhoneServer {
         if (!"ready".equals(keys)) Keys.warm(c);   // a phone is open: have the key helper ready for its first press
         o.put("keys", keys);
         JSONArray phones = new JSONArray();
-        for (Phones.Phone ph : Phones.list(c)) phones.put(obj("name", ph.name, "seen", ph.seen, "me", ph.id.equals(me.id)));
+        int pi = 0;
+        for (Phones.Phone ph : Phones.list(c)) phones.put(obj("name", Sample.on ? Sample.phone(pi++) : ph.name, "seen", ph.seen, "me", ph.id.equals(me.id)));
         o.put("phones", phones);
         return o;
     }
@@ -539,7 +543,7 @@ final class PhoneServer {
         Media.fresh(c, 1500);
         Media.Now n = Media.best();
         if (n == null) return null;
-        CharSequence app = Glass.label(c, n.pkg);
+        CharSequence app = Sample.on ? Sample.APP : Glass.label(c, n.pkg);
         JSONObject o = obj("title", n.title, "app", app != null ? app.toString() : n.pkg, "pkg", n.pkg, "playing", n.playing(),
                 "pos", n.position(), "dur", n.dur);
         try {

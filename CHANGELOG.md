@@ -4,6 +4,12 @@ One section per release. The heading is the version as in `launcher/app/build.gr
 word), and the `- ` lines under it are what the TV and the phone show as what's new, so they're short and in plain
 words. `tools/release.sh` won't tag a version that has no section here.
 
+## 5.3 — The installer
+
+- New: ./glass puts Glass on any Android TV from a Mac or Linux computer, in one status screen
+- ./glass update, status, doctor and restore look after it afterwards
+- Without an update service, Settings says where updates come from
+
 ## 5.2.1 — The app switcher
 
 - Hold Home inside an app: the switcher opens over it, without going home first

@@ -134,7 +134,9 @@ final class Brain {
         StringBuilder names = new StringBuilder();
         for (Actions.App a : Actions.apps(ctx)) names.append(a.label).append(", ");
         String tv = tvNow();
-        return "You are Glass, the assistant built into this living-room TV in India. It is " + now + ".\n"
+        String where = region();
+        return "You are Glass, the assistant built into this living-room TV" + (where.isEmpty() ? "" : " in " + where)
+                + ". It is " + now + ".\n"
                 + "You are in a running conversation with the people on the sofa, and you can do things on the TV.\n"
                 + (tv.isEmpty() ? "" : "What the TV shows right now (read the moment they spoke):\n" + tv)
                 + "Installed apps: " + names + "\n"
@@ -160,15 +162,21 @@ final class Brain {
                 + "ask: only when you truly need something to go on (which one, how old, which app): a short question and 2-4 "
                 + "choices to pick with the remote, each under 28 characters. When you ask, don't act yet, and put the question "
                 + "only in ask (say stays empty or a few words; never the same question twice).\n"
-                + "pick: when suggesting something to watch: {\"title\":\"...\",\"app\":\"Netflix|Prime Video|YouTube|JioHotstar\","
+                + "pick: when suggesting something to watch: {\"title\":\"...\",\"app\":\"<an installed app that has it, else YouTube>\","
                 + "\"meta\":\"Film · 1 h 32\" or \"Series · 45-min episodes\" (a length only if you are sure),\"why\":\"one short line\"}. "
                 + "One title, never a list; "
-                + "prefer titles you are sure are on that app in India; if unsure use YouTube.\n"
+                + "prefer titles you are sure are on that app" + (where.isEmpty() ? "" : " in " + where) + "; if unsure use YouTube.\n"
                 + "next: 2-3 follow-ups they might say next, in their words (\"Show me one\", not \"Show one?\"), each under 28 "
                 + "characters, that build on your reply (after a film: "
                 + "\"Who's in it?\", \"Something lighter\"); never generic menu items like \"Open an app\" ([] if none fit).\n"
                 + "\"This\", \"it\", \"he\", \"she\", \"the second one\", \"the show\" mean what is on screen or playing. "
                 + "Remember the conversation: follow-ups build on what was said.";
+    }
+
+    /** The TV's region, as its language setting names it ("India" for English (India)); "" when it names none. */
+    private static String region() {
+        String c = Locale.getDefault().getDisplayCountry(Locale.ENGLISH);
+        return c == null ? "" : c.trim();
     }
 
     private Reply converse(Talk talk, String said) {

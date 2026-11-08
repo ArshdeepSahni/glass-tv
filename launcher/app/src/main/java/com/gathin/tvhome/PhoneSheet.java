@@ -217,10 +217,11 @@ final class PhoneSheet extends Sheet {
                 phonesPage.addView(Ui.line(c, 15, t.ink2, 400, "No phones yet."), Ui.ll(-2, -1, 0, 10));
             }
             View first = null;
+            int pi = 0;
             for (Phones.Phone p : all) {
                 LinearLayout row = Ui.row(c);
                 LinearLayout words = Ui.column(c);
-                words.addView(Ui.line(c, 17, t.ink, 500, p.name));
+                words.addView(Ui.line(c, 17, t.ink, 500, Sample.on ? Sample.phone(pi++) : p.name));
                 words.addView(Ui.line(c, 13, t.ink2, 400, seen(p.seen)), Ui.ll(-1, -1, 0, 2));
                 row.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
                 TextView remove = button("Remove", false);

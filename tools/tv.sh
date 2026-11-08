@@ -1,5 +1,6 @@
 #!/bin/bash
-# The TV's upkeep from this Mac, over the network (the TV must be on; nothing here wakes it).
+# The TV's upkeep from this computer, over the network (the TV must be on; nothing here wakes it). ./glass status,
+# ./glass doctor and ./glass restore do the same with a status screen.
 #   tools/tv.sh status          Glass and its helpers, the debloat, memory, crashes since the TV started
 #   tools/tv.sh check           after a TV update or a factory reset: the debloat list again (tv/debloat-list.txt),
 #                               Glass's remote helper, Glass as home

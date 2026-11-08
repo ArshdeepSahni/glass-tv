@@ -1,14 +1,17 @@
 #!/bin/bash
-# Once, on the Mac, in Terminal:   bash tools/set-secrets.sh
+# Once, on your computer, in a terminal:   bash tools/set-secrets.sh
+# (Only for publishing updates through your own GitHub and Cloudflare, so TVs update from Settings. Without it,
+# ./glass update builds and installs updates from your computer.)
 # Gives GitHub what its release workflow needs, as encrypted GitHub secrets of this repository:
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID   asks for a Cloudflare API token (made from the "Edit Cloudflare
 #                                                  Workers" template), finds its account
 #   GLASS_UPDATE_TOKEN                             makes the update service's key (TVs need it to download)
-#   ANDROID_KEYSTORE_B64                           this Mac's Android signing key, so GitHub's builds can update the
-#                                                  Glass already on the TV (Android only takes an update signed alike)
+#   ANDROID_KEYSTORE_B64                           this computer's Glass signing key, so GitHub's builds can update
+#                                                  the Glass already on the TV (Android only takes an update signed
+#                                                  alike); its certificate goes in updates/signing-cert.sha256
 #   GLASS_ENV_FILE                                 only if you say yes: the assistant's keys, so releases update it too
-# The update service's address and key are also kept in ~/Desktop/tv/.updates.env, for builds and installs on this
-# Mac. Nothing secret is shown or written in the repository; .secrets-status says how it went, without any of it.
+# The update service's address and key are also kept in GLASS_HOME/.updates.env, for builds and installs on this
+# computer. Nothing secret is shown or written in the repository; .secrets-status says how it went, without any of it.
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 cd "$ROOT"
@@ -86,15 +89,25 @@ TOK=""
 note "Update key: set (GitHub, and $(short "$GLASS_UPDATES_FILE"))"
 
 # ---- the signing key -----------------------------------------------------------------------------------------------
-KS="$HOME/.android/debug.keystore"
-[ -f "$KS" ] || fail "This Mac's Android signing key isn't there (~/.android/debug.keystore)"
+KS="$GLASS_KEYSTORE"
+[ -f "$KS" ] || fail "This computer's Glass signing key isn't there ($(short "$KS")): ./glass setup makes it"
 base64 < "$KS" | tr -d '\n' | gh secret set ANDROID_KEYSTORE_B64 --repo "$REPO" >/dev/null
 note "Signing key: set (the one the Glass on the TV is signed with)"
+# its certificate (public: it's in every APK) is what the release workflow checks each build against
+tools_ready
+CERT="$("$JAVA_HOME/bin/keytool" -list -v -keystore "$KS" -storepass android 2>/dev/null | grep -m1 'SHA256:' | sed 's/.*SHA256: //' | tr -d ':' | tr 'A-F' 'a-f')"
+[[ "$CERT" =~ ^[0-9a-f]{64}$ ]] || fail "Couldn't read the signing key's certificate"
+if [ "$(tr -d ' \n' < updates/signing-cert.sha256 2>/dev/null)" != "$CERT" ]; then
+  echo "$CERT" > updates/signing-cert.sha256
+  note "updates/signing-cert.sha256: written for this key (commit it, so releases are checked against it)"
+else
+  note "updates/signing-cert.sha256: already this key's"
+fi
 
 # ---- the assistant's keys: only when you say so --------------------------------------------------------------------
 if [ -f "$GLASS_ENV" ]; then
   echo
-  echo "Releases can update the assistant too. For that GitHub needs the assistant's keys (~/Desktop/tv/.env) as a"
+  echo "Releases can update the assistant too. For that GitHub needs the assistant's keys ($(short "$GLASS_ENV")) as a"
   echo "secret: GitHub keeps it encrypted and only the release workflow reads it. Without it, releases update Glass"
   echo "and leave the assistant as it is on the TV."
   read -rp "Give GitHub the assistant's keys? [y/N] " yn
@@ -103,7 +116,7 @@ if [ -f "$GLASS_ENV" ]; then
     *) gh secret delete GLASS_ENV_FILE --repo "$REPO" >/dev/null 2>&1 || true; note "Assistant keys: not given (you said no)" ;;
   esac
 else
-  note "Assistant keys: none on this Mac"
+  note "Assistant keys: none on this computer"
 fi
 note "All set"
 echo

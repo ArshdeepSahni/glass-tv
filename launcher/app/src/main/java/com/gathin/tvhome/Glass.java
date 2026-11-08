@@ -35,8 +35,15 @@ final class Glass {
     static final String NIGHT_CEILING = "night_ceiling"; // 0 = off
     static final String STOCK_HOME = "com.google.android.tvlauncher";
 
+    private static volatile boolean sampleRead;
+
     static SharedPreferences prefs(Context ctx) {
-        return ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (!sampleRead) {
+            sampleRead = true;
+            Sample.on = p.getBoolean("sample", false);   // pictures of Glass: sample content (Sample)
+        }
+        return p;
     }
 
     static boolean original(Context ctx) {

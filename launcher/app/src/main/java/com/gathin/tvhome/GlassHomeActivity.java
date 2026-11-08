@@ -118,6 +118,7 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         live = this;
+        Sample.load(this);
         Sound.init(this);
         Wake.bootCheck(this);   // the first desktop of a boot opens with the film
         build();
@@ -227,6 +228,16 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
             i.removeExtra("look");
             if (!look.equals(prefs().getString(APPEARANCE, "auto"))) {
                 prefs().edit().putString(APPEARANCE, look).apply();
+                rebuild(i.getStringExtra(EXTRA_OPEN));
+                i.removeExtra(EXTRA_OPEN);
+                return;
+            }
+        }
+        String sample = i == null ? null : i.getStringExtra("sample");
+        if (sample != null && (sample.equals("on") || sample.equals("off"))) {
+            i.removeExtra("sample");
+            if ((sample.equals("on")) != Sample.on) {
+                Sample.set(this, sample.equals("on"));
                 rebuild(i.getStringExtra(EXTRA_OPEN));
                 i.removeExtra(EXTRA_OPEN);
                 return;

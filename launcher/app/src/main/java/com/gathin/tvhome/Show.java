@@ -43,6 +43,7 @@ final class Show {
 
     /** Everything sent, newest first. */
     static List<File> all(Context c) {
+        if (Sample.on) return Sample.photos(c);
         File[] fs = dir(c).listFiles();
         List<File> out = new ArrayList<>();
         if (fs == null) return out;

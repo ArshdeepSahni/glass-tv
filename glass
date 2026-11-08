@@ -1,0 +1,14 @@
+#!/bin/sh
+# Glass's installer: ./glass (or ./glass help). It needs Python 3.8 or newer, which macOS has once its Command Line
+# Tools are installed, and Linux usually has.
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+for py in python3 /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3; do
+  if command -v "$py" >/dev/null 2>&1 && "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' 2>/dev/null; then
+    PYTHONPATH="$ROOT/tools${PYTHONPATH:+:$PYTHONPATH}" exec "$py" -m glasscli "$@"
+  fi
+done
+case "$(uname -s)" in
+  Darwin) echo "Glass's installer needs Python 3, which comes with Apple's Command Line Tools: run  xcode-select --install  then ./glass again." ;;
+  *) echo "Glass's installer needs Python 3.8 or newer: install python3 with your package manager, then ./glass again." ;;
+esac
+exit 1

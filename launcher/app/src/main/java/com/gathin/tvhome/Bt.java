@@ -69,6 +69,7 @@ final class Bt {
                 v.audio = major == BluetoothClass.Device.Major.AUDIO_VIDEO;
                 v.remote = major == BluetoothClass.Device.Major.PERIPHERAL || v.name.toLowerCase(java.util.Locale.ROOT).contains("remote");
                 v.connected = connected(d);
+                if (Sample.on) v.name = Sample.device(out.size(), v.remote);
                 out.add(v);
             }
         } catch (RuntimeException ignored) {

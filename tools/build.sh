@@ -1,11 +1,11 @@
 #!/bin/bash
-# Builds Glass and its assistant on this Mac, into dist/, the way the release workflow does (signed with this Mac's
-# Android key, so they install over what's on the TV).
+# Builds Glass and its assistant on this computer, into dist/, the way the release workflow does (signed with this
+# computer's Glass key, so they install over what's on the TV). ./glass update does this and installs it.
 #   tools/build.sh              both
 #   tools/build.sh launcher     Glass only
 #   tools/build.sh assistant    the assistant only
-# The assistant's keys come from ~/Desktop/tv/.env (or GLASS_ENV), the update service's address and key from
-# ~/Desktop/tv/.updates.env (or GLASS_UPDATES_FILE). Without them the assistant only does TV commands and Glass says
+# The assistant's keys come from GLASS_HOME/.env (or GLASS_ENV), the update service's address and key from
+# GLASS_HOME/.updates.env (or GLASS_UPDATES_FILE). Without them the assistant only does TV commands and Glass says
 # updates aren't set up; nothing else changes.
 set -euo pipefail
 source "$(dirname "$0")/common.sh"

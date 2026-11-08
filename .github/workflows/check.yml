@@ -1,7 +1,8 @@
 name: Check
 
-# Every push to main and every pull request: both apps build, and Glass's unit tests pass. No secrets, nothing
-# published: releasing is the Release workflow's (a version tag).
+# Every push to main and every pull request: both apps build, Glass's unit tests pass, and the installer runs (its
+# demo, full screen in a pseudo-terminal and in plain lines). No secrets, nothing published: releasing is the Release
+# workflow's (a version tag).
 
 on:
   push:
@@ -52,3 +53,15 @@ jobs:
           node --input-type=module --check < updates/worker/index.js
           for f in tools/*.sh; do bash -n "$f"; done
           python3 updates/manifest.py version
+
+      - name: The installer runs
+        env:
+          GLASS_HOME: ${{ runner.temp }}/glass-home
+        run: |
+          python3 -m py_compile tools/glasscli/*.py
+          ./glass help > /dev/null
+          ./glass version
+          ./glass demo setup --plain --yes > /dev/null
+          ./glass demo fail --plain --yes > /dev/null && exit 1 || true
+          # full screen, in a pseudo-terminal, answering its own questions
+          timeout 180 script -qec "./glass demo setup --auto 0.2" /dev/null > /dev/null
