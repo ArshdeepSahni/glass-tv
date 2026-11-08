@@ -37,7 +37,8 @@ Settings › About this TV › Check for updates  ◄── the release's list a
 3. Commit, then `tools/release.sh`. It tags `v5.2` and pushes; `gh run watch` follows the build (about ten minutes).
 4. On the TV: Settings › About this TV › Check for updates › Install.
 
-*Run workflow* on the Actions tab publishes what's on a branch the same way, without a release page.
+*Run workflow* on the Actions tab publishes what's on a branch the same way; it makes the release page only for a version
+that's tagged already and has none (a tag run that stopped early).
 
 ## On this Mac
 

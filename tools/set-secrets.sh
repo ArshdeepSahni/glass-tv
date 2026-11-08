@@ -66,8 +66,9 @@ URL="https://glass-updates.$SUB.workers.dev"
 
 printf '%s' "$CF" | gh secret set CLOUDFLARE_API_TOKEN --repo "$REPO" >/dev/null
 printf '%s' "$ACC" | gh secret set CLOUDFLARE_ACCOUNT_ID --repo "$REPO" >/dev/null
+# short fingerprints (not the values): the release workflow's "token works" step prints the same, to compare
+note "GitHub secrets: Cloudflare token and account, set (token ${#CF} characters, sha256 starts $(printf '%s' "$CF" | shasum -a 256 | cut -c1-8); account sha256 starts $(printf '%s' "$ACC" | shasum -a 256 | cut -c1-8))"
 CF=""
-note "GitHub secrets: Cloudflare token and account, set"
 
 # ---- the update service's key --------------------------------------------------------------------------------------
 TOK="$(sed -n 's/^GLASS_UPDATE_TOKEN=//p' "$GLASS_UPDATES_FILE" 2>/dev/null | head -1 || true)"

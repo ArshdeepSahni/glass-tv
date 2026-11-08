@@ -3,7 +3,8 @@ name: Release
 # A version tag (v5.1, the first word of versionName in launcher/app/build.gradle; tools/release.sh makes it) builds
 # Glass, publishes it to Glass's update service on Cloudflare and makes a release page with what's new. TVs get it
 # when someone checks for updates (Settings › About this TV, or the phone's TV tab): nothing is pushed to them.
-# "Run workflow" on the Actions tab publishes what's on the branch the same way, without a release page.
+# "Run workflow" on the Actions tab publishes what's on the branch the same way (and makes the release page only when
+# that version is tagged already and has none).
 #
 # Secrets (tools/set-secrets.sh sets them): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, GLASS_UPDATE_TOKEN,
 # ANDROID_KEYSTORE_B64, and GLASS_ENV_FILE only if the assistant is to be part of releases.
@@ -75,6 +76,12 @@ jobs:
           (umask 077; printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore)
           chmod +x launcher/gradlew assistant/gradlew
 
+      - name: The Cloudflare token works
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 updates/publish.py check
+
       - name: The update service's address
         id: svc
         env:
@@ -128,11 +135,17 @@ jobs:
         run: python3 updates/publish.py verify dist
 
       - name: Release page (what's new and fingerprints; the APKs stay on the update service)
-        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE: ${{ steps.v.outputs.release }}
-        run: gh release create "$GITHUB_REF_NAME" --title "Glass $RELEASE" --notes-file dist/notes.md dist/SHA256SUMS.txt
+        run: |
+          TAG="v$RELEASE"
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "$TAG has its release page already"; exit 0; fi
+          # "Run workflow" finishes the page of a version that's tagged already (when its tag's run stopped early)
+          if [ "$GITHUB_REF_TYPE" != tag ] && ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "$TAG isn't tagged, so no release page (tools/release.sh tags a version)"; exit 0
+          fi
+          gh release create "$TAG" -R "$GITHUB_REPOSITORY" --title "Glass $RELEASE" --notes-file dist/notes.md dist/SHA256SUMS.txt
 
       - name: Forget the keys
         if: always()

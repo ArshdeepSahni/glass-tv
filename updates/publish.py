@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Glass's update service on Cloudflare: a Worker (glass-updates) in front of a KV namespace (glass-releases).
 
+  publish.py check          says whether the Cloudflare token and account work, and if not, what Cloudflare says
   publish.py prepare        the account's workers.dev name and the namespace exist; prints url=<the service's address>
   publish.py deploy DIST    deploys the Worker, uploads DIST's APKs, then DIST/manifest.json (last), then drops old APKs
   publish.py verify DIST    asks the service the way a TV does and checks it gives back exactly what's in DIST
@@ -94,6 +95,54 @@ def multipart(parts):
         out += data + b'\r\n'
     out += f'--{b}--\r\n'.encode()
     return bytes(out), f'multipart/form-data; boundary={b}'
+
+
+# ---- is the token any good? ---------------------------------------------------------------------------------------
+
+def probe(url):
+    """(HTTP status, JSON or None, WWW-Authenticate) for one GET with the token: never raises."""
+    req = urllib.request.Request(url, headers={'Authorization': 'Bearer ' + need('CLOUDFLARE_API_TOKEN'), 'User-Agent': UA})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            body, status, wa = r.read(), r.status, r.headers.get('WWW-Authenticate')
+    except urllib.error.HTTPError as e:
+        body, status, wa = e.read(), e.code, e.headers.get('WWW-Authenticate')
+    except urllib.error.URLError as e:
+        return 0, None, str(e.reason)
+    try:
+        return status, json.loads(body), wa
+    except ValueError:
+        return status, None, wa
+
+
+def check():
+    """What Cloudflare makes of the token and the account (nothing secret printed: lengths, short hashes, verdicts)."""
+    tok, acc = need('CLOUDFLARE_API_TOKEN'), account()
+    print(f'token: {len(tok)} characters, plain letters/digits/-/_: {"yes" if re.fullmatch(r"[A-Za-z0-9_-]+", tok) else "NO"}, '
+          f'sha256 starts {hashlib.sha256(tok.encode()).hexdigest()[:8]}')
+    print(f'account ID: {"32 hex characters" if re.fullmatch(r"[0-9a-f]{32}", acc) else "NOT 32 hex characters"}, '
+          f'sha256 starts {hashlib.sha256(acc.encode()).hexdigest()[:8]}')
+    good = True
+    for name, path in (('verify (a user token)', '/user/tokens/verify'), ('verify (an account token)', f'/accounts/{acc}/tokens/verify'),
+                       ('the accounts it reaches', '/accounts?per_page=50'), ('the workers.dev name', f'/accounts/{acc}/workers/subdomain')):
+        status, j, wa = probe(API + path)
+        ok = isinstance(j, dict) and bool(j.get('success'))
+        said = ''
+        if isinstance(j, dict):
+            said = '; '.join(f'{e.get("code")} {e.get("message")}' for e in (j.get('errors') or []) + (j.get('messages') or []))
+        more = ''
+        if ok and 'verify' in name:
+            more = f', status {(j.get("result") or {}).get("status")}'
+        if ok and 'accounts' in name:
+            ids = [a.get('id') for a in j.get('result') or []]
+            more = f', {len(ids)} account(s), the chosen one among them: {"yes" if acc in ids else "NO"}'
+        if ok and 'workers.dev' in name:
+            more = ', there' if (j.get('result') or {}).get('subdomain') else ', none yet'
+        print(f'{name}: HTTP {status}{more}' + (f' ({said})' if said else '') + (f' [WWW-Authenticate: {wa}]' if wa else ''))
+        if 'workers.dev' in name:
+            good = ok or status == 404
+    if not good:
+        sys.exit('The Cloudflare token or account doesn\'t work from here: run tools/set-secrets.sh with a current token')
 
 
 # ---- the address and the namespace -------------------------------------------------------------------------------
@@ -266,10 +315,12 @@ def verify(dist):
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in ('prepare', 'deploy', 'verify') or (sys.argv[1] != 'prepare' and len(sys.argv) < 3):
+    if len(sys.argv) < 2 or sys.argv[1] not in ('check', 'prepare', 'deploy', 'verify') or (sys.argv[1] in ('deploy', 'verify') and len(sys.argv) < 3):
         sys.exit(__doc__)
     try:
-        if sys.argv[1] == 'prepare':
+        if sys.argv[1] == 'check':
+            check()
+        elif sys.argv[1] == 'prepare':
             prepare()
         elif sys.argv[1] == 'deploy':
             deploy(sys.argv[2])
