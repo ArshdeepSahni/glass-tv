@@ -4,7 +4,10 @@
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TVDIR="${GLASS_HOME:-$HOME/Desktop/tv}"
-BRIDGE="$TVDIR/_bridge"   # where this Mac's build tools were set up (Java's path, the SDK, Gradle, adb)
+# this Mac's build tools (java_home.txt, android-sdk, gradle-8.9, gradle-home, platform-tools): GLASS_TOOLCHAIN,
+# else ~/Desktop/tv/toolchain (the first setup kept them in ~/Desktop/tv/_bridge, still looked at)
+TOOLCHAIN="${GLASS_TOOLCHAIN:-$TVDIR/toolchain}"
+[ -d "$TOOLCHAIN/android-sdk" ] || [ ! -d "$TVDIR/_bridge/android-sdk" ] || TOOLCHAIN="$TVDIR/_bridge"
 export GLASS_ENV="${GLASS_ENV:-$TVDIR/.env}"
 export GLASS_UPDATES_FILE="${GLASS_UPDATES_FILE:-$TVDIR/.updates.env}"
 PKG=com.gathin.tvhome
@@ -21,25 +24,25 @@ mask() {
 # Java 17, the Android SDK and Gradle's cache, from what's on this Mac
 tools_ready() {
   if [ -z "${JAVA_HOME:-}" ]; then
-    if [ -s "$BRIDGE/java_home.txt" ]; then JAVA_HOME="$(cat "$BRIDGE/java_home.txt")"
+    if [ -s "$TOOLCHAIN/java_home.txt" ]; then JAVA_HOME="$(cat "$TOOLCHAIN/java_home.txt")"
     elif /usr/libexec/java_home -v 17 >/dev/null 2>&1; then JAVA_HOME="$(/usr/libexec/java_home -v 17)"
     elif command -v brew >/dev/null 2>&1 && [ -d "$(brew --prefix openjdk@17 2>/dev/null)" ]; then JAVA_HOME="$(brew --prefix openjdk@17)"
     else die "Java 17 isn't installed (brew install openjdk@17)"; fi
   fi
   export JAVA_HOME PATH="$JAVA_HOME/bin:$PATH"
   if [ -z "${ANDROID_HOME:-}" ]; then
-    if [ -d "$BRIDGE/android-sdk" ]; then ANDROID_HOME="$BRIDGE/android-sdk"
+    if [ -d "$TOOLCHAIN/android-sdk" ]; then ANDROID_HOME="$TOOLCHAIN/android-sdk"
     elif [ -d "$HOME/Library/Android/sdk" ]; then ANDROID_HOME="$HOME/Library/Android/sdk"
     else die "The Android SDK isn't installed (or set ANDROID_HOME)"; fi
   fi
   export ANDROID_HOME
-  if [ -z "${GRADLE_USER_HOME:-}" ] && [ -d "$BRIDGE/gradle-home" ]; then export GRADLE_USER_HOME="$BRIDGE/gradle-home"; fi
+  if [ -z "${GRADLE_USER_HOME:-}" ] && [ -d "$TOOLCHAIN/gradle-home" ]; then export GRADLE_USER_HOME="$TOOLCHAIN/gradle-home"; fi
   return 0
 }
 
 # Gradle 8.9: the copy on this Mac when there is one, else the wrapper (which fetches it once)
 gradle_run() {
-  if [ -x "$BRIDGE/gradle-8.9/bin/gradle" ]; then "$BRIDGE/gradle-8.9/bin/gradle" --no-daemon --console=plain -q "$@"
+  if [ -x "$TOOLCHAIN/gradle-8.9/bin/gradle" ]; then "$TOOLCHAIN/gradle-8.9/bin/gradle" --no-daemon --console=plain -q "$@"
   else bash ./gradlew --no-daemon --console=plain -q "$@"; fi
 }
 
@@ -68,7 +71,7 @@ tv_address() {
 adb_ready() {
   ADB="$(command -v adb || true)"
   if [ -z "$ADB" ]; then
-    for c in "$BRIDGE/platform-tools/adb" "${ANDROID_HOME:-}/platform-tools/adb" "$HOME/Library/Android/sdk/platform-tools/adb"; do
+    for c in "$TOOLCHAIN/platform-tools/adb" "${ANDROID_HOME:-}/platform-tools/adb" "$HOME/Library/Android/sdk/platform-tools/adb"; do
       if [ -x "$c" ]; then ADB="$c"; break; fi
     done
   fi

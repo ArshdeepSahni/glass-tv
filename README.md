@@ -37,6 +37,8 @@ Settings › About this TV › Check for updates  ◄── the release's list a
 3. Commit, then `tools/release.sh`. It tags `v5.2` and pushes; `gh run watch` follows the build (about ten minutes).
 4. On the TV: Settings › About this TV › Check for updates › Install.
 
+When something stops or needs changing (a key, the TV after a reset), [docs/RUNBOOK.md](docs/RUNBOOK.md) says what to do.
+
 *Run workflow* on the Actions tab publishes what's on a branch the same way; it makes the release page only for a version
 that's tagged already and has none (a tag run that stopped early).
 
@@ -50,9 +52,10 @@ that's tagged already and has none (a tag run that stopped early).
 | `tools/install-tv.sh --setup` | Also sets up a TV that never had Glass: home screen, keyboard, assistant button, screen saver |
 | `tools/set-secrets.sh` | Once, in Terminal: gives GitHub the secrets its workflow needs (below) |
 | `tools/release.sh` | Tags the version and pushes it |
+| `tools/tv.sh` | The TV's upkeep: `status`, `check` (the debloat again after a TV update or reset), `restore-stock` |
 
-The tools find Java 17, the Android SDK, Gradle 8.9 and adb where this Mac has them (or `JAVA_HOME`,
-`ANDROID_HOME`). The TV's address is asked once and kept in `.tv` here, which git ignores; the TV must be on, with
+The tools find Java 17, the Android SDK, Gradle 8.9 and adb in `~/Desktop/tv/toolchain` (or `GLASS_TOOLCHAIN`,
+`JAVA_HOME`, `ANDROID_HOME`, the usual places). The TV's address is asked once and kept in `.tv` here, which git ignores; the TV must be on, with
 network debugging allowed for this Mac.
 
 ## Keys and privacy
@@ -69,7 +72,8 @@ and APKs. What the release workflow needs lives in GitHub's encrypted secrets, s
 | `GLASS_ENV_FILE` | Optional, and best left out: the assistant's keys (`~/Desktop/tv/.env`). Without it, releases leave the assistant as it is and it's built on the Mac when it changes |
 
 On the Mac, `~/Desktop/tv/.env` holds the assistant's keys and `~/Desktop/tv/.updates.env` the update service's
-address and key (both readable by you only).
+address and key (both readable by you only). `~/.android/debug.keystore` is the key the TV's Glass is signed with:
+keep a private backup of it, as no update can ever install over Glass without it.
 
 - The workflow runs only GitHub's own actions, pinned to exact commits, and gives each secret only to the steps that
   use it. The runner is a fresh machine each time, deleted after the run.
@@ -88,14 +92,20 @@ address and key (both readable by you only).
 launcher/                     Glass (Android, Gradle 8.9, AGP 8.5, Java 17, minSdk 26)
   app/src/main/java/…/Updates.java     checking, downloading, verifying, installing
   app/src/main/java/…/KeyDaemon.java   the key helper (the TV's shell user; installs only from Glass's updates folder)
+  app/src/main/java/…/SwitcherSheet.java  hold Home: the open apps
   app/src/main/assets/phone/           the phone remote
+  app/src/test/                        unit tests (the Check workflow runs them)
 assistant/                    Glass Assistant
 updates/worker/index.js       the Cloudflare Worker: GET /v1/manifest, GET /v1/apk/<file>, with the key only
 updates/manifest.py           the release's list, notes and SHA-256s from the APKs and CHANGELOG.md
-updates/publish.py            deploys the Worker, uploads the APKs and the list, then asks it as a TV would
+updates/publish.py            checks the token, deploys the Worker, uploads the APKs and the list, asks it as a TV would
 updates/fetch.py              downloads the newest release as a TV does (tools/install-tv.sh --service)
+updates/signing-cert.sha256   the certificate the TV's Glass is signed with: releases signed otherwise are refused
 tools/                        the Mac's side
-.github/workflows/release.yml the release workflow
+tv/debloat-list.txt           the TV's packages kept disabled (tools/tv.sh check, restore-stock)
+docs/RUNBOOK.md               releasing, undoing, when a workflow stops, keys, the TV
+.github/workflows/check.yml   every push: both apps build, the tests pass
+.github/workflows/release.yml a version tag: build, sign, check, publish, release page
 ```
 
 Fonts, pictures and libraries that came from elsewhere are in [NOTICE.md](NOTICE.md).

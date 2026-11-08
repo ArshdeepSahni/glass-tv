@@ -1,0 +1,31 @@
+# Realme Smart TV 32" (Changhong, Android TV 9): packages kept DISABLED, never uninstalled.
+# tools/tv.sh check disables them again after a TV update or a factory reset; tools/tv.sh restore-stock turns them
+# all back on. One package per line, a note after #. [optional] ones are left as they are by `check`: Glass turns
+# them on and off itself (casting in Settings › Glass & original home, the TV's own home behind "Use the TV's
+# original home").
+com.homwee.aipont                            # AI PONT vendor portal and promo channels
+com.google.android.tvrecommendations         # sponsored and recommendation rows
+android.autoinstalls.config.homwee           # vendor partner auto-installs
+com.homwee.store                             # vendor app store
+com.homwee.help                              # vendor help app
+com.homwee.howtocast                         # vendor how-to-cast tutorial
+com.google.android.feedback                  # Google feedback and telemetry
+com.google.android.play.games                # Play Games service
+com.google.android.videos                    # Google Play Movies & TV (discontinued)
+com.google.android.syncadapters.calendar     # calendar sync
+com.google.android.onetimeinitializer        # one-shot setup helper
+com.google.android.partnersetup              # Google partner setup
+com.android.printspooler                     # printing
+com.android.htmlviewer                       # legacy HTML viewer
+com.android.wallpaperbackup                  # phone wallpaper backup agent
+com.google.android.backdrop                  # Google Ambient Mode (Glass has its own screen savers)
+com.google.android.apps.mediashell           # [optional] Chromecast built-in
+com.homwee.multiscreenshare                  # [optional] Miracast mirroring
+com.homwee.mmp.screenshare                   # [optional] vendor screen share
+com.google.android.tvlauncher                # [optional] the TV's own home (Glass is home)
+#
+# NEVER disable (Inputs, Wi-Fi, the remote, Play Store and boot need them):
+#   com.google.android.leanbacklauncher.partnercustomizer  com.google.android.tungsten.setupwraith (owns the saved Wi-Fi)
+#   com.mediatek.*  com.homwee.dmt.upgrade  com.homwee.upgrade  com.homwee.synckey  com.homwee.factory
+#   com.android.vending  com.google.android.gms  com.google.android.gsf  com.google.android.webview
+#   com.google.android.inputmethod.latin  com.google.android.tv.remote.service  com.android.bluetooth  com.mediatek.autopair
