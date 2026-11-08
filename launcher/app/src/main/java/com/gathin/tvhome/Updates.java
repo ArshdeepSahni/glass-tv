@@ -241,7 +241,9 @@ final class Updates {
                     File f = new File(dir, a.file);
                     boolean me = a.pkg.equals(app.getPackageName());
                     say("installing", me ? "Installing Glass " + r.version + ". Glass restarts in a moment." : "Installing " + a.name + "…", -1);
-                    if (me) Glass.prefs(app).edit().putString(PENDING, r.version + "|" + a.code).commit();
+                    // "|away": started from a phone while another app was in front, so Glass doesn't come back over it
+                    if (me) Glass.prefs(app).edit().putString(PENDING, r.version + "|" + a.code
+                            + (Glass.selfInFront() ? "" : "|away")).commit();
                     String res = Keys.install(app, f.getPath());
                     Log.i(TAG, "install " + a.pkg + " " + a.code + ": " + (res == null ? "no helper" : res.startsWith("ok") ? "ok" : "failed"));
                     if (res == null) {   // no key helper: the TV's own installer asks on the screen
@@ -367,10 +369,11 @@ final class Updates {
         String to = p.getString(PENDING, null);
         if (to == null) return null;
         p.edit().remove(PENDING).apply();
-        String version = to.contains("|") ? to.substring(0, to.indexOf('|')) : to;
+        String[] part = to.split("\\|");
+        String version = part[0];
         long code = 0;
         try {
-            code = Long.parseLong(to.substring(to.indexOf('|') + 1));
+            if (part.length > 1) code = Long.parseLong(part[1]);
         } catch (NumberFormatException ignored) {
         }
         if (installedCode(c, c.getPackageName()) >= code) {
@@ -379,6 +382,32 @@ final class Updates {
         }
         say("failed", "Glass " + version + " wasn't installed. Try again.", -1);
         return null;
+    }
+
+    /**
+     * Glass started again a moment ago after replacing itself, with About this TV on screen when Install was pressed:
+     * that page comes back (saying it's updated) instead of the TV dropping into the app that was under Glass. Called
+     * when the remote helper connects, which is what starts Glass again. An update started from a phone while another
+     * app was in front stays out of the way (Glass says so the next time it's opened). Updates started by 5.3 don't
+     * say where they started, and come back.
+     */
+    static void comeBack(Context c) {
+        String to = Glass.prefs(c).getString(PENDING, null);
+        if (to == null || to.endsWith("|away")) return;
+        long since;
+        try {
+            since = System.currentTimeMillis() - c.getPackageManager().getPackageInfo(c.getPackageName(), 0).lastUpdateTime;
+        } catch (PackageManager.NameNotFoundException e) {
+            return;
+        }
+        if (since < 0 || since > 2 * 60_000) return;
+        try {
+            c.startActivity(new Intent(c, GlassHomeActivity.class)
+                    .putExtra(GlassHomeActivity.EXTRA_OPEN, "settings:about")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (RuntimeException e) {
+            Log.w(TAG, "back: " + e.getClass().getSimpleName());
+        }
     }
 
     /** What an installed update left behind: Glass can't delete its own APK (Android replaces it mid-way). */

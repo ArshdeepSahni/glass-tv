@@ -85,10 +85,12 @@ final class Running {
         for (String[] r : LastOpened.recent(c, 24)) {
             if (!open.remove(r[0])) continue;
             if (r[0].equals(c.getPackageName()) || pm.getLeanbackLaunchIntentForPackage(r[0]) == null) continue;
+            if (!Sample.shows(c, r[0])) continue;
             if (r[0].equals(front)) out.add(0, r); else out.add(r);
         }
         // in front but never noted (started some other way): it's still the one on screen
-        if (front != null && open.contains(front) && !front.equals(c.getPackageName()) && pm.getLeanbackLaunchIntentForPackage(front) != null) {
+        if (front != null && open.contains(front) && !front.equals(c.getPackageName()) && pm.getLeanbackLaunchIntentForPackage(front) != null
+                && Sample.shows(c, front)) {
             out.add(0, new String[]{front, String.valueOf(System.currentTimeMillis())});
         }
         return out.size() > max ? new ArrayList<>(out.subList(0, max)) : out;

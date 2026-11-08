@@ -79,6 +79,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    lint {
+        // targetSdk 28 is on purpose (Android TV 9's rules for an app that appears over others). The assistant
+        // never goes through Google Play, so Play's minimum target doesn't apply; left on, it stops release builds.
+        disable 'ExpiredTargetSdkVersion'
+    }
 }
 
 dependencies {

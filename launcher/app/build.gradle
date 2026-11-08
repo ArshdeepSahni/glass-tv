@@ -55,8 +55,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 24
-        versionName '5.3 glass installer'
+        versionCode 25
+        versionName '5.3.1 glass installer'
         buildConfigField 'String', 'UPDATE_URL', "\"${updateSetting('GLASS_UPDATE_URL')}\""
         buildConfigField 'String', 'UPDATE_TOKEN', "\"${updateSetting('GLASS_UPDATE_TOKEN')}\""
     }

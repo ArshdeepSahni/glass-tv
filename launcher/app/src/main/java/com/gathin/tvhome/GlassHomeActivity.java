@@ -738,7 +738,8 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
     }
 
     private void saveDock(List<String> pkgs) {
-        prefs().edit().putString(DOCK, android.text.TextUtils.join(",", pkgs)).apply();
+        // the sample dock is for pictures: the owner's own dock stays as it was
+        if (!Sample.on) prefs().edit().putString(DOCK, android.text.TextUtils.join(",", pkgs)).apply();
         dock.setItems(dockItems());
         dock.setRunning(running());
     }
@@ -829,9 +830,13 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
         } else {
             pkgs = defaults();
         }
+        if (Sample.on) {   // pictures: the well-known apps the TV has, never its owner's own choice
+            pkgs = new ArrayList<>(java.util.Arrays.asList(Sample.APPS));
+            pkgs.add(3, Config.load(this).liveTvPackage);
+        }
         List<Dock.Item> out = new ArrayList<>();
         for (String p : pkgs) {
-            if (!launchable(p)) continue;
+            if (p == null || p.isEmpty() || !launchable(p) || !Sample.shows(this, p)) continue;
             CharSequence l = Glass.label(this, p);
             out.add(new Dock.Item(p, l == null ? p : l.toString()));
             if (out.size() >= 9) break;
@@ -893,6 +898,7 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
             String pkg = ri.activityInfo.packageName;
             if (pkg.equals(ctx.getPackageName()) || pkg.startsWith("com.gathin.glass") || !seen.add(pkg)) continue;
             if (hidden.contains(pkg) && !pkg.equals(liveTv)) continue;
+            if (!Sample.shows(ctx, pkg)) continue;
             CharSequence l = Glass.label(ctx, pkg);
             apps.add(new String[]{l == null ? pkg : l.toString(), pkg});
         }

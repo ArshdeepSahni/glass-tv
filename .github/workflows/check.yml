@@ -39,13 +39,14 @@ jobs:
         working-directory: launcher
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon --console=plain testDebugUnitTest assembleDebug
+          # lintVitalRelease: what would stop a release build (./glass setup makes one), without a signing key
+          ./gradlew --no-daemon --console=plain testDebugUnitTest assembleDebug lintVitalRelease
 
       - name: The assistant builds (without its keys)
         working-directory: assistant
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon --console=plain assembleDebug
+          ./gradlew --no-daemon --console=plain assembleDebug lintVitalRelease
 
       - name: The release scripts are sound
         run: |

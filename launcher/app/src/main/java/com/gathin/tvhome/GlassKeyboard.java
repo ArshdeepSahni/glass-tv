@@ -224,7 +224,7 @@ public final class GlassKeyboard extends InputMethodService {
         List<String> out = new ArrayList<>();
         if (prefix.isEmpty() || words == null) return out;
         String p = prefix.toLowerCase(Locale.ROOT);
-        for (int i = learned.size() - 1; i >= 0 && out.size() < 2; i--) {
+        for (int i = learned.size() - 1; i >= 0 && out.size() < 2 && !Sample.on; i--) {   // not in pictures
             String w = learned.get(i);
             if (w.startsWith(p) && !w.equals(p) && !out.contains(w)) out.add(w);
         }
@@ -257,6 +257,7 @@ public final class GlassKeyboard extends InputMethodService {
 
     private void remember(String w) {
         if (board != null && board.password) return;   // never from a password box
+        if (Sample.on) return;                           // nor what's typed for pictures
         String lw = w.toLowerCase(Locale.ROOT);
         if (lw.length() < 3 || lw.length() > 24) return;
         learned.remove(lw);

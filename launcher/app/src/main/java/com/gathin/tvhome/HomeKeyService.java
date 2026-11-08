@@ -249,6 +249,7 @@ public class HomeKeyService extends AccessibilityService {
             handler.postDelayed(() -> GlassKeys.powerOn(this), 3000);
         }
         GlassKeys.watchNight(this, handler);
+        handler.postDelayed(() -> Updates.comeBack(this), 600);   // after Glass replaced itself, its page again
         if (screenOffReceiver == null) {
             // the screen going off closes whatever was open on the desktop, and covers it for the wake film (Wake)
             screenOffReceiver = new BroadcastReceiver() {

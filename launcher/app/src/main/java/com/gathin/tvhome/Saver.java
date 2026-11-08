@@ -68,6 +68,8 @@ final class Saver extends FrameLayout {
 
     private void build() {
         Context c = getContext();
+        // the widgets first: where the time goes depends on them (they're added last, over everything)
+        strip = Widgets.strip(c, "saver", night || !"clock".equals(style));
         switch (style) {
             case "drift": {
                 for (String[] w : Looks.WALLS) if (!"field".equals(w[0])) slides.add(w[0]);   // decoded one at a time
@@ -89,8 +91,10 @@ final class Saver extends FrameLayout {
                 a.setImageBitmap(Looks.asset(c, "saver/glass.jpg", 1));
                 a.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 addView(a, Ui.fill());
-                clock = clock(56, true);
-                place(clock, 0, 560);
+                // under the glass when it has the bottom to itself; beside the widgets, at the left, when they're there
+                clock = clock(56, strip == null);
+                if (strip == null) place(clock, 0, 560);
+                else place(clock, 56, 520);
                 break;
             }
             case "glow": {
@@ -128,7 +132,6 @@ final class Saver extends FrameLayout {
                 place(clock, 72, 380);
             }
         }
-        strip = Widgets.strip(c, "saver", night || !"clock".equals(style));
         if (strip != null) {
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END);
             lp.rightMargin = Ui.px(48);

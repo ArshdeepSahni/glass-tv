@@ -20,9 +20,10 @@ import java.util.Locale;
 
 /**
  * Sample content, for pictures of Glass (the website, the docs): weather for a neutral place, a made-up song, Glass's
- * own pictures as the photos from phones, a made-up network, address and names. While it's on, nobody's town, music,
- * photos, network or devices show. Nothing real changes, and off brings everything back as it was. Only through the
- * TV's debugging (there is no switch for it on the TV):
+ * own pictures as the photos from phones, a made-up network, address and names, and only well-known apps (the dock,
+ * All apps, search, the open apps). While it's on, nobody's town, music, photos, network, devices or apps show.
+ * Nothing real changes, and off brings everything back as it was. Only through the TV's debugging (there is no
+ * switch for it on the TV):
  *
  *   adb shell am start -n com.gathin.tvhome/.GlassHomeActivity --es sample on      (off to stop)
  */
@@ -43,6 +44,16 @@ final class Sample {
     private static final String[] DEVICES = {"Living room speaker", "Headphones", "Game controller", "Keyboard"};
     private static final String[] PHONES = {"Phone", "Tablet", "Phone 2"};
     private static final String[] PHOTOS = {"walls/dunes-d.jpg", "walls/ridges-d.jpg", "walls/aurora-n.jpg", "walls/silk-d.jpg"};
+    /** The apps pictures show, in the dock's order, when the TV has them; with the TV's Live TV and Glass's own. */
+    static final String[] APPS = {"com.google.android.youtube.tv", "com.netflix.ninja", "com.amazon.amazonvideo.livingroom",
+            "com.spotify.tv.android", "com.google.android.youtube.tvmusic", "com.android.vending", "org.videolan.vlc"};
+
+    /** Whether an app shows: always, unless sample content is on and it isn't one of APPS. */
+    static boolean shows(Context c, String pkg) {
+        if (!on || pkg == null) return true;
+        for (String a : APPS) if (a.equals(pkg)) return true;
+        return pkg.equals(c.getPackageName()) || pkg.equals(Config.load(c).liveTvPackage);
+    }
 
     static void load(Context c) {
         on = Glass.prefs(c).getBoolean("sample", false);
