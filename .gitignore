@@ -1,0 +1,23 @@
+# Never in the repository: keys, addresses, signing keys
+.env
+*.env
+.updates.env
+.tv
+.secrets-status
+*.keystore
+*.jks
+local.properties
+
+# What builds make
+dist/
+build/
+.gradle/
+*.apk
+*.aab
+captures/
+
+# Editors and the Mac
+.idea/
+*.iml
+.vscode/
+.DS_Store

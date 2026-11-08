@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Glass Palette: hold Home anywhere. A left-anchored panel over whatever is playing; the filter line on top,
+     then Continue / Inputs / Actions / Apps rows. Rows reuse item_input so the focus look matches the Inputs menu. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrim"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#66000000">
+
+    <LinearLayout
+        android:id="@+id/panel"
+        android:layout_width="350dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="top|start"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="18dp"
+        android:layout_marginStart="32dp"
+        android:orientation="vertical"
+        android:background="@drawable/glass_panel"
+        android:padding="10dp"
+        android:elevation="12dp">
+
+        <EditText
+            android:id="@+id/filter"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/input_row_bg"
+            android:hint="@string/palette_hint"
+            android:textColorHint="#5C6168"
+            android:textColor="#F2F3F5"
+            android:textSize="15sp"
+            android:fontFamily="@string/font_medium"
+            android:singleLine="true"
+            android:inputType="text|textNoSuggestions"
+            android:imeOptions="actionDone|flagNoExtractUi"
+            android:importantForAutofill="no" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="6dp"
+            android:scrollbars="none"
+            android:fadeScrollbars="true">
+
+            <LinearLayout
+                android:id="@+id/rows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <TextView
+            android:id="@+id/foot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:textColor="#5C6168"
+            android:textSize="11sp"
+            android:fontFamily="@string/font_body"
+            android:text="@string/palette_foot" />
+    </LinearLayout>
+</FrameLayout>

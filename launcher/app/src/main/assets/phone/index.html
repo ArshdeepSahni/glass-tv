@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#B9CDE3">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Glass">
+<meta name="referrer" content="no-referrer">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="manifest" href="/manifest.json">
+<title>Glass</title>
+<style>
+:root{--ink:#16181D;--ink2:rgba(22,24,29,.64);--ink3:rgba(22,24,29,.42);--hair:rgba(22,24,29,.09);--hover:rgba(22,24,29,.06);
+--bubble:rgba(22,24,29,.08);--sel:#0E0E10;--selink:#fff;--glass:rgba(250,250,252,.6);--field:rgba(255,255,255,.55);
+--spring:cubic-bezier(.2,1.3,.4,1);--out:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overscroll-behavior:none}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+background:#C9D9EA;overflow:hidden;font-feature-settings:"tnum" 1}
+button{font:inherit;color:inherit;border:0;margin:0;background:none;cursor:pointer;touch-action:manipulation}
+input{font:inherit;color:inherit}
+[hidden]{display:none!important}
+/* an app, not a page: no zoom, no text selection or callouts on the controls, no rubber band */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.says,.you,input{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:linear-gradient(172deg,#A9C6E4 0%,#C9D9EA 30%,#EBDCCB 60%,#D7B9A1 100%)}
+.bg i{position:absolute;border-radius:50%;filter:blur(6px)}
+.bg i:nth-child(1){left:15%;top:-28%;width:150%;height:66%;background:radial-gradient(closest-side,rgba(255,240,214,.95),transparent)}
+.bg i:nth-child(2){left:-66%;top:50%;width:164%;height:52%;background:radial-gradient(closest-side,rgba(255,200,170,.55),transparent)}
+.bg i:nth-child(3){left:23%;top:64%;width:160%;height:52%;background:radial-gradient(closest-side,rgba(160,190,230,.55),transparent)}
+.glass{position:relative;background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+border-radius:24px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.72),inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(30,40,60,.10),0 24px 50px rgba(30,40,60,.10)}
+/* the mark: Glass's own icon (the glass with a sunrise inside) */
+.mark{flex:none;width:40px;height:40px;border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.55),0 6px 16px rgba(20,24,40,.22);background:#141428}
+.mark.s{width:24px;height:24px;border-radius:6px;box-shadow:0 0 0 1px rgba(255,255,255,.4)}
+/* the wake animation, as on the TV, when Glass opens */
+.intro{position:fixed;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center;transition:opacity .55s var(--out)}
+.intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.intro.gone{opacity:0;pointer-events:none}
+.intro.light{background:#C9D9EA}
+.screen{position:fixed;left:0;right:0;top:var(--vtop,0px);height:var(--vh,100%);display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 20px) 16px 0}
+.head{display:flex;align-items:center;gap:12px;min-height:44px}
+.head .t{flex:1;min-width:0}
+.title{font-size:20px;line-height:24px;font-weight:600;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:13px;line-height:16px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.round{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),0 6px 16px rgba(30,40,60,.12);transition:transform .18s var(--spring)}
+.round:active,.key:active button,.chip:active,.btn:active{transform:scale(.94)}
+.btn{height:52px;border-radius:16px;padding:0 20px;font-size:17px;font-weight:600;letter-spacing:-.01em;transition:transform .18s var(--spring)}
+.btn.dark{background:var(--sel);color:var(--selink);box-shadow:0 6px 16px rgba(14,14,16,.18)}
+.btn.quiet{background:var(--hover);box-shadow:inset 0 0 0 1px var(--hair);font-size:15px;font-weight:500;height:44px;border-radius:14px}
+.btn.small{height:36px;border-radius:12px;padding:0 14px;font-size:15px;font-weight:500;background:var(--hover);box-shadow:inset 0 0 0 1px var(--hair)}
+.btn:disabled{opacity:.5}
+.muted{font-size:13px;line-height:18px;color:var(--ink2)}
+svg{display:block}
+/* pairing */
+#pair{align-items:center;text-align:center;justify-content:center;padding-bottom:40px}
+#pair .tvdisc{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 10px 26px rgba(30,40,60,.14)}
+#pair h1{margin:24px 0 0;font-size:28px;line-height:34px;font-weight:600;letter-spacing:-.02em;max-width:320px}
+#pair p.lead{margin:12px 0 0;font-size:17px;line-height:24px;color:var(--ink2);max-width:318px}
+#pair .codebox{width:100%;max-width:358px;margin-top:28px;padding:18px 20px;text-align:left}
+#pair .code{font-size:32px;line-height:40px;font-weight:600;letter-spacing:.06em;margin-top:4px}
+#pair input.code{width:100%;border:0;background:transparent;outline:none;padding:0}
+#pair input.code::placeholder{color:var(--ink3)}
+#pair .actions{width:100%;max-width:358px;margin-top:28px;display:flex;flex-direction:column;gap:12px;align-items:center}
+#pair .actions .dark{width:100%}
+#pair .foot{margin-top:28px;max-width:300px}
+.wait{display:inline-flex;align-items:center;gap:10px}
+.dots{display:inline-flex;gap:5px}.dots i{width:7px;height:7px;border-radius:50%;background:currentColor;animation:dot 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,100%{opacity:.25}40%{opacity:1}}
+/* the app */
+#app{padding-bottom:0}
+.page{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom) + 96px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.now{display:flex;align-items:center;gap:14px;padding:16px 14px 16px 16px;min-height:84px}
+.now .art{width:52px;height:52px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:22px;
+background:linear-gradient(160deg,#3A3A40,#141416);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 6px 14px rgba(0,0,0,.2)}
+.now .t{flex:1;min-width:0}
+.now .name{font-size:17px;line-height:22px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp{width:48px;height:48px;border-radius:50%;background:var(--sel);color:var(--selink);display:flex;align-items:center;justify-content:center;flex:none}
+.pad{flex:1;min-height:150px;border-radius:32px;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.pad .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;padding:0 18px}
+.pad .hint.ask{color:var(--ink);font-weight:600}
+.pad .chev{position:absolute;color:var(--ink3)}
+.pad .touch{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;pointer-events:none;opacity:0;
+background:radial-gradient(closest-side,rgba(255,255,255,.75),rgba(255,255,255,0));transition:opacity .25s}
+.pad.on .touch{opacity:1;transition:none}
+.pad .center{position:absolute;left:50%;top:46%;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;
+box-shadow:inset 0 0 0 1.5px var(--hair),0 0 0 10px rgba(255,255,255,.18);transition:transform .3s var(--spring),box-shadow .3s}
+.pad .center.hit{transform:scale(.9);box-shadow:inset 0 0 0 1.5px var(--ink3),0 0 0 16px rgba(255,255,255,.42);transition:none}
+.pad .chev{transition:color .35s,transform .35s var(--spring)}
+.pad .chev.hit{color:var(--ink);transform:scale(1.35);transition:none}
+.keys{display:flex;justify-content:space-between;padding:0 6px}
+.key{display:flex;flex-direction:column;align-items:center;gap:8px;width:76px}
+.key button{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 6px 16px rgba(30,40,60,.12);transition:transform .18s var(--spring)}
+.key span{font-size:13px;line-height:16px;color:var(--ink2);font-weight:500}
+.vol{display:flex;flex-direction:column;padding:4px 10px;border-radius:28px}
+.vol .lv{display:flex;align-items:center;gap:12px;min-height:52px}
+.vol .lv + .lv{border-top:1px solid var(--hair)}
+.vol button{width:40px;height:40px;border-radius:50%;background:var(--hover);display:flex;align-items:center;justify-content:center;flex:none;transition:transform .18s var(--spring),background .2s}
+.vol button:active{transform:scale(.88);background:rgba(22,24,29,.12)}
+.vol .meter{flex:1}
+.vol .row{display:flex;justify-content:space-between;font-size:13px;line-height:16px;color:var(--ink2)}
+.vol .row b{color:var(--ink);font-weight:600}
+.vol .bar{height:6px;border-radius:3px;background:rgba(22,24,29,.10);margin-top:7px;overflow:hidden}
+.vol .bar i{display:block;height:6px;border-radius:3px;background:var(--sel);width:0;transition:width .3s var(--out)}
+/* Glass */
+.talk{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px;padding:4px 4px 8px;
+-webkit-mask:linear-gradient(transparent,#000 18px,#000 calc(100% - 8px),transparent);mask:linear-gradient(transparent,#000 18px,#000 calc(100% - 8px),transparent)}
+.talk .first{margin-top:auto}
+.you{align-self:flex-end;max-width:84%;padding:10px 14px;border-radius:18px 18px 6px 18px;background:var(--bubble);font-size:17px;line-height:23px;font-weight:500;white-space:pre-wrap;word-wrap:break-word}
+.says{font-size:17px;line-height:24px;white-space:pre-wrap;word-wrap:break-word}
+.receipts{display:flex;gap:6px;flex-wrap:wrap}
+.receipt{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:9px;background:var(--hover);font-size:13px;font-weight:600;color:var(--ink2)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:40px;padding:0 14px;border-radius:12px;background:rgba(255,255,255,.5);box-shadow:inset 0 0 0 1px var(--hair);font-size:15px;font-weight:500;transition:transform .18s var(--spring)}
+.chip.picked{background:var(--bubble);font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.chip.gone{opacity:.5;background:transparent}
+.card{padding:14px;border-radius:18px;background:rgba(255,255,255,.45);box-shadow:inset 0 0 0 1px var(--hair)}
+.card .top{display:flex;gap:12px;align-items:center}
+.card .ttl{font-size:19px;line-height:24px;font-weight:600;letter-spacing:-.01em}
+.card .why{font-size:15px;line-height:21px;margin-top:10px}
+.card .acts{display:flex;gap:8px;margin-top:12px}
+.thinking{color:var(--ink2);padding:6px 2px}
+.compose{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 18px;border-radius:30px;min-height:60px}
+.compose input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-size:17px}
+.compose input::placeholder{color:var(--ink2)}
+.compose .go{width:44px;height:44px;border-radius:50%;background:var(--sel);color:var(--selink);display:flex;align-items:center;justify-content:center;flex:none;transition:transform .18s var(--spring)}
+.compose .go:active{transform:scale(.9)}
+.compose .go svg.send,.compose.has-text .go svg.mic{display:none}
+.compose.has-text .go svg.send{display:block}
+.compose .go.listening{animation:listen 1.3s ease-in-out infinite}
+@keyframes listen{0%,100%{box-shadow:0 0 0 0 rgba(14,14,16,.35)}50%{box-shadow:0 0 0 12px rgba(14,14,16,0)}}
+.talk{overscroll-behavior:contain}
+/* TV */
+.card2{padding:16px 18px}
+.card2 h2{margin:0;font-size:13px;line-height:16px;color:var(--ink2);font-weight:600}
+.line{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 0;border-bottom:1px solid var(--hair)}
+.line:last-child{border-bottom:0}
+.line .t{flex:1;min-width:0}
+.line .n{font-size:17px;line-height:22px;font-weight:500}
+.ok{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--ink2)}
+/* media keys under what's playing */
+.media{display:flex;justify-content:space-between;padding:0 4px;margin-top:-4px}
+.media button{width:48px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.4);box-shadow:inset 0 0 0 1px var(--hair);transition:transform .18s var(--spring)}
+.media button:active{transform:scale(.9)}
+/* the pad's mode */
+.mode{position:absolute;right:12px;top:12px;height:30px;padding:0 11px;border-radius:15px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;
+background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 4px 10px rgba(30,40,60,.10);z-index:2}
+.mode.on{background:var(--sel);color:var(--selink)}
+.pad.point .chev,.pad.point .center{opacity:.25}
+/* apps */
+.send{display:flex;align-items:center;gap:14px;padding:16px}
+.send .big{width:52px;height:52px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--sel);color:var(--selink)}
+.send .t{flex:1;min-width:0}
+.progress{height:6px;border-radius:3px;background:rgba(22,24,29,.10);overflow:hidden;margin-top:8px}
+.progress i{display:block;height:6px;background:var(--sel);width:0;transition:width .2s}
+.notes{margin:4px 0 2px;padding:0 0 0 18px;font-size:15px;line-height:21px;color:var(--ink2)}
+.notes li+li{margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;padding:16px 10px}
+.app{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;transition:transform .18s var(--spring)}
+.app:active{transform:scale(.92)}
+.app .ic{position:relative;width:56px;height:56px;border-radius:13px;background:rgba(255,255,255,.5);box-shadow:0 4px 12px rgba(30,40,60,.14);overflow:visible}
+.app .ic img{width:56px;height:56px;border-radius:13px;display:block}
+.app .ic .dot{position:absolute;left:50%;bottom:-7px;width:14px;height:3px;margin-left:-7px;border-radius:2px;background:var(--ink2)}
+.app .l{font-size:12px;line-height:15px;color:var(--ink);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.menu{position:fixed;inset:0;z-index:8;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,12,20,.18);opacity:0;pointer-events:none;transition:opacity .2s}
+.menu.open{opacity:1;pointer-events:auto}
+.menu .glass{width:calc(100% - 24px);margin-bottom:calc(env(safe-area-inset-bottom) + 12px);padding:8px;border-radius:24px;transform:translateY(30px);transition:transform .35s var(--spring)}
+.menu.open .glass{transform:none}
+.menu button{display:block;width:100%;height:52px;border-radius:16px;font-size:17px;font-weight:500;text-align:center}
+.menu button.do{font-weight:600}
+.menu .ttl{font-size:13px;color:var(--ink2);text-align:center;padding:8px 0 6px}
+/* the tab bar */
+.tabs{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);height:64px;border-radius:32px;padding:6px;display:flex;gap:6px;
+background:rgba(255,255,255,.22);-webkit-backdrop-filter:blur(14px) saturate(170%);backdrop-filter:blur(14px) saturate(170%);
+box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),0 10px 30px rgba(30,40,60,.16)}
+.tabs button{flex:1;height:52px;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;transition:background .2s}
+.tabs button[aria-selected=true]{background:var(--sel);color:var(--selink)}
+.tabs button[aria-selected=true] .mark.s{box-shadow:0 0 0 1px rgba(255,255,255,.75)}
+.tabs{transition:transform .32s var(--out),opacity .2s}
+body.typing .tabs{transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none}
+body.typing .page{padding-bottom:12px}
+/* a small phone: the same remote, a little tighter */
+@media (max-height:620px){.media button{height:34px}.grid{gap:12px 6px}.screen{padding-top:calc(env(safe-area-inset-top) + 10px)}.head .sub{display:none}.now{min-height:62px;padding:10px 12px}.now .art{width:42px;height:42px;border-radius:10px;font-size:18px}.pp{width:42px;height:42px}.key span{display:none}.key button{width:50px;height:50px}.keys{padding:0 12px}.page{gap:10px}}
+/* the phone's own settings */
+.sw{-webkit-appearance:none;appearance:none;margin:0;width:51px;height:31px;border-radius:16px;background:rgba(22,24,29,.16);position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .28s var(--spring)}
+.sw:checked{background:var(--sel)}
+.sw:checked::after{transform:translateX(20px)}
+/* a sheet over the page (typing) */
+.sheet{position:fixed;left:12px;right:12px;top:calc(var(--vtop,0px) + var(--vh,100vh) - 12px - var(--sab,env(safe-area-inset-bottom)));padding:16px;border-radius:28px;z-index:5;
+transform:translateY(40px);opacity:0;pointer-events:none;transition:transform .38s var(--spring),opacity .2s}
+.sheet.open{transform:translateY(-100%);opacity:1;pointer-events:auto}
+.sheet .row2{display:flex;gap:8px;margin-top:12px}
+.sheet input{flex:1;min-width:0;height:48px;border-radius:14px;border:0;padding:0 14px;background:var(--field);box-shadow:inset 0 0 0 1px var(--hair);outline:none;font-size:17px}
+.sheet .row3{display:flex;gap:8px;margin-top:10px}
+.sheet .row3 .btn{flex:1;height:40px;border-radius:12px;font-size:15px}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-140%);padding:10px 16px;border-radius:16px;z-index:9;
+font-size:15px;font-weight:500;transition:transform .35s var(--spring);max-width:90%;text-align:center}
+.toast.show{transform:translate(-50%,0)}
+
+/* the TV's look, on the phone too: dark when the TV is dark */
+body.dark{--ink:#F2F2F5;--ink2:rgba(242,242,245,.66);--ink3:rgba(242,242,245,.42);--hair:rgba(255,255,255,.11);--hover:rgba(255,255,255,.08);
+--bubble:rgba(255,255,255,.11);--sel:#F2F2F5;--selink:#0E0E10;--glass:rgba(34,34,44,.56);--field:rgba(255,255,255,.08);background:#0B1022}
+body.dark .bg{background:linear-gradient(172deg,#0B1022 0%,#141A33 34%,#22182C 68%,#2A1A22 100%)}
+body.dark .bg i:nth-child(1){background:radial-gradient(closest-side,rgba(130,120,255,.26),transparent)}
+body.dark .bg i:nth-child(2){background:radial-gradient(closest-side,rgba(255,130,96,.16),transparent)}
+body.dark .bg i:nth-child(3){background:radial-gradient(closest-side,rgba(70,180,210,.18),transparent)}
+body.dark .glass{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.26),0 24px 50px rgba(0,0,0,.3)}
+body.dark .round,body.dark .key button,body.dark .mode{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 6px 16px rgba(0,0,0,.3)}
+body.dark .mode.on{background:var(--sel);color:var(--selink)}
+body.dark .pad .touch{background:radial-gradient(closest-side,rgba(255,255,255,.28),rgba(255,255,255,0))}
+body.dark .pad .center{box-shadow:inset 0 0 0 1.5px var(--hair),0 0 0 10px rgba(255,255,255,.05)}
+body.dark .pad .center.hit{box-shadow:inset 0 0 0 1.5px var(--ink3),0 0 0 16px rgba(255,255,255,.12)}
+body.dark .vol button:active{background:rgba(255,255,255,.16)}
+body.dark .vol .bar,body.dark .progress,body.dark .np{background:rgba(255,255,255,.14)}
+body.dark .chip,body.dark .card,body.dark .media button{background:rgba(255,255,255,.07)}
+body.dark .app .ic{background:rgba(255,255,255,.08);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+body.dark .tabs{background:rgba(30,30,40,.42);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.4)}
+body.dark .sw{background:rgba(255,255,255,.18)}
+body.dark .sw::after{box-shadow:0 2px 6px rgba(0,0,0,.4)}
+body.dark .sw:checked::after{background:#1C1C22}
+body.dark .menu{background:rgba(0,0,0,.4)}
+body.dark .intro.light{background:#0B1022}
+/* what's playing: its picture and how far along it is */
+.now .art img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.np{height:4px;border-radius:2px;background:rgba(22,24,29,.10);overflow:hidden;margin-top:8px}
+.np i{display:block;height:4px;border-radius:2px;background:var(--ink2);width:0;transition:width 1s linear}
+.nt{display:flex;justify-content:space-between;font-size:11px;line-height:13px;color:var(--ink3);margin-top:4px;font-weight:600}
+/* the shortcuts under the touchpad: yours to choose, as in an iPhone's Control Center */
+.keys{flex-wrap:wrap;row-gap:12px}
+.keys .key{width:25%}
+.keys .key.edit button{background:transparent;box-shadow:inset 0 0 0 1.5px var(--hair)}
+.cust{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(10,12,20,.22);opacity:0;pointer-events:none;transition:opacity .2s}
+body.dark .cust{background:rgba(0,0,0,.45)}
+.cust.open{opacity:1;pointer-events:auto}
+.cust .glass{margin:0 10px calc(env(safe-area-inset-bottom) + 10px);border-radius:28px;max-height:82vh;overflow:auto;padding:8px 16px 16px;transform:translateY(40px);transition:transform .35s var(--spring)}
+.cust.open .glass{transform:none}
+.cust .top{display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0}
+.cust .top b{font-size:17px}
+.cust h3{margin:14px 2px 6px;font-size:13px;line-height:16px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.ctl{display:flex;align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--hair)}
+.ctl:last-child{border-bottom:0}
+.ctl .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--hover);flex:none}
+.ctl .n{flex:1;font-size:17px}
+.ctl button{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;position:relative}
+.ctl button::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--hover)}
+.ctl button svg{position:relative}
+.ctl .rm{color:#fff}.ctl .rm::before{background:#FF3B30}
+.ctl .add{color:#fff}.ctl .add::before{background:#34C759}
+.ctl .up{color:var(--ink2)}
+/* what this phone sent, on the TV */
+.sent{padding:14px 14px 16px}
+.sent .sh{display:flex;align-items:center;justify-content:space-between}
+.sent h2{margin:0;font-size:13px;line-height:16px;color:var(--ink2);font-weight:600}
+.strip{display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-bottom:2px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.thumb{position:relative;flex:none;width:76px;height:76px;border-radius:12px;overflow:hidden;background:var(--hover)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .v{position:absolute;left:6px;bottom:5px;color:#fff;font-size:11px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.thumb .x{position:absolute;right:5px;top:5px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:none;align-items:center;justify-content:center}
+.strip.editing .thumb .x{display:flex}
+/* Light · Auto · Dark */
+.seg{display:flex;padding:3px;border-radius:12px;background:var(--hover);gap:2px}
+.seg button{flex:1;height:34px;border-radius:9px;font-size:15px;font-weight:500;color:var(--ink2)}
+.seg button[aria-pressed=true]{background:var(--sel);color:var(--selink);font-weight:600}
+@media (max-height:700px){.keys{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}.keys::-webkit-scrollbar{display:none}.keys .key{flex:none;width:72px}}
+@media (max-width:360px){.pad .hint{font-size:12px;line-height:15px}}
+body.dark #pair .tvdisc{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 10px 26px rgba(0,0,0,.4)}
+body.dark .btn.dark{box-shadow:0 6px 16px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<!-- connecting -->
+<main id="pair" class="screen" hidden>
+  <div class="tvdisc" aria-hidden="true">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg>
+  </div>
+  <h1 id="pairTitle">Connect to your TV</h1>
+  <p class="lead">A remote and Glass on your phone, whenever you’re on the home Wi‑Fi.</p>
+  <div class="glass codebox">
+    <div class="muted" id="codeLabel">The TV shows</div>
+    <div class="code" id="codeShown" hidden></div>
+    <label for="codeIn" class="muted" id="codeAsk" hidden style="position:absolute;left:-9999px">Code on the TV</label>
+    <input id="codeIn" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000" hidden>
+    <div class="muted" id="codeNote" style="margin-top:6px">Check it matches, then allow this phone on the TV.</div>
+  </div>
+  <div class="actions">
+    <button class="btn dark" id="connect">Connect</button>
+    <div class="muted" id="pairStatus" role="status" aria-live="polite"></div>
+  </div>
+  <p class="muted foot">Nothing to install. To open Glass like an app, add this page to your Home Screen.</p>
+</main>
+
+<!-- connected -->
+<main id="app" class="screen" hidden>
+  <section class="page" id="remote" aria-label="Remote">
+    <div class="head">
+      <img class="mark" src="/icon.png" alt="" aria-hidden="true">
+      <div class="t"><div class="title" data-tv>TV</div><div class="sub" id="tvSub">Connected · on your home Wi‑Fi</div></div>
+      <button class="round" id="power" aria-label="Turn the TV off">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 4v8"/><path d="M7.4 7.2a6.8 6.8 0 1 0 9.2 0"/></svg>
+      </button>
+    </div>
+    <div class="glass now" id="now" hidden>
+      <div class="art" id="nowArt" aria-hidden="true"></div>
+      <div class="t"><div class="name" id="nowTitle"></div><div class="sub" id="nowSub"></div>
+        <div id="nowTime" hidden><div class="np"><i id="npBar"></i></div><div class="nt"><span id="npAt"></span><span id="npLeft"></span></div></div></div>
+      <button class="pp" aria-label="Play or pause" id="ppBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5.5" width="3.4" height="13" rx="1"/><rect x="13.6" y="5.5" width="3.4" height="13" rx="1"/></svg>
+      </button>
+    </div>
+    <div class="media" id="media" hidden>
+      <button data-media="prev" aria-label="Previous"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="6" width="2.2" height="12" rx="1"/><path d="M19 6.5v11l-9-5.5z"/></svg></button>
+      <button data-key="rewind" data-hold aria-label="Rewind"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.5 7v10l-7-5z"/><path d="M20 7v10l-7-5z"/></svg></button>
+      <button data-key="forward" data-hold aria-label="Fast forward"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4 7v10l7-5z"/><path d="M12.5 7v10l7-5z"/></svg></button>
+      <button data-media="next" aria-label="Next"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="16.8" y="6" width="2.2" height="12" rx="1"/><path d="M5 6.5v11l9-5.5z"/></svg></button>
+    </div>
+    <div class="glass pad" id="pad" role="application" aria-label="Touchpad: swipe to move, tap to select">
+      <button class="mode" id="modeBtn" aria-pressed="false" aria-label="Pointer: tap where the pointer is"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 3.5l11.5 7.4-5.1 1.4 3 6-2.5 1.2-2.9-6-4 3.6z"/></svg><span>Pointer</span></button>
+      <div class="chev" data-dir="left" style="left:14px;top:46%;margin-top:-11px" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6l-6 6 6 6"/></svg></div>
+      <div class="chev" data-dir="right" style="right:14px;top:46%;margin-top:-11px" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></div>
+      <div class="chev" data-dir="up" style="left:50%;top:14px;margin-left:-11px" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14.5l6-6 6 6"/></svg></div>
+      <div class="chev" data-dir="down" style="left:50%;bottom:44px;margin-left:-11px" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg></div>
+      <div class="center" id="padCenter" aria-hidden="true"></div>
+      <div class="touch" id="touch" aria-hidden="true"></div>
+      <div class="hint muted" id="padHint" role="status">Swipe or tap an arrow · tap the middle to select</div>
+    </div>
+    <div class="keys" id="keys" aria-label="Shortcuts (hold one to choose them)"></div>
+    <div class="glass vol">
+      <div class="lv">
+        <button data-key="voldown" data-hold aria-label="Volume down"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
+        <div class="meter"><div class="row"><span>Volume</span><b id="volNum">–</b></div><div class="bar"><i id="volBar"></i></div></div>
+        <button data-key="volup" data-hold aria-label="Volume up"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 6v12"/><path d="M6 12h12"/></svg></button>
+      </div>
+      <div class="lv" id="brightRow" hidden>
+        <button data-key="brightdown" data-hold aria-label="Brightness down"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
+        <div class="meter"><div class="row"><span>Brightness</span><b id="brightNum">–</b></div><div class="bar"><i id="brightBar"></i></div></div>
+        <button data-key="brightup" data-hold aria-label="Brightness up"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 6v12"/><path d="M6 12h12"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="appsTab" aria-label="Apps" hidden>
+    <div class="head">
+      <img class="mark" src="/icon.png" alt="" aria-hidden="true">
+      <div class="t"><div class="title">Apps</div><div class="sub">Tap to open on the TV · hold for more</div></div>
+    </div>
+    <div class="glass send" id="sendCard">
+      <button class="big" id="sendBtn" aria-label="Send photos and videos to the TV"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5l16-7-6.5 16-2.6-6.6z"/><path d="M10.9 13.9L20 4.5"/></svg></button>
+      <div class="t"><div class="n" style="font-size:17px;font-weight:600">Show on the TV</div><div class="muted" id="sendNote">Photos and videos from this phone, on the big screen</div>
+        <div class="progress" id="sendBar" hidden><i></i></div></div>
+      <input type="file" id="sendPick" accept="image/*,video/*" multiple hidden>
+    </div>
+    <div class="glass sent" id="sentCard" hidden>
+      <div class="sh"><h2>On the TV from your phones</h2><button class="btn small" id="sentEdit">Edit</button></div>
+      <div class="strip" id="sentStrip"></div>
+    </div>
+    <div class="glass" style="border-radius:28px"><div class="grid" id="grid"><div class="muted" style="grid-column:1/-1;text-align:center;padding:20px 0">Loading the TV’s apps…</div></div></div>
+  </section>
+
+  <section class="page" id="glassTab" aria-label="Glass" hidden>
+    <div class="head">
+      <img class="mark" src="/icon.png" alt="" aria-hidden="true">
+      <div class="t"><div class="title">Glass</div><div class="sub">The same conversation as on the TV</div></div>
+    </div>
+    <div class="talk" id="talk" aria-live="polite"></div>
+    <form class="glass compose" id="compose" autocomplete="off">
+      <label for="msg" style="position:absolute;left:-9999px">Message Glass</label>
+      <input id="msg" placeholder="Message Glass" enterkeyhint="send" autocapitalize="sentences">
+      <button class="go" id="goBtn" type="button" aria-label="Talk to Glass">
+        <svg class="mic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v2.5"/></svg>
+        <svg class="send" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>
+      </button>
+    </form>
+  </section>
+
+  <section class="page" id="tvTab" aria-label="TV" hidden>
+    <div class="head">
+      <img class="mark" src="/icon.png" alt="" aria-hidden="true">
+      <div class="t"><div class="title" data-tv>TV</div><div class="sub" id="glassVer">Glass</div></div>
+    </div>
+    <div class="glass card2">
+      <h2>The TV</h2>
+      <label class="line"><div class="t"><div class="n">Bluetooth</div><div class="muted">Headphones, speakers, gamepads, the remote</div></div><input type="checkbox" class="sw" id="optBt" switch></label>
+      <label class="line"><div class="t"><div class="n">Casting</div><div class="muted" id="castNote">Cast from YouTube, Netflix or Chrome, or mirror an Android phone</div></div><input type="checkbox" class="sw" id="optCast" switch></label>
+      <div class="line"><div class="t"><div class="n">Remote inside apps</div><div class="muted" id="helperNote">Ready</div></div></div>
+    </div>
+    <div class="glass card2">
+      <h2>Appearance</h2>
+      <div class="muted" style="margin:8px 0 10px">The TV and this remote: Auto is light by day and dark from 6 pm</div>
+      <div class="seg" id="lookSeg" role="group" aria-label="Appearance"><button data-look="light" aria-pressed="false">Light</button><button data-look="auto" aria-pressed="false">Auto</button><button data-look="dark" aria-pressed="false">Dark</button></div>
+    </div>
+    <div class="glass card2" id="updCard">
+      <h2>Updates</h2>
+      <div class="line"><div class="t"><div class="n" id="updName">Glass</div><div class="muted" id="updNote">Glass looks for a new version only when you ask</div>
+        <div class="progress" id="updBar" hidden><i></i></div></div><button class="btn small" id="updBtn">Check</button></div>
+      <ul class="notes" id="updNotes" hidden></ul>
+    </div>
+    <div class="glass card2">
+      <h2>This phone</h2>
+      <label class="line"><div class="t"><div class="n">Sounds</div><div class="muted">A quiet click as you press</div></div><input type="checkbox" class="sw" id="optSound" switch></label>
+      <div class="line"><div class="t"><div class="n">Shortcuts</div><div class="muted">The buttons under the touchpad</div></div><button class="btn small" id="custBtn">Choose</button></div>
+      <label class="line" id="hapticRow"><div class="t"><div class="n" id="hapticName">Vibration</div><div class="muted">A light tap under your finger</div></div><input type="checkbox" class="sw" id="optHaptic" switch></label>
+    </div>
+    <div class="glass card2">
+      <h2>Phones</h2>
+      <div id="phones"></div>
+      <div class="muted" style="margin-top:6px">To add another, open Controls › Phone on the TV.</div>
+    </div>
+  </section>
+
+  <nav class="tabs" aria-label="Glass">
+    <button data-tab="remote" aria-selected="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="8" y="2.5" width="8" height="19" rx="4"/><circle cx="12" cy="8" r="1.8"/><path d="M10.5 13.5h3"/><path d="M10.5 16.5h3"/></svg><span>Remote</span></button>
+    <button data-tab="appsTab" aria-selected="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg><span>Apps</span></button>
+    <button data-tab="glassTab" aria-selected="false"><img class="mark s" src="/icon.png" alt="" aria-hidden="true"><span>Glass</span></button>
+    <button data-tab="tvTab" aria-selected="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg><span>TV</span></button>
+  </nav>
+</main>
+
+<div class="glass sheet" id="typeSheet" role="dialog" aria-label="Type on the TV">
+  <div class="title" style="font-size:17px" id="typeTitle">Type on the TV</div>
+  <div class="muted" style="margin-top:2px" id="typeNote">Goes into the text box on the TV — open a search box there first.</div>
+  <form class="row2" id="typeForm" autocomplete="off">
+    <label for="typeIn" style="position:absolute;left:-9999px">Text</label>
+    <input id="typeIn" enterkeyhint="send" placeholder="Search for…" autocapitalize="off" autocorrect="off">
+    <button class="btn dark" style="height:48px;border-radius:14px;font-size:15px" id="typeGo">Send</button>
+  </form>
+  <div class="row3"><button class="btn quiet" type="button" id="typeDel">⌫ Delete</button><button class="btn quiet" type="button" id="typeEnter">↵ Enter</button></div>
+</div>
+<div class="menu" id="menu" role="dialog" aria-label="App"><div class="glass"><div class="ttl" id="menuTitle"></div><button class="do" id="menuOpen">Open on the TV</button><button id="menuClose">Close the app</button><button id="menuCancel">Cancel</button></div></div>
+<div class="cust" id="cust" role="dialog" aria-label="Shortcuts"><div class="glass">
+  <div class="top"><span style="width:60px"></span><b>Shortcuts</b><button class="btn small" id="custDone">Done</button></div>
+  <h3>On the remote</h3><div id="custOn"></div>
+  <h3>More</h3><div id="custMore"></div>
+</div></div>
+<div class="intro" id="intro" hidden><video id="introFilm" muted playsinline preload="auto"></video></div>
+<div class="glass toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var K = 'glass.key', key = null;
+  try { key = localStorage.getItem(K); } catch (e) {}
+  var token = location.pathname.indexOf('/p/') === 0 ? location.pathname.slice(3) : null;
+  var $ = function (id) { return document.getElementById(id); };
+  var tvName = 'TV';
+
+  function api(path, body) {
+    var h = { 'Content-Type': 'application/json' };
+    if (key) h.Authorization = 'Bearer ' + key;
+    return fetch(path, { method: body ? 'POST' : 'GET', headers: h, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' })
+      .then(function (r) {
+        if (r.status === 401) { forget(); throw new Error('pair'); }
+        return r.json();
+      });
+  }
+  function forget() {
+    key = null;
+    try { localStorage.removeItem(K); } catch (e) {}
+    showPair(null);
+  }
+  var toastT;
+  function toast(s) {
+    var t = $('toast'); t.textContent = s; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+  // ---- feel: a tap under the finger and a quiet click, like the phone's own keyboard -------------------------------
+  var feelOn = { sound: true, haptic: true };
+  try { var fo = JSON.parse(localStorage.getItem('glass.feel') || '{}'); if (fo.sound === false) feelOn.sound = false; if (fo.haptic === false) feelOn.haptic = false; } catch (e) {}
+  function saveFeel() { try { localStorage.setItem('glass.feel', JSON.stringify(feelOn)); } catch (e) {} }
+  var ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  var canBuzz = typeof navigator.vibrate === 'function' && !ios;
+  var canTick = ios && 'switch' in HTMLInputElement.prototype;   // iOS 18: flipping a switch plays the system's tick
+  var ticker = null;
+  function haptic(kind) {
+    if (!feelOn.haptic) return;
+    if (canBuzz) { try { navigator.vibrate(kind === 'double' ? [12, 70, 12] : kind === 'firm' ? 15 : kind === 'soft' ? 9 : 6); } catch (e) {} return; }
+    if (!canTick) return;
+    try {
+      if (!ticker) {
+        ticker = document.createElement('label'); ticker.setAttribute('aria-hidden', 'true'); ticker.style.display = 'none';
+        var sw = document.createElement('input'); sw.type = 'checkbox'; sw.setAttribute('switch', ''); ticker.appendChild(sw);
+        document.body.appendChild(ticker);
+      }
+      ticker.click();
+      if (kind === 'double') setTimeout(function () { ticker.click(); }, 80);
+    } catch (e) {}
+  }
+  var ac = null, grain = null;
+  function audio() {
+    if (ac) return ac;
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}   // iPhone: under music, silent with the switch
+    try { ac = new C(); } catch (e) { ac = null; }
+    return ac;
+  }
+  function wakeAudio() { var a = audio(); if (a && a.state === 'suspended') { try { a.resume(); } catch (e) {} } }
+  document.addEventListener('touchend', wakeAudio, { passive: true });
+  document.addEventListener('click', wakeAudio, { passive: true });
+  function sound(kind) {
+    if (!feelOn.sound) return;
+    var a = audio(); if (!a) return;
+    wakeAudio();
+    try {
+      var t = a.currentTime + 0.002;
+      if (!grain) {   // a short burst of noise, falling off fast: the body of a key's click
+        grain = a.createBuffer(1, Math.floor(a.sampleRate * 0.03), a.sampleRate);
+        var d = grain.getChannelData(0);
+        for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 5);
+      }
+      var src = a.createBufferSource(); src.buffer = grain;
+      var bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.9;
+      bp.frequency.value = kind === 'firm' ? 1500 : kind === 'soft' ? 1100 : kind === 'double' ? 700 : 2400;
+      var g = a.createGain(); g.gain.value = kind === 'firm' ? 1.4 : kind === 'soft' ? 0.9 : kind === 'double' ? 1.2 : 1.0;
+      src.connect(bp); bp.connect(g); g.connect(a.destination); src.start(t);
+      if (kind === 'firm' || kind === 'double') {   // and a soft, low thump under it
+        var o = a.createOscillator(), og = a.createGain();
+        o.frequency.setValueAtTime(kind === 'double' ? 140 : 190, t); o.frequency.exponentialRampToValueAtTime(90, t + 0.06);
+        og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.16, t + 0.004); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+        o.connect(og); og.connect(a.destination); o.start(t); o.stop(t + 0.09);
+      }
+      if (kind === 'double') { var s2 = a.createBufferSource(); s2.buffer = grain; s2.connect(bp); s2.start(t + 0.09); }
+    } catch (e) {}
+  }
+  function feel(kind) { haptic(kind); sound(kind); }
+
+  // ---- touch, as in an app ------------------------------------------------------------------------------------------
+  document.addEventListener('touchstart', function () {}, { passive: true });   // iOS: pressed states while touching
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); });   // no pinch-zoom
+  document.addEventListener('dblclick', function (e) { e.preventDefault(); });
+  document.addEventListener('contextmenu', function (e) { if (!(e.target.closest && e.target.closest('.says,.you,input'))) e.preventDefault(); });
+  // the keyboard: the app fits the part of the screen that's left, and the tabs step aside while typing
+  var vv = window.visualViewport;
+  function fit() {
+    var st = document.documentElement.style, typing = !!(document.activeElement && document.activeElement.tagName === 'INPUT');
+    if (vv) {
+      st.setProperty('--vh', vv.height + 'px'); st.setProperty('--vtop', vv.offsetTop + 'px');
+      var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      if (kb > 60 || (typing && window.innerHeight - vv.height > 60)) st.setProperty('--sab', '0px'); else st.removeProperty('--sab');
+    }
+    document.body.classList.toggle('typing', typing);
+  }
+  if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+  document.addEventListener('focusin', function () { fit(); setTimeout(fit, 300); });
+  // a tap outside the box puts the keyboard away (iOS keeps it up otherwise)
+  document.addEventListener('pointerdown', function (e) {
+    var a = document.activeElement;
+    if (a && a.tagName === 'INPUT' && !(e.target.closest && e.target.closest('form, .sheet'))) a.blur();
+  });
+  document.addEventListener('focusout', function () { setTimeout(fit, 60); setTimeout(fit, 350); });
+  fit();
+
+  // ---- connecting --------------------------------------------------------------------------------------------
+  function showPair(code) {
+    $('app').hidden = true; $('pair').hidden = false;
+    $('pairTitle').textContent = 'Connect to ' + tvName;
+    if (code) {
+      $('codeLabel').textContent = 'The TV shows';
+      $('codeShown').textContent = code; $('codeShown').hidden = false; $('codeIn').hidden = true;
+      $('codeNote').textContent = 'Check it matches, then allow this phone on the TV.';
+    } else {
+      $('codeLabel').textContent = 'Enter the code on the TV (Controls › Phone)';
+      $('codeShown').hidden = true; $('codeIn').hidden = false;
+      $('codeNote').textContent = 'Then allow this phone on the TV.';
+    }
+  }
+  $('connect').addEventListener('click', function () {
+    var b = $('connect'), st = $('pairStatus');
+    var typed = $('codeIn').hidden ? null : $('codeIn').value;
+    if (!token && (!typed || typed.replace(/\D/g, '').length !== 6)) { st.textContent = 'Type the six digits shown on the TV.'; return; }
+    b.disabled = true;
+    st.innerHTML = '<span class="wait"><span class="dots"><i></i><i></i><i></i></span>Press Allow on the TV</span>';
+    fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token, code: typed }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        b.disabled = false;
+        if (j.ok && j.key) {
+          key = j.key;
+          try { localStorage.setItem(K, key); } catch (e) {}
+          history.replaceState(null, '', '/');
+          token = null; st.textContent = '';
+          feel('firm');
+          showApp();
+        } else if (j.why === 'declined') {
+          st.textContent = 'The TV said not now.';
+        } else {
+          st.textContent = 'That didn’t work — open Controls › Phone on the TV for a fresh code.';
+        }
+      })
+      .catch(function () { b.disabled = false; st.textContent = 'Can’t reach the TV. Is this phone on the home Wi‑Fi?'; });
+  });
+
+  // ---- the app -----------------------------------------------------------------------------------------------
+  var tab = 'remote';
+  function showApp() {
+    $('pair').hidden = true; $('app').hidden = false;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tv]'), function (e) { e.textContent = tvName; });
+    pick(tab); poll();
+  }
+  function pick(name) {
+    tab = name;
+    ['remote', 'appsTab', 'glassTab', 'tvTab'].forEach(function (id) { $(id).hidden = id !== name; });
+    Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.setAttribute('aria-selected', b.dataset.tab === name ? 'true' : 'false'); });
+    if (name === 'glassTab') loadChat();
+    if (name === 'appsTab') { loadApps(); loadSent(); }
+    if (name === 'tvTab') loadUpd();
+    poll();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.addEventListener('click', function () { pick(b.dataset.tab); }); });
+
+  // buttons send keys, one after another (in order); a press the TV didn't take says so, now and then
+  var queue = Promise.resolve(), saidAt = 0, levelsT = null;
+  function press(k) {
+    queue = queue.then(function () {
+      return api('/api/key', { key: k }).then(function (j) { if (j && j.ok === false) missed('That didn’t reach the TV'); })
+        .catch(function (e) { if (!e || e.message !== 'pair') missed('Can’t reach the TV — is this phone on the home Wi‑Fi?'); });
+    });
+  }
+  function missed(s) { var n = Date.now(); if (n - saidAt < 5000) return; saidAt = n; feel('double'); toast(s); }
+  function levelsSoon() { clearTimeout(levelsT); levelsT = setTimeout(poll, 220); }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-key]'), function (b) {
+    var k = b.dataset.key;
+    if (b.hasAttribute('data-hold')) {   // − and +: on touch, then again and again while held
+      var t = null, downAt = 0;
+      var go = function () { feel('light'); press(k); levelsSoon(); };
+      b.addEventListener('pointerdown', function () { downAt = Date.now(); go(); clearTimeout(t); t = setTimeout(function again() { go(); t = setTimeout(again, 110); }, 420); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { b.addEventListener(ev, function () { clearTimeout(t); t = null; }); });
+      b.addEventListener('click', function () { if (Date.now() - downAt > 1500) go(); });   // a keyboard's or VoiceOver's press
+    } else {
+      b.addEventListener('click', function () { feel(k === 'playpause' || k === 'assistant' ? 'firm' : 'light'); press(k); });
+    }
+  });
+  var reach = true, screenOn = true;
+  $('power').addEventListener('click', function () {
+    feel('firm');
+    if (!reach) { toast('The TV is off or asleep — turn it on with its own remote'); return; }
+    if (!screenOn) { press('power'); toast('Turning ' + tvName + ' on…'); setTimeout(poll, 1500); return; }
+    ask('Turn ' + tvName + ' off?', 'Turn off', function () { feel('double'); press('power'); screenOn = false; syncPower(); setTimeout(poll, 2500); });
+  });
+  function syncPower() {
+    $('power').setAttribute('aria-label', !reach ? 'The TV is off' : screenOn ? 'Turn the TV off' : 'Turn the TV on');
+    $('power').style.opacity = reach ? '1' : '.45';
+    $('tvSub').textContent = !reach ? 'Can’t reach the TV · off or asleep?' : screenOn ? 'Connected · on your home Wi‑Fi' : 'The screen is off · tap ⏻ to turn it on';
+  }
+  // a small sheet from the bottom: one action and Cancel (or an app's Open / Close)
+  var menuDo = null;
+  function ask(title, label, fn, second, fn2) {
+    $('menuTitle').textContent = title; $('menuOpen').textContent = label; menuDo = [fn, fn2];
+    $('menuClose').hidden = !second; if (second) $('menuClose').textContent = second;
+    $('menu').classList.add('open');
+  }
+  function shut() { $('menu').classList.remove('open'); }
+  $('menuOpen').addEventListener('click', function () { shut(); if (menuDo && menuDo[0]) menuDo[0](); });
+  $('menuClose').addEventListener('click', function () { shut(); if (menuDo && menuDo[1]) menuDo[1](); });
+  $('menuCancel').addEventListener('click', function () { feel('light'); shut(); });
+  $('menu').addEventListener('click', function (e) { if (e.target === $('menu')) shut(); });
+
+  // the touchpad: a swipe moves a step every 40 px and, resting there, keeps going; a tap on an arrow moves one step
+  // (hold it to keep going); a tap in the middle selects
+  var pad = $('pad'), dot = $('touch'), STEP = 40, sx, sy, lx, ly, rx, ry, t0 = null, moved = false, last = null, rep = null, repeated = false;
+  var pointMode = false, pdx = 0, pdy = 0, px0 = 0, py0 = 0, pBusy = false, pT = null;
+  try { pointMode = localStorage.getItem('glass.point') === '1'; } catch (e) {}
+  function syncMode() {
+    $('modeBtn').classList.toggle('on', pointMode); $('modeBtn').setAttribute('aria-pressed', pointMode ? 'true' : 'false');
+    pad.classList.toggle('point', pointMode);
+    $('padHint').textContent = pointMode ? 'Drag to move the pointer on the TV · tap to click there' : 'Swipe or tap an arrow · tap the middle to select';
+  }
+  $('modeBtn').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  $('modeBtn').addEventListener('click', function (e) {
+    e.stopPropagation(); pointMode = !pointMode; feel('firm'); syncMode();
+    try { localStorage.setItem('glass.point', pointMode ? '1' : '0'); } catch (x) {}
+    toast(pointMode ? 'Pointer: drag to move it, tap to click' : 'Swipe: move between things with your finger');
+  });
+  // the pointer on the TV: where the finger goes, sent a few times a second (only the latest movement matters)
+  function pointer(phase, x, y) { api('/api/pointer', { p: phase, x: x || 0, y: y || 0 }).catch(function () {}); }
+  function flushPointer() {
+    pT = null;
+    if (pBusy || (!pdx && !pdy)) return;
+    var x = pdx, y = pdy; pdx = pdy = 0; pBusy = true;
+    api('/api/pointer', { p: 'm', x: x, y: y }).catch(function () {}).then(function () { pBusy = false; if (pdx || pdy) flushPointer(); });
+  }
+  var chev = {}; Array.prototype.forEach.call(pad.querySelectorAll('.chev'), function (c) { chev[c.dataset.dir] = c; });
+  function at(e) { var r = pad.getBoundingClientRect(); dot.style.left = (e.clientX - r.left) + 'px'; dot.style.top = (e.clientY - r.top) + 'px'; }
+  function flash(el) { if (!el) return; el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove('hit'); }, 150); }
+  function step(dir) { press(dir); flash(chev[dir]); feel('light'); }
+  function stopRep() { clearTimeout(rep); rep = null; }
+  function holdOn(dir, wait) { stopRep(); rep = setTimeout(function again() { repeated = true; step(dir); rep = setTimeout(again, 120); }, wait); }
+  function edge(e) {   // the arrow a touch is on, or null in the middle
+    var r = pad.getBoundingClientRect(), u = (e.clientX - r.left) / r.width - 0.5, v = (e.clientY - r.top) / r.height - 0.5;
+    if (Math.abs(u) < 0.27 && Math.abs(v) < 0.27) return null;
+    return Math.abs(u) > Math.abs(v) ? (u > 0 ? 'right' : 'left') : (v > 0 ? 'down' : 'up');
+  }
+  pad.addEventListener('pointerdown', function (e) {
+    pad.setPointerCapture(e.pointerId); sx = lx = rx = px0 = e.clientX; sy = ly = ry = py0 = e.clientY; t0 = performance.now(); moved = false; last = null; repeated = false;
+    pad.classList.add('on'); at(e);
+    pdx = pdy = 0;
+    if (pointMode) { pointer('s'); return; }   // the TV's pointer moves only in Pointer mode
+    var z = edge(e); if (z) holdOn(z, 450);   // holding an arrow keeps moving
+  });
+  pad.addEventListener('pointermove', function (e) {
+    if (t0 === null) return;
+    at(e);
+    if (pointMode) {
+      pdx += e.clientX - px0; pdy += e.clientY - py0; px0 = e.clientX; py0 = e.clientY;
+      if (!pT) pT = setTimeout(flushPointer, 45);
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) > 10) moved = true;
+      return;
+    }
+    var dx = e.clientX - lx, dy = e.clientY - ly;
+    if (!moved && !repeated && Math.hypot(e.clientX - sx, e.clientY - sy) > 12) stopRep();   // a swipe, not a held arrow
+    if (Math.abs(dx) >= STEP || Math.abs(dy) >= STEP) {
+      var dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+      if (dir === 'left' || dir === 'right') { lx += (dx > 0 ? 1 : -1) * STEP; ly = e.clientY; } else { ly += (dy > 0 ? 1 : -1) * STEP; lx = e.clientX; }
+      moved = true; last = dir; step(dir);
+      rx = e.clientX; ry = e.clientY; holdOn(dir, 450);   // resting after a swipe keeps going that way
+    } else if (moved && Math.hypot(e.clientX - rx, e.clientY - ry) > 6) {
+      rx = e.clientX; ry = e.clientY; if (last) holdOn(last, 450);   // still moving: not resting yet
+    }
+  });
+  function lift(e) {
+    if (t0 === null) return;
+    stopRep();
+    var quick = performance.now() - t0 < 450, tx = e.clientX - sx, ty = e.clientY - sy;
+    if (pointMode) {
+      flushPointer();
+      if (!moved && quick) { feel('firm'); flash($('padCenter')); pointer('c'); } else pointer('e');
+      t0 = null; pad.classList.remove('on'); return;
+    }
+    if (!moved && !repeated) {
+      if (quick && (Math.abs(tx) > 18 || Math.abs(ty) > 18)) {   // a short flick still moves one step
+        step(Math.abs(tx) > Math.abs(ty) ? (tx > 0 ? 'right' : 'left') : (ty > 0 ? 'down' : 'up'));
+      } else if (Math.abs(tx) <= 18 && Math.abs(ty) <= 18) {
+        var z = edge(e);
+        if (z) step(z); else { press('ok'); flash($('padCenter')); feel('firm'); }
+      }
+    }
+    t0 = null; pad.classList.remove('on');
+  }
+  pad.addEventListener('pointerup', lift);
+  pad.addEventListener('pointercancel', function () { stopRep(); t0 = null; pad.classList.remove('on'); if (pointMode) pointer('e'); });
+  syncMode();
+
+  // typing
+  function openType() { feel('light'); $('typeSheet').classList.add('open'); setTimeout(function () { $('typeIn').focus(); }, 60); }
+  var wants = null, autoOpened = false;
+  function typeFor(w, hint) {
+    var i = $('typeIn');
+    i.type = w === 'password' ? 'password' : w === 'email' ? 'email' : w === 'url' ? 'url' : 'text';
+    i.inputMode = w === 'number' ? 'numeric' : '';
+    i.setAttribute('enterkeyhint', w === 'search' ? 'search' : w === 'url' ? 'go' : 'send');
+    $('typeTitle').textContent = !w ? 'Type on the TV' : w === 'password' ? 'The TV is asking for a password' : w === 'email' ? 'The TV is asking for an email' : w === 'search' ? 'Search on the TV' : 'The TV is asking for text';
+    $('typeNote').textContent = hint ? hint : !w ? 'Goes into the text box on the TV — open a search box there first.' : w === 'password' ? 'Only the TV sees it — nothing is kept' : 'Type here, it goes straight into the box on the TV';
+    i.placeholder = w === 'search' ? 'Search for…' : w === 'password' ? 'Password' : '';
+  }
+  function sendText(enter) {
+    var t = $('typeIn').value; if (!t && !enter) return;
+    api('/api/text', { text: t, enter: !!enter }).then(function (j) {
+      if (j.ok) { $('typeIn').value = ''; feel('firm'); if (enter || !wants) { $('typeSheet').classList.remove('open'); $('typeIn').blur(); } toast(enter ? 'Sent' : 'Typed on the TV'); }
+      else { feel('double'); toast('No text box on the TV right now — open a search box first.'); }
+    }).catch(function () {});
+  }
+  $('typeForm').addEventListener('submit', function (e) { e.preventDefault(); sendText(wants === 'search' || wants === 'url'); });
+  $('typeDel').addEventListener('click', function () { feel('light'); press('del'); });
+  $('typeEnter').addEventListener('click', function () { feel('firm'); sendText(true); });
+  document.addEventListener('pointerdown', function (e) { var s = $('typeSheet'); if (s.classList.contains('open') && !s.contains(e.target) && e.target !== $('typeBtn')) s.classList.remove('open'); });
+
+  // Glass's updates: looked for only when someone asks (here, or on the TV: Settings › About this TV)
+  var updT = null;
+  function mb(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+  function upd(j) {
+    if (!j || !j.ok) return;
+    var rel = j.release, ph = j.phase || 'idle', busy = ph === 'checking' || ph === 'downloading' || ph === 'installing';
+    var avail = !!(rel && rel.newer);
+    $('updName').textContent = 'Glass ' + (j.glass || '') + (j.assistant ? ' · Assistant ' + j.assistant : '');
+    $('updNote').textContent = !j.ready ? 'Updates aren’t set up in this copy of Glass'
+      : ph === 'idle' ? (avail ? 'Glass ' + rel.version + ' is ready · ' + mb(rel.size) : 'Glass looks for a new version only when you ask')
+      : j.text;
+    $('updBar').hidden = ph !== 'downloading';
+    $('updBar').firstElementChild.style.width = Math.max(0, j.percent || 0) + '%';
+    var b = $('updBtn');
+    b.disabled = busy || !j.ready;
+    b.textContent = busy ? (ph === 'checking' ? 'Checking' : 'Updating') : avail ? 'Install' : 'Check';
+    b.dataset.do = avail ? 'install' : 'check';
+    var ul = $('updNotes'); ul.innerHTML = '';
+    if (avail && rel.notes && rel.notes.length) {
+      rel.notes.forEach(function (n) { var li = document.createElement('li'); li.textContent = n; ul.appendChild(li); });
+      ul.hidden = false;
+    } else ul.hidden = true;
+    clearTimeout(updT);
+    if (busy && tab === 'tvTab') updT = setTimeout(loadUpd, ph === 'downloading' ? 700 : 1500);
+  }
+  function loadUpd() {
+    clearTimeout(updT);
+    if (!key) return;
+    // while Glass replaces itself the TV doesn't answer for a moment: ask again until it does
+    api('/api/update').then(upd).catch(function (e) { if ((!e || e.message !== 'pair') && tab === 'tvTab') updT = setTimeout(loadUpd, 3000); });
+  }
+  $('updBtn').addEventListener('click', function () {
+    feel('light');
+    var d = $('updBtn').dataset.do || 'check';
+    $('updBtn').disabled = true;
+    api('/api/update', { do: d }).then(function (j) { upd(j); setTimeout(loadUpd, 500); })
+      .catch(function (e) { if (!e || e.message !== 'pair') { $('updBtn').disabled = false; toast('Can’t reach the TV — is this phone on the home Wi‑Fi?'); } });
+  });
+
+  // what's playing, the volume, the phones
+  var polling = null;
+  function poll() {
+    clearTimeout(polling);
+    if (!key || document.hidden) return;
+    api('/api/state').then(function (s) {
+      tvName = s.tv || tvName;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-tv]'), function (e) { e.textContent = tvName; });
+      $('glassVer').textContent = 'Glass ' + (s.glass || '');
+      reach = true; screenOn = s.screen !== false; syncPower();
+      var now = s.playing;
+      $('now').hidden = !now; $('media').hidden = !now;
+      if (now) {
+        $('nowTitle').textContent = now.title;
+        $('nowSub').textContent = (now.artist ? now.artist + ' · ' : '') + now.app + (now.playing ? '' : ' · Paused');
+        showArt(now.art || null, now.app);
+        var timed = now.dur > 0; $('nowTime').hidden = !timed;
+        if (timed) {
+          $('npAt').textContent = mmss(now.pos); $('npLeft').textContent = '−' + mmss(Math.max(0, now.dur - now.pos));
+          $('npBar').style.width = Math.min(100, 100 * now.pos / now.dur) + '%';
+        }
+        $('ppBtn').innerHTML = now.playing
+          ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5.5" width="3.4" height="13" rx="1"/><rect x="13.6" y="5.5" width="3.4" height="13" rx="1"/></svg>'
+          : '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+      }
+      theme(!!s.night);
+      Array.prototype.forEach.call($('lookSeg').children, function (b) { b.setAttribute('aria-pressed', b.dataset.look === (s.look || 'auto') ? 'true' : 'false'); });
+      if (s.volume) {
+        $('volNum').textContent = s.volume.muted ? 'Muted' : s.volume.level;
+        $('volBar').style.width = (s.volume.max ? Math.round(100 * s.volume.level / s.volume.max) : 0) + '%';
+      }
+      var br = s.bright;
+      $('brightRow').hidden = !br;
+      if (br) { $('brightNum').textContent = br.level; $('brightBar').style.width = (br.max ? Math.round(100 * br.level / br.max) : 0) + '%'; }
+      var hint = $('padHint'), ask = s.keys === 'asking';
+      hint.textContent = ask ? 'On the TV: tick “Always allow”, then OK — so this remote works inside apps'
+        : s.keys === 'declined' ? 'Inside apps, this remote needs Glass allowed on the TV'
+        : s.keys === 'off' ? 'Inside apps, this remote needs the TV’s network debugging'
+        : 'Swipe or tap an arrow · tap the middle to select';
+      hint.classList.toggle('ask', ask);
+      if (!ask && pointMode) hint.textContent = 'Drag to move the pointer on the TV · tap to click there';
+      $('helperNote').textContent = s.keys === 'ready' ? 'Ready — this phone works inside every app' : ask ? 'Answer on the TV: tick “Always allow”, then OK'
+        : s.keys === 'declined' ? 'Not allowed — open Settings › Remote & keyboard on the TV' : s.keys === 'off' ? 'Needs the TV’s network debugging' : 'Starting…';
+      if (document.activeElement !== $('optBt')) $('optBt').checked = !!s.bt;
+      if (document.activeElement !== $('optCast')) $('optCast').checked = !!s.casting;
+      var w = s.wants || null;
+      if (w && w !== wants) { typeFor(w, s.wantsHint); if (!$('typeSheet').classList.contains('open')) { $('typeSheet').classList.add('open'); autoOpened = true; feel('soft'); } }
+      if (!w && wants && autoOpened && document.activeElement !== $('typeIn')) { $('typeSheet').classList.remove('open'); autoOpened = false; }
+      if (!w && !wants) typeFor(null, null);
+      wants = w;
+      var ph = $('phones'); ph.textContent = '';
+      (s.phones || []).forEach(function (p) {
+        var line = document.createElement('div'); line.className = 'line';
+        var t = document.createElement('div'); t.className = 't';
+        var n = document.createElement('div'); n.className = 'n'; n.textContent = p.me ? 'This phone' : p.name;
+        var u = document.createElement('div'); u.className = 'muted'; u.textContent = p.me ? p.name + ' · connected now' : ago(p.seen);
+        t.appendChild(n); t.appendChild(u); line.appendChild(t);
+        if (p.me) {
+          var b = document.createElement('button'); b.className = 'btn small'; b.textContent = 'Remove';
+          b.addEventListener('click', function () { if (confirm('Remove this phone from the TV?')) api('/api/forget', {}).then(forget).catch(forget); });
+          line.appendChild(b);
+        }
+        ph.appendChild(line);
+      });
+    }).catch(function (e) { if (!e || e.message !== 'pair') { reach = false; syncPower(); } }).then(function () { polling = setTimeout(poll, tab === 'remote' ? 1500 : 5000); });
+  }
+  function ago(ms) {
+    var m = Math.round((Date.now() - ms) / 60000);
+    return m < 2 ? 'Used just now' : m < 60 ? 'Used ' + m + ' min ago' : m < 2880 ? 'Used ' + Math.round(m / 60) + ' h ago' : 'Used ' + Math.round(m / 1440) + ' days ago';
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { poll(); if (tab === 'glassTab') loadChat(); } });
+
+  // ---- Glass ----------------------------------------------------------------------------------------------------
+  var busy = false, chatT = null, lastJson = '';
+  function loadChat() {
+    clearTimeout(chatT);
+    if (!key || document.hidden || tab !== 'glassTab') return;
+    if (!busy) api('/api/chat').then(render).catch(function () {});
+    chatT = setTimeout(loadChat, 4000);
+  }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function render(j) {
+    if (!j || !j.ok) return;
+    var s = JSON.stringify(j.turns); if (s === lastJson) return; lastJson = s;
+    var box = $('talk'); box.textContent = '';
+    var turns = j.turns || [], first = true;
+    if (!turns.length) { var hi = el('div', 'says muted first', 'Ask Glass anything about the TV, or tell it what to do.'); box.appendChild(hi); return; }
+    turns.forEach(function (t, idx) {
+      var e = null;
+      if (t.who === 'you') e = el('div', 'you', t.text);
+      else if (t.who === 'glass') e = el('div', 'says', t.text);
+      else if (t.who === 'done') {
+        e = el('div', 'receipts');
+        (t.items || []).forEach(function (s) { var failed = s.indexOf('✕ ') === 0; e.appendChild(el('div', 'receipt', (failed ? '' : '✓ ') + (failed ? s.slice(2) : s))); });
+      } else if (t.who === 'ask') {
+        e = el('div', '');
+        e.appendChild(el('div', 'says', t.text));
+        var chips = el('div', 'chips'); chips.style.marginTop = '10px';
+        (t.items || []).forEach(function (s) {
+          var c = el('button', 'chip', s);
+          if (t.picked != null) { c.className = 'chip ' + (s === t.picked ? 'picked' : 'gone'); c.disabled = true; if (s === t.picked) c.textContent = '✓ ' + s; }
+          else c.addEventListener('click', function () { send(s, t.i); });
+          chips.appendChild(c);
+        });
+        e.appendChild(chips);
+      } else if (t.who === 'pick' && t.pick) {
+        var p = t.pick; e = el('div', 'card');
+        var top = el('div', 'top'); var w = el('div', '');
+        w.appendChild(el('div', 'ttl', p.title)); w.appendChild(el('div', 'muted', [p.meta, p.app].filter(Boolean).join(' · ')));
+        top.appendChild(w); e.appendChild(top);
+        if (p.why) e.appendChild(el('div', 'why', p.why));
+        var acts = el('div', 'acts');
+        var play = el('button', 'btn dark', 'Play on the TV'); play.style.height = '40px'; play.style.borderRadius = '12px'; play.style.fontSize = '15px';
+        play.addEventListener('click', function () { busy = true; api('/api/chat', { pick: p }).then(function (j2) { busy = false; render(j2); toast('Opening on the TV'); }).catch(function () { busy = false; }); });
+        var another = el('button', 'btn small', 'Another'); another.style.height = '40px';
+        another.addEventListener('click', function () { send('Another one'); });
+        acts.appendChild(play); acts.appendChild(another); e.appendChild(acts);
+      } else if (t.who === 'next' && idx === turns.length - 1) {
+        e = el('div', 'chips');
+        (t.items || []).forEach(function (s) { var c = el('button', 'chip', s); c.addEventListener('click', function () { send(s); }); e.appendChild(c); });
+      }
+      if (e) { if (first) { e.classList.add('first'); first = false; } box.appendChild(e); }
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+  function send(text, turn) {
+    if (busy || !text) return;
+    busy = true; feel('light');
+    var box = $('talk');
+    if (turn == null) { var y = el('div', 'you', text); if (!box.children.length) y.classList.add('first'); box.appendChild(y); }
+    var th = el('div', 'thinking'); th.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>'; box.appendChild(th);
+    box.scrollTop = box.scrollHeight;
+    var body = { text: text }; if (turn != null) body.turn = turn;
+    api('/api/chat', body).then(function (j) { busy = false; lastJson = ''; render(j); if (!document.hidden) feel('soft'); })
+      .catch(function () { busy = false; th.remove(); toast('Glass didn’t answer — try again.'); });
+  }
+  function sendTyped() { var t = $('msg').value.trim(); if (!t) return; $('msg').value = ''; syncGo(); send(t); }
+  $('compose').addEventListener('submit', function (e) { e.preventDefault(); sendTyped(); });
+  // the composer's button: Talk (the microphone) while it's empty, Send once there's something written
+  function syncGo() { var has = $('msg').value.trim().length > 0; $('compose').classList.toggle('has-text', has); $('goBtn').setAttribute('aria-label', has ? 'Send' : 'Talk to Glass'); }
+  $('msg').addEventListener('input', syncGo);
+  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, micTips = 0;
+  try { micTips = +(localStorage.getItem('glass.mic') || 0); } catch (e) {}
+  $('goBtn').addEventListener('click', function () {
+    if ($('compose').classList.contains('has-text')) { sendTyped(); return; }
+    if (Rec && window.isSecureContext) listen(); else dictate();
+  });
+  function dictate() {   // on the home Wi‑Fi a browser keeps its microphone to itself; the keyboard's own works anywhere
+    $('msg').focus(); feel('light');
+    if (micTips < 4) { micTips++; try { localStorage.setItem('glass.mic', micTips); } catch (e) {} toast('Tap the 🎤 on your keyboard, and talk'); }
+  }
+  function listen() {
+    if (rec) { rec.stop(); return; }
+    rec = new Rec(); rec.lang = navigator.language || 'en-IN'; rec.interimResults = true; rec.maxAlternatives = 1;
+    var heard = '';
+    $('goBtn').classList.add('listening'); $('msg').placeholder = 'Listening…'; feel('firm');
+    rec.onresult = function (ev) { var t = ''; for (var i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript; $('msg').value = t; heard = t; };
+    rec.onerror = function () {};
+    rec.onend = function () {
+      $('goBtn').classList.remove('listening'); $('msg').placeholder = 'Message Glass'; rec = null;
+      var t = heard.trim(); $('msg').value = ''; syncGo(); if (t) send(t);
+    };
+    try { rec.start(); } catch (e) { rec = null; $('goBtn').classList.remove('listening'); $('msg').placeholder = 'Message Glass'; dictate(); }
+  }
+
+  // ---- the TV's switches ------------------------------------------------------------------------------------------
+  $('optBt').addEventListener('change', function () {
+    var on = this.checked, box = this;
+    var go = function (sure) {
+      api('/api/bt', { on: on, sure: !!sure }).then(function (j) {
+        if (j.ok) { feel('firm'); return; }
+        if (j.why === 'remote') { box.checked = true; ask('The TV’s remote uses Bluetooth', 'Turn Bluetooth off anyway', function () { box.checked = false; go(true); }); return; }
+        box.checked = !on; feel('double'); toast('The TV wouldn’t change Bluetooth just now');
+      }).catch(function () { box.checked = !on; });
+    };
+    go(false);
+  });
+  $('optCast').addEventListener('change', function () {
+    var on = this.checked, box = this;
+    $('castNote').textContent = on ? 'Turning on…' : 'Turning off…';
+    api('/api/casting', { on: on }).then(function (j) {
+      if (j.ok) {
+        feel('firm');
+        $('castNote').textContent = on ? 'On — look for “' + tvName + '” behind the cast button in YouTube, Netflix or Chrome; Android phones: Cast screen' : 'Off — it saves the TV some memory';
+      } else {
+        box.checked = !on; feel('double');
+        $('castNote').textContent = 'First allow the remote helper on the TV (it asks once)';
+      }
+    }).catch(function () { box.checked = !on; });
+  });
+
+  // ---- apps, and sending photos and videos --------------------------------------------------------------------------
+  var icons = {}, appsAt = 0;
+  function icon(pkg, img) {
+    if (icons[pkg]) { img.src = icons[pkg]; return; }
+    fetch('/api/appicon?pkg=' + encodeURIComponent(pkg), { headers: { Authorization: 'Bearer ' + key } })
+      .then(function (r) { return r.ok ? r.blob() : null; })
+      .then(function (b) { if (b) { icons[pkg] = URL.createObjectURL(b); img.src = icons[pkg]; } }).catch(function () {});
+  }
+  function loadApps() {
+    if (Date.now() - appsAt < 15000) return;
+    api('/api/apps').then(function (j) {
+      if (!j || !j.ok) return;
+      appsAt = Date.now();
+      var g = $('grid'); g.textContent = '';
+      (j.apps || []).forEach(function (a) {
+        var b = el('button', 'app'); b.setAttribute('aria-label', a.label);
+        var ic = el('div', 'ic'); var img = document.createElement('img'); img.alt = ''; ic.appendChild(img);
+        if (a.open) ic.appendChild(el('i', 'dot'));
+        b.appendChild(ic); b.appendChild(el('div', 'l', a.label)); g.appendChild(b);
+        icon(a.pkg, img);
+        var held = null, longDone = false;
+        b.addEventListener('pointerdown', function () { longDone = false; held = setTimeout(function () { longDone = true; feel('firm');
+          ask(a.label, 'Open on the TV', function () { openApp(a); }, a.open ? 'Close the app' : null, function () { api('/api/close', { pkg: a.pkg }).then(function () { appsAt = 0; toast(a.label + ' is closed'); loadApps(); }); });
+        }, 520); });
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { b.addEventListener(ev, function () { clearTimeout(held); }); });
+        b.addEventListener('click', function () { if (!longDone) openApp(a); });
+      });
+    }).catch(function () {});
+  }
+  function openApp(a) {
+    feel('firm');
+    api('/api/open', { pkg: a.pkg }).then(function (j) { if (j.ok) { toast('Opening ' + a.label); appsAt = 0; } else { feel('double'); toast('Couldn’t open ' + a.label); } }).catch(function () {});
+  }
+  $('sendBtn').addEventListener('click', function () { feel('light'); $('sendPick').click(); });
+  $('sendPick').addEventListener('change', function () {
+    var files = Array.prototype.slice.call(this.files || []); this.value = '';
+    if (!files.length) return;
+    var bar = $('sendBar'), note = $('sendNote'), i = 0;
+    bar.hidden = false;
+    var next = function () {
+      if (i >= files.length) { bar.hidden = true; note.textContent = 'On the TV — ← → there for the others'; feel('double'); loadSent(true); return; }
+      var f = files[i++];
+      note.textContent = (files.length > 1 ? i + ' of ' + files.length + ' · ' : '') + 'Sending…';
+      var x = new XMLHttpRequest();
+      var name = f.name || ('photo-' + Date.now() + '.jpg');
+      if (!/\.[A-Za-z0-9]{2,5}$/.test(name)) name += f.type.indexOf('video') === 0 ? '.mp4' : '.jpg';
+      x.open('POST', '/api/send?name=' + encodeURIComponent(name) + '&show=1');
+      x.setRequestHeader('Authorization', 'Bearer ' + key);
+      x.upload.onprogress = function (ev) { if (ev.lengthComputable) bar.firstChild.style.width = Math.round(100 * ev.loaded / ev.total) + '%'; };
+      x.onload = function () {
+        var j = {}; try { j = JSON.parse(x.responseText); } catch (e) {}
+        if (!j.ok) {
+          feel('double');
+          toast(j.why === 'big' ? 'That one is too big (400 MB at most)' : j.why === 'space' ? 'The TV is short of space' : j.why === 'kind' ? 'The TV can show photos and videos' : 'That one didn’t arrive');
+        }
+        bar.firstChild.style.width = '0%'; next();
+      };
+      x.onerror = function () { feel('double'); toast('Can’t reach the TV'); bar.hidden = true; note.textContent = 'Photos and videos from this phone, on the big screen'; };
+      x.send(f);
+    };
+    next();
+  });
+
+  // ---- the look, what's playing, shortcuts, what was sent ---------------------------------------------------------
+  function theme(night) {
+    document.body.classList.toggle('dark', !!night);
+    var m = document.querySelector('meta[name=theme-color]'); if (m) m.content = night ? '#0B1022' : '#B9CDE3';
+  }
+  Array.prototype.forEach.call($('lookSeg').children, function (b) {
+    b.addEventListener('click', function () {
+      feel('light');
+      Array.prototype.forEach.call($('lookSeg').children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      api('/api/look', { look: b.dataset.look }).then(function (j) { if (j && j.ok) theme(!!j.night); }).catch(function () {});
+    });
+  });
+  function mmss(ms) { var t = Math.max(0, Math.round(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), x = t % 60;
+    return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (x < 10 ? '0' : '') + x; }
+  var artKey = null;
+  function showArt(k, app) {
+    if (k === artKey) return;
+    artKey = k;
+    var box = $('nowArt');
+    if (!k) { box.textContent = (app || '?').charAt(0); return; }
+    fetch('/api/art', { headers: { Authorization: 'Bearer ' + key }, cache: 'no-store' }).then(function (r) { return r.ok ? r.blob() : null; })
+      .then(function (b) {
+        if (!b || artKey !== k) return;
+        var img = document.createElement('img'); img.alt = ''; img.src = URL.createObjectURL(b);
+        box.textContent = ''; box.appendChild(img);
+      }).catch(function () {});
+  }
+  function media(what) { feel('firm'); api('/api/media', { do: what }).then(levelsSoon).catch(function () {}); }
+  $('ppBtn').addEventListener('click', function () { media('toggle'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-media]'), function (b) { b.addEventListener('click', function () { media(b.dataset.media); }); });
+
+  // the shortcuts under the touchpad, chosen like an iPhone's Control Center (stored on this phone)
+  var SV = function (inner) { return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>'; };
+  var CTL = {
+    back: { n: 'Back', i: SV('<path d="M9 7l-5 5 5 5"/><path d="M4 12h10a5 5 0 0 1 0 10h-2"/>'), go: function () { press('back'); } },
+    home: { n: 'Home', i: SV('<path d="M4 11l8-6.5 8 6.5v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5z"/>'), go: function () { press('home'); } },
+    assistant: { n: 'Glass', i: '<img class="mark s" src="/icon.png" alt="" aria-hidden="true" style="width:28px;height:28px;border-radius:7px">', go: function () { press('assistant'); } },
+    type: { n: 'Type', i: SV('<path d="M5 18L9.5 6h1L15 18"/><path d="M6.8 13.5h6.4"/><path d="M16 18l2.4-6h.6l2.4 6"/>'), go: openType, id: 'typeBtn' },
+    menu: { n: 'Control Center', i: SV('<path d="M5 7h9"/><path d="M18 7h1"/><circle cx="16" cy="7" r="2"/><path d="M5 17h3"/><path d="M12 17h7"/><circle cx="10" cy="17" r="2"/>'), go: function () { press('menu'); } },
+    mute: { n: 'Mute', i: SV('<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5"/><path d="M21 9.5l-5 5"/>'), go: function () { press('mute'); levelsSoon(); } },
+    playpause: { n: 'Play/Pause', i: SV('<path d="M5 6v12l7-6z" fill="currentColor"/><path d="M15.5 6v12"/><path d="M19.5 6v12"/>'), go: function () { media('toggle'); } },
+    search: { n: 'Search', i: SV('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'), go: function () { place(':search', 'Search'); } },
+    apps: { n: 'All apps', i: SV('<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>'), go: function () { place(':apps', 'All apps'); } },
+    files: { n: 'Files', i: SV('<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'), go: function () { place(':files', 'Files'); } },
+    settings: { n: 'Settings', i: SV('<path d="M7 4v6"/><path d="M7 14v6"/><circle cx="7" cy="12" r="2"/><path d="M17 4v2"/><path d="M17 10v10"/><circle cx="17" cy="8" r="2"/>'), go: function () { place(':settings', 'Settings'); } },
+    inputs: { n: 'Inputs', i: SV('<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M12 8.5v5.5"/><path d="M9.5 11.5L12 14l2.5-2.5"/><path d="M8 21h8"/>'), go: function () { place(':inputs', 'Inputs'); } }
+  };
+  var DEFAULT_KEYS = ['back', 'home', 'assistant', 'type'], keysOn = DEFAULT_KEYS.slice();
+  try { var ko = JSON.parse(localStorage.getItem('glass.keys') || 'null'); if (ko && ko.length) keysOn = ko.filter(function (k) { return CTL[k]; }); } catch (e) {}
+  if (!keysOn.length) keysOn = DEFAULT_KEYS.slice();
+  function place(p, label) { feel('firm'); api('/api/open', { pkg: p }).then(function (j) { if (!j.ok) { feel('double'); toast('Couldn’t open ' + label); } }).catch(function () {}); }
+  function renderKeys() {
+    var row = $('keys'); row.textContent = '';
+    keysOn.forEach(function (k) {
+      var c = CTL[k], w = el('div', 'key'), b = document.createElement('button');
+      b.setAttribute('aria-label', c.n); b.innerHTML = c.i; if (c.id) b.id = c.id;
+      var held = null, longDone = false;
+      b.addEventListener('pointerdown', function () { longDone = false; held = setTimeout(function () { longDone = true; feel('firm'); openCust(); }, 600); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { b.addEventListener(ev, function () { clearTimeout(held); }); });
+      b.addEventListener('click', function () { if (longDone) return; if (k !== 'type') feel(k === 'assistant' ? 'firm' : 'light'); c.go(); });
+      w.appendChild(b); w.appendChild(el('span', null, c.n)); row.appendChild(w);
+    });
+  }
+  function saveKeys() { try { localStorage.setItem('glass.keys', JSON.stringify(keysOn)); } catch (e) {} renderKeys(); fillCust(); }
+  function ctlRow(k, on, i) {
+    var c = CTL[k], r = el('div', 'ctl'), ic = el('div', 'ic'); ic.innerHTML = c.i; r.appendChild(ic); r.appendChild(el('div', 'n', c.n));
+    if (on && i > 0) {
+      var up = el('button', 'up'); up.setAttribute('aria-label', 'Move ' + c.n + ' up');
+      up.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14.5l6-6 6 6"/></svg>';
+      up.addEventListener('click', function () { feel('light'); keysOn.splice(i, 1); keysOn.splice(i - 1, 0, k); saveKeys(); });
+      r.appendChild(up);
+    }
+    var b = el('button', on ? 'rm' : 'add'); b.setAttribute('aria-label', (on ? 'Remove ' : 'Add ') + c.n);
+    b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">' + (on ? '<path d="M6 12h12"/>' : '<path d="M12 6v12"/><path d="M6 12h12"/>') + '</svg>';
+    b.addEventListener('click', function () {
+      if (on) { if (keysOn.length <= 1) { feel('double'); toast('Keep at least one'); return; } keysOn.splice(i, 1); }
+      else { if (keysOn.length >= 8) { feel('double'); toast('Eight at most: take one off first'); return; } keysOn.push(k); }
+      feel('light'); saveKeys();
+    });
+    r.appendChild(b);
+    return r;
+  }
+  function fillCust() {
+    var a = $('custOn'), m = $('custMore'); a.textContent = ''; m.textContent = '';
+    keysOn.forEach(function (k, i) { a.appendChild(ctlRow(k, true, i)); });
+    Object.keys(CTL).forEach(function (k) { if (keysOn.indexOf(k) < 0) m.appendChild(ctlRow(k, false, -1)); });
+  }
+  function openCust() { fillCust(); $('cust').classList.add('open'); }
+  $('custBtn').addEventListener('click', function () { feel('light'); openCust(); });
+  $('custDone').addEventListener('click', function () { feel('light'); $('cust').classList.remove('open'); });
+  $('cust').addEventListener('click', function (e) { if (e.target === $('cust')) $('cust').classList.remove('open'); });
+  renderKeys();
+
+  // photos and videos this phone (and others) sent: tap to show again, Edit to delete
+  var sentAt = 0;
+  function loadSent(force) {
+    if (!force && Date.now() - sentAt < 8000) return;
+    api('/api/sent').then(function (j) {
+      if (!j || !j.ok) return;
+      sentAt = Date.now();
+      var items = j.items || [], strip = $('sentStrip');
+      $('sentCard').hidden = !items.length; strip.textContent = '';
+      items.slice(0, 60).forEach(function (it) {
+        var t = el('button', 'thumb'); t.setAttribute('aria-label', it.name);
+        var img = document.createElement('img'); img.alt = ''; t.appendChild(img);
+        if (it.video) t.appendChild(el('span', 'v', 'Video'));
+        var x = el('span', 'x'); x.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>';
+        t.appendChild(x);
+        fetch('/api/sentthumb?name=' + encodeURIComponent(it.name), { headers: { Authorization: 'Bearer ' + key } })
+          .then(function (r) { return r.ok ? r.blob() : null; }).then(function (b) { if (b) img.src = URL.createObjectURL(b); }).catch(function () {});
+        var del = function () {
+          api('/api/sentdelete', { name: it.name }).then(function (r) { if (r.ok) { feel('firm'); toast('Deleted from the TV'); loadSent(true); } else { feel('double'); toast('Couldn’t delete it'); } });
+        };
+        t.addEventListener('click', function () {
+          if (strip.classList.contains('editing')) { feel('light'); if (confirm('Delete this from the TV?')) del(); return; }
+          feel('light');
+          ask(it.video ? 'Video' : 'Photo', 'Show on the TV', function () { api('/api/show', { name: it.name }); toast('On the TV'); }, 'Delete from the TV', del);
+        });
+        strip.appendChild(t);
+      });
+    }).catch(function () {});
+  }
+  $('sentEdit').addEventListener('click', function () {
+    var s2 = $('sentStrip'), on = !s2.classList.contains('editing');
+    s2.classList.toggle('editing', on); this.textContent = on ? 'Done' : 'Edit'; feel('light');
+  });
+
+  // ---- this phone's settings --------------------------------------------------------------------------------------
+  $('optSound').checked = feelOn.sound; $('optHaptic').checked = feelOn.haptic;
+  $('optSound').addEventListener('change', function () { feelOn.sound = this.checked; saveFeel(); if (this.checked) sound('firm'); });
+  $('optHaptic').addEventListener('change', function () { feelOn.haptic = this.checked; saveFeel(); if (this.checked) haptic('firm'); });
+  if (!canBuzz && !canTick) $('hapticRow').hidden = true;
+  if (ios) $('hapticName').textContent = 'Haptics';
+
+  // ---- start ----------------------------------------------------------------------------------------------------
+  function intro(night) {
+    var seen = false;
+    try { seen = sessionStorage.getItem('glass.intro') === '1'; sessionStorage.setItem('glass.intro', '1'); } catch (e) {}
+    if (seen || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var box = $('intro'), v = $('introFilm'), done = false;
+    var end = function () { if (done) return; done = true; box.classList.add('gone'); setTimeout(function () { box.hidden = true; v.removeAttribute('src'); try { v.load(); } catch (e) {} }, 600); };
+    if (!night) box.classList.add('light');
+    box.hidden = false;
+    v.src = '/wake.mp4' + (night ? '?night=1' : '');
+    v.addEventListener('timeupdate', function () { if (v.currentTime > 1.95) end(); });
+    v.addEventListener('ended', end); v.addEventListener('error', end);
+    box.addEventListener('click', end);
+    var pr = v.play(); if (pr && pr.catch) pr.catch(end);
+    setTimeout(end, 4000);
+  }
+  fetch('/api/hello' + (token ? '?token=' + encodeURIComponent(token) : ''), { headers: key ? { Authorization: 'Bearer ' + key } : {}, cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (h) {
+      tvName = h.tv || 'TV';
+      theme(!!h.night);
+      intro(!!h.night);
+      if (h.paired) { if (token) history.replaceState(null, '', '/'); showApp(); }
+      else {
+        if (key) { key = null; try { localStorage.removeItem(K); } catch (e) {} }
+        if (token && !h.code) token = null;   // an old code: ask for the digits instead
+        showPair(h.code || null);
+      }
+    })
+    .catch(function () { showPair(null); $('pairStatus').textContent = 'Can’t reach the TV. Is this phone on the home Wi‑Fi?'; });
+})();
+</script>
+</body>
+</html>

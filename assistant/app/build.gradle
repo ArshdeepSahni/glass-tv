@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Keys live only in ~/Desktop/tv/.env on the Mac (never in chat, never in the source archive).
+def env = [:]
+def envFile = new File(System.getenv('GLASS_ENV') ?: "${System.getProperty('user.home')}/Desktop/tv/.env")
+if (envFile.exists()) {
+    envFile.eachLine { line ->
+        def t = line.trim()
+        if (t && !t.startsWith('#') && t.contains('=')) {
+            def i = t.indexOf('=')
+            env[t.substring(0, i).trim()] = t.substring(i + 1).trim().replaceAll(/^["']|["']$/, '')
+        }
+    }
+}
+def q = { String k, String d = '' -> '"' + (env[k] ?: d).replace('\\', '\\\\').replace('"', '\\"') + '"' }
+
+android {
+    namespace 'com.gathin.glass.assistant'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.gathin.glass.assistant'
+        minSdk 26
+        targetSdk 28
+        versionCode 4
+        versionName '3.5 glass marquee'
+        buildConfigField 'String', 'CF_ACCOUNT_ID', q('CF_ACCOUNT_ID')
+        buildConfigField 'String', 'CF_API_TOKEN', q('CF_API_TOKEN')
+        buildConfigField 'String', 'CF_DECIDE_MODEL', q('CF_DECIDE_MODEL', '@cf/meta/llama-3.1-8b-instruct-fast')
+        buildConfigField 'String', 'CF_CHAT_MODEL', q('CF_CHAT_MODEL', '@cf/meta/llama-3.3-70b-instruct-fp8-fast')
+        buildConfigField 'String', 'GROQ_API_KEY', q('GROQ_API_KEY')
+        buildConfigField 'String', 'GROQ_MODEL', q('GROQ_MODEL', 'openai/gpt-oss-120b')
+        buildConfigField 'String', 'CEREBRAS_API_KEY', q('CEREBRAS_API_KEY')
+        buildConfigField 'String', 'CEREBRAS_MODEL', q('CEREBRAS_MODEL', 'gpt-oss-120b')
+        buildConfigField 'String', 'OPENROUTER_API_KEY', q('OPENROUTER_API_KEY')
+        buildConfigField 'String', 'OPENROUTER_MODEL', q('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct:free')
+    }
+    buildFeatures { buildConfig true }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // springs for the glass (same physics as the desktop); R8 keeps only what's used
+    implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keys only: no accessibilityEventTypes (0), so the system never calls into the launcher for
+     accessibility events, which both services ignore. Key filtering depends only on
+     flagRequestFilterKeyEvents and canRequestFilterKeyEvents, not on the event types.
+     stock_home_redirect is the exception: with it set, HomeKeyService adds typeWindowStateChanged at runtime.
+     Glass: canRetrieveWindowContent lets the assistant read the app's screen when asked (Screen) and read the words
+     Google's voice screen hears when the remote's assistant button is pressed (Takeover). Nothing is read otherwise. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRequestFilterKeyEvents"
+    android:canRequestFilterKeyEvents="true"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/home_key_description" />

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Files opens what it shows in other apps through content:// links (FileProvider): the TV's own storage and
+     any USB drive under /storage or /mnt. Read-only grants, one file at a time. -->
+<paths>
+    <external-path name="tv" path="." />
+    <root-path name="storage" path="/storage" />
+    <root-path name="mnt" path="/mnt" />
+</paths>

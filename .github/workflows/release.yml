@@ -1,0 +1,139 @@
+name: Release
+
+# A version tag (v5.1, the first word of versionName in launcher/app/build.gradle; tools/release.sh makes it) builds
+# Glass, publishes it to Glass's update service on Cloudflare and makes a release page with what's new. TVs get it
+# when someone checks for updates (Settings › About this TV, or the phone's TV tab): nothing is pushed to them.
+# "Run workflow" on the Actions tab publishes what's on the branch the same way, without a release page.
+#
+# Secrets (tools/set-secrets.sh sets them): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, GLASS_UPDATE_TOKEN,
+# ANDROID_KEYSTORE_B64, and GLASS_ENV_FILE only if the assistant is to be part of releases.
+# Kept tight: only GitHub's own actions, pinned to exact commits (a moved tag can't change what runs here), and each
+# secret given only to the steps that need it.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Secrets are there
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GLASS_UPDATE_TOKEN: ${{ secrets.GLASS_UPDATE_TOKEN }}
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          missing=""
+          for s in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID GLASS_UPDATE_TOKEN ANDROID_KEYSTORE_B64; do
+            [ -n "${!s}" ] || missing="$missing $s"
+          done
+          if [ -n "$missing" ]; then echo "::error::Missing secrets:$missing (run tools/set-secrets.sh on the Mac)"; exit 1; fi
+
+      - name: Version
+        id: v
+        run: python3 updates/manifest.py version >> "$GITHUB_OUTPUT"
+
+      - name: The tag is that version
+        if: github.ref_type == 'tag'
+        env:
+          RELEASE: ${{ steps.v.outputs.release }}
+        run: |
+          if [ "${GITHUB_REF_NAME#v}" != "$RELEASE" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but launcher/app/build.gradle says $RELEASE"; exit 1
+          fi
+
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78   # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: |
+            launcher/**/*.gradle*
+            launcher/gradle/wrapper/gradle-wrapper.properties
+            assistant/**/*.gradle*
+
+      - name: Signing key (the one the Glass on the TV is signed with)
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          (umask 077; printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore)
+          chmod +x launcher/gradlew assistant/gradlew
+
+      - name: The update service's address
+        id: svc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 updates/publish.py prepare
+
+      - name: Build Glass
+        working-directory: launcher
+        env:
+          GLASS_UPDATE_URL: ${{ steps.svc.outputs.url }}
+          GLASS_UPDATE_TOKEN: ${{ secrets.GLASS_UPDATE_TOKEN }}
+        run: ./gradlew --no-daemon --console=plain assembleRelease
+
+      - name: Build the assistant
+        env:
+          GLASS_ENV_FILE: ${{ secrets.GLASS_ENV_FILE }}
+        run: |
+          if [ -z "$GLASS_ENV_FILE" ]; then
+            echo "No GLASS_ENV_FILE secret: this release leaves the assistant on the TVs as it is."
+            exit 0
+          fi
+          (umask 077; printf '%s\n' "$GLASS_ENV_FILE" > "$RUNNER_TEMP/glass.env")
+          cd assistant
+          GLASS_ENV="$RUNNER_TEMP/glass.env" ./gradlew --no-daemon --console=plain assembleRelease
+          rm -f "$RUNNER_TEMP/glass.env"
+
+      - name: The release's list
+        env:
+          RELEASE: ${{ steps.v.outputs.release }}
+        run: |
+          mkdir -p dist
+          cp launcher/app/build/outputs/apk/release/app-release.apk "dist/glass-$RELEASE-launcher.apk"
+          if [ -f assistant/app/build/outputs/apk/release/app-release.apk ]; then
+            cp assistant/app/build/outputs/apk/release/app-release.apk "dist/glass-$RELEASE-assistant.apk"
+          fi
+          python3 updates/manifest.py build dist
+
+      - name: Publish to the update service
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GLASS_UPDATE_TOKEN: ${{ secrets.GLASS_UPDATE_TOKEN }}
+        run: python3 updates/publish.py deploy dist
+
+      - name: Ask it the way a TV does
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GLASS_UPDATE_TOKEN: ${{ secrets.GLASS_UPDATE_TOKEN }}
+        run: python3 updates/publish.py verify dist
+
+      - name: Release page (what's new and fingerprints; the APKs stay on the update service)
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE: ${{ steps.v.outputs.release }}
+        run: gh release create "$GITHUB_REF_NAME" --title "Glass $RELEASE" --notes-file dist/notes.md dist/SHA256SUMS.txt
+
+      - name: Forget the keys
+        if: always()
+        run: rm -f ~/.android/debug.keystore "$RUNNER_TEMP/glass.env"
