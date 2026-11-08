@@ -4,6 +4,11 @@ One section per release. The heading is the version as in `launcher/app/build.gr
 word), and the `- ` lines under it are what the TV and the phone show as what's new, so they're short and in plain
 words. `tools/release.sh` won't tag a version that has no section here.
 
+## 5.1.1 — The first update
+
+- This version came to the TV through Glass's own update service
+- Nothing else changed
+
 ## 5.1 — Updates
 
 - Check for updates in Settings › About this TV, or on your phone's TV tab
