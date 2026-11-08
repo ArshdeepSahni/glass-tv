@@ -15,7 +15,8 @@ import android.view.KeyEvent;
  * the assistant key when it reaches us, the night volume ceiling); OK, Back, Menu and the D-pad belong to the
  * app in front. On the desktop, Menu opens Controls (GlassHomeActivity handles it).
  *
- *   Home        tap: the desktop (anything open on it closes) · hold: recent apps
+ *   Home        tap: the desktop (anything open on it closes) · hold: the open apps, over the app in front
+ *               (it stays as it is underneath) or over the desktop
  *   Assistant   Glass's assistant (normally it arrives as the TV's assistant, see GlassVoiceService)
  *   Volume/Mute the TV applies Vol+/- itself; Glass follows the change (volumeChanged): its HUD over the
  *               TV's bar, and the night ceiling after 11 pm
@@ -51,9 +52,15 @@ final class GlassKeys {
                 if (e.getRepeatCount() > 0) return true;
                 homeHeld = false;
                 if (hold != null) h.removeCallbacks(hold);
+                // which apps are really open, asked now: the list is fresh by the time the hold counts
+                Running.refresh(svc, pkgs -> { });
                 hold = () -> {
                     homeHeld = true;
-                    open(svc, "switcher");
+                    if (Glass.selfInFront() && GlassHomeActivity.showing() && !Hud.open()) {
+                        open(svc, "switcher");    // on the desktop: the desktop's own
+                    } else {
+                        Hud.of(svc).switcher();   // inside an app: over it, without leaving it
+                    }
                 };
                 h.postDelayed(hold, HOLD_MS);
             } else if (e.getAction() == KeyEvent.ACTION_UP) {

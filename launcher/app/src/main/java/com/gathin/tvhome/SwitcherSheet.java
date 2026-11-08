@@ -13,15 +13,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Hold Home: your open apps on clear glass, newest first, the one before the current already chosen so a hold and
- * OK goes back. ← → choose, OK opens, ↑ closes the app (it leaves for the top, as a card flicked away), hold OK for
- * its menu, Back closes. The chosen card rises on the focus platter. Cards 150 × 180 at radius 20 (16 in from 36).
+ * Hold Home: the apps that are open, newest first, on glass. Inside an app it opens over the app (Hud: the app stays
+ * as it is underneath); on the desktop, over the desktop. The app on screen comes first and the one before it is
+ * already chosen, so a hold and OK goes back to it. ← → choose (every card, however many), OK opens, ↑ closes the
+ * app (its card leaves for the top, as a card flicked away), hold OK for its menu, Back closes. The chosen card rises
+ * on the focus platter, with room around it in the glass so nothing of it is cut.
+ *
+ * Only apps that are really open are here (Running.recent): with the key helper up, the ones whose process is still
+ * there; without it, the ones in front in the last 3 hours. Never one closed since, never one from days ago.
  */
 final class SwitcherSheet extends Sheet {
+    /** At most this many cards: they fit across the screen at every Text size. */
+    static final int MAX = 7;
+    /** Card width, gap between cards, and the glass around them (room for the chosen card's rise and shadow). */
+    private static final float CW = 150, GAP = 14, PAD = 26, ICON = 96;
     private final List<View> cards = new ArrayList<>();
     private final List<String> pkgs = new ArrayList<>();
     private LinearLayout row;
     private TextView hint;
+    private String onScreen;
 
     SwitcherSheet(Desk a) {
         super(a);
@@ -30,94 +40,103 @@ final class SwitcherSheet extends Sheet {
 
     @Override
     void build() {
+        boolean over = a.overApp();
         View dim = new View(c);
-        dim.setBackgroundColor(Ui.a(0x000000, .10f));
+        dim.setBackgroundColor(Ui.a(0x000000, over ? .34f : .10f));
         root.addView(dim, Ui.fill());
-        List<String[]> recent = new ArrayList<>();
-        String front = Glass.front();
-        for (String[] r : LastOpened.recent(c, 12)) {
-            if (recent.size() >= 6) break;
-            if (c.getPackageManager().getLeanbackLaunchIntentForPackage(r[0]) == null) continue;   // TV apps only
-            if (r[0].equals(c.getPackageName())) continue;
-            try {
-                if (Running.closed(c, r[0], Long.parseLong(r[1]))) continue;   // closed here since: it left
-            } catch (NumberFormatException ignored) {
-            }
-            recent.add(r);
-        }
+        onScreen = Glass.selfInFront() ? null : Glass.front();
+        List<String[]> recent = Running.recent(c, MAX);
+        // the card grows with the words (Text size); the glass leaves PAD all round it
+        float nameH = Ui.boxf(20, 15), agoH = Ui.boxf(17, 13);
+        float ch = 20 + ICON + 12 + nameH + 3 + agoH + 16;
         int n = Math.max(1, recent.size());
-        float w = n * 150 + (n - 1) * 12 + 32, h = 180 + 32;
+        float w = n * CW + (n - 1) * GAP + 2 * PAD, h = ch + 2 * PAD;
         float x = (1280 - w) / 2, y = (720 - h) / 2;
-        pane = new Pane(c, false, x, y, w, h, 36);
+        pane = new Pane(c, over, x, y, w, h, 36);
+        pane.overApp(over);
         FrameLayout holder = new FrameLayout(c);
         holder.setClipChildren(false);
+        holder.setClipToPadding(false);
         row = Ui.row(c);
         row.setGravity(Gravity.CENTER);
         row.setClipChildren(false);
-        row.setPadding(Ui.px(16), Ui.px(16), Ui.px(16), Ui.px(16));
+        row.setClipToPadding(false);
+        row.setPadding(Ui.px(PAD), Ui.px(PAD), Ui.px(PAD), Ui.px(PAD));
         holder.addView(row, Ui.fill());
-        if (recent.isEmpty()) empty();
+        if (recent.isEmpty()) empty(ch);
         long now = System.currentTimeMillis();
-        for (int i = 0; i < recent.size(); i++) {
-            String pkg = recent.get(i)[0];
-            long when = Long.parseLong(recent.get(i)[1]);
+        for (String[] r : recent) {
+            String pkg = r[0];
+            long when;
+            try {
+                when = Long.parseLong(r[1]);
+            } catch (NumberFormatException e) {
+                when = now;
+            }
             LinearLayout card = Ui.column(c);
             card.setGravity(Gravity.CENTER_HORIZONTAL);
-            card.setPadding(0, Ui.px(18), 0, 0);
+            card.setPadding(Ui.px(8), Ui.px(20), Ui.px(8), Ui.px(16));
+            card.setClipChildren(false);
+            card.setClipToPadding(false);
             card.setFocusable(true);
             card.setClickable(true);
             card.setLongClickable(true);
             ImageView icon = new ImageView(c);
-            icon.setImageBitmap(AppIcons.of(c, pkg, Ui.px(96)));
+            icon.setImageBitmap(AppIcons.of(c, pkg, Ui.px(ICON)));
+            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
             icon.setOutlineProvider(new android.view.ViewOutlineProvider() {
                 @Override
                 public void getOutline(View v, android.graphics.Outline o) {
-                    o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), Ui.pxf(96 * 0.235f));
+                    o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), Ui.pxf(ICON * 0.235f));
                 }
             });
             icon.setElevation(Ui.pxf(2));
-            card.addView(icon, Ui.ll(96, 96));
+            card.addView(icon, Ui.ll(ICON, ICON));
             CharSequence l = Glass.label(c, pkg);
             TextView name = Ui.line(c, 15, t.ink, 500, l == null ? pkg : l.toString());
-            card.addView(name, Ui.ll(-1, -1, 0, 12));
-            boolean live = pkg.equals(front) && !Glass.selfInFront();
-            String ago = live ? "Open now" : now - when < DateUtils.MINUTE_IN_MILLIS ? "Just now"
+            name.setGravity(Gravity.CENTER);
+            name.setTag("clip-ok");   // a long name scrolls into view while its card is chosen (Ui.marquee)
+            card.addView(name, Ui.ll(-2, nameH, 0, 12));
+            boolean live = pkg.equals(onScreen);
+            String ago = live ? "On screen" : now - when < DateUtils.MINUTE_IN_MILLIS ? "Just now"
                     : DateUtils.getRelativeTimeSpanString(when, now, DateUtils.MINUTE_IN_MILLIS).toString();
-            card.addView(Ui.line(c, 13, t.ink3, 400, ago), Ui.ll(-1, -1, 0, 6));
-            Ui.focusRing(card, 20);
-            Ui.lift(card, 1.05f, 10);
+            TextView sub = Ui.line(c, 13, t.ink3, 400, ago);
+            sub.setGravity(Gravity.CENTER);
+            card.addView(sub, Ui.ll(-2, agoH, 0, 3));
+            Ui.focusRing(card, 22);
+            Ui.lift(card, 1.05f, 8);
             card.setOnFocusChangeListener((v, has) -> {
                 name.setTypeface(Ui.face(c, has ? 600 : 500));
                 if (has) Sound.tick();
             });
             card.setOnClickListener(v -> {
                 a.dismiss(this);
-                a.launch(pkg, icon);
+                if (!pkg.equals(onScreen)) a.launch(pkg, icon);   // the one on screen: just back to it, as it was
             });
             card.setOnLongClickListener(v -> {
                 menu(pkg, v);
                 return true;
             });
-            row.addView(card, Ui.ll(150, 180, cards.isEmpty() ? 0 : 12, 0));
+            row.addView(card, Ui.ll(CW, ch, cards.isEmpty() ? 0 : GAP, 0));
             cards.add(card);
             pkgs.add(pkg);
         }
         pane.addView(holder, Ui.fill());
         root.addView(pane, pane.params());
         pane.bake(c);
-        hint = Ui.text(c, 13, t.ink, 400);
-        hint.setAlpha(0.7f);
+        hint = Ui.text(c, 13, over ? 0xFFFFFFFF : t.ink, 400);
+        hint.setAlpha(over ? 0.85f : 0.7f);
         hint.setGravity(Gravity.CENTER);
         hint.setText(recent.isEmpty() ? "Hold Home" : "← → choose · OK open · ↑ close the app · hold OK for more");
         root.addView(hint, Ui.at(0, y + h + 16, 1280, -1));
     }
 
-    private void empty() {
+    private void empty(float ch) {
         TextView none = Ui.text(c, 15, t.ink2, 400);
         none.setText("Apps you open will line up here");
         none.setGravity(Gravity.CENTER);
         none.setFocusable(true);
-        row.addView(none, Ui.ll(150, 180));
+        row.addView(none, Ui.ll(CW, ch));
         cards.add(none);
         pkgs.add(null);
     }
@@ -125,9 +144,8 @@ final class SwitcherSheet extends Sheet {
     @Override
     View firstFocus() {
         if (cards.isEmpty()) return null;
-        // the one before what's in front: hold Home, OK, and you're back
-        String front = Glass.front();
-        if (cards.size() > 1 && front != null && !Glass.selfInFront() && front.equals(pkgs.get(0))) return cards.get(1);
+        // the one before the app on screen: hold Home, OK, and you're back in it
+        if (cards.size() > 1 && onScreen != null && onScreen.equals(pkgs.get(0))) return cards.get(1);
         return cards.get(0);
     }
 
@@ -140,7 +158,7 @@ final class SwitcherSheet extends Sheet {
                 return true;
             }
         }
-        return false;
+        return true;   // ↑ never leaves the cards
     }
 
     /** The app closes; its card leaves for the top and the others close the gap, focus on the next one. */
@@ -153,6 +171,7 @@ final class SwitcherSheet extends Sheet {
         card.setFocusable(false);
         int next = Math.min(i, cards.size() - 1);
         if (next >= 0) cards.get(next).requestFocus();
+        if (pkg.equals(onScreen)) onScreen = null;
         Running.close(c, pkg, a::runningChanged);
         card.animate().translationY(-Ui.pxf(70)).alpha(0f).setDuration(Ui.ms(220)).setInterpolator(Ui.EIN).withEndAction(() -> {
             row.removeView(card);
@@ -161,7 +180,8 @@ final class SwitcherSheet extends Sheet {
                 lp.leftMargin = 0;
                 cards.get(0).setLayoutParams(lp);
             } else {
-                empty();
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) card.getLayoutParams();
+                empty(lp.height / Ui.s);
                 hint.setText("Hold Home");
                 cards.get(0).requestFocus();
             }
@@ -183,7 +203,7 @@ final class SwitcherSheet extends Sheet {
         int[] loc = new int[2];
         card.getLocationOnScreen(loc);
         float x = Math.max(Ui.EDGE, Math.min(1280 - Ui.EDGE - 200, loc[0] / Ui.s - 25));
-        float y = loc[1] / Ui.s + 150;
+        float y = Math.min(720 - 110, loc[1] / Ui.s + card.getHeight() / Ui.s - 24);
         a.stack(new Menu(a, rows, x, y, 200, false), card);
     }
 }

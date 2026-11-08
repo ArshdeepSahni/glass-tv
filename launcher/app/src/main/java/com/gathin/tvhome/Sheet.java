@@ -124,7 +124,12 @@ abstract class Sheet {
         pane.unpour(cx, () -> pane.animate().alpha(0f).setDuration(Ui.ms(60)).withEndAction(end).start());
     }
 
-    /** Full-screen and transparent: keeps focus inside the sheet; a push against the edge bumps. */
+    /**
+     * Full-screen and transparent: keeps focus inside the sheet; a push against the edge bumps. The next focus is
+     * looked for among the sheet's own views only. (Looked for in the whole window, a view of the desktop under the
+     * sheet, a widget or a dock icon, could be the nearest one in that direction; refused, it left focus stuck where
+     * it was: the switcher's cards couldn't be reached past the second.)
+     */
     static final class Trap extends FrameLayout {
         Trap(Context c) {
             super(c);
@@ -133,7 +138,9 @@ abstract class Sheet {
 
         @Override
         public View focusSearch(View focused, int direction) {
-            View next = super.focusSearch(focused, direction);
+            View next = focused != null && inside(focused)
+                    ? android.view.FocusFinder.getInstance().findNextFocus(this, focused, direction)
+                    : super.focusSearch(focused, direction);
             if (next != null && inside(next)) return next;
             Sound.bump();
             return focused;

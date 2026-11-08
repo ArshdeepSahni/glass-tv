@@ -3,19 +3,23 @@ package com.gathin.tvhome;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
  * Which apps are open in the background (the dock's dashes, the switcher's cards), and closing one.
  *
- * An app that Glass saw in front in the last 3 hours counts, unless it has been closed since: by Glass (the switcher,
- * the dock's menu), or by anything else (Force stop in the TV's settings, the TV running short of memory). That last
- * part needs the key helper (Keys), the one thing on the TV that may list every app's process; while it isn't up,
+ * An app Glass saw in front counts while its process is still there (and it was in front in the last 12 hours), unless
+ * it has been closed since: by Glass (the switcher, the dock's menu), or by anything else (Force stop in the TV's
+ * settings, the TV running short of memory). Knowing about the process needs the key helper (Keys), the one thing on
+ * the TV that may list every app's process; while it isn't up, an app counts for 3 hours after it was in front, and
  * what Glass closed itself is still left out.
  *
  * Closing goes through the helper when it's up (as Android's own Force stop does it); without it, Android lets Glass
@@ -27,6 +31,8 @@ final class Running {
 
     private static final String PREFS = "closed_apps";
     private static final long RECENT_MS = 3L * 60 * 60 * 1000;
+    /** With its process known to be there: in front within this long (an app left running since yesterday isn't "open"). */
+    private static final long ALIVE_MS = 12L * 60 * 60 * 1000;
     /** A list of processes this fresh stands in for a new one. */
     private static final long FRESH_MS = 20_000;
 
@@ -53,14 +59,39 @@ final class Running {
             } catch (NumberFormatException e) {
                 continue;
             }
-            if (now - at > RECENT_MS) continue;
             if (closed.getLong(r[0], 0L) > at) continue;   // closed after it was last in front
-            if (live != null && !live.contains(r[0])) continue;   // its process is gone (force-stopped, out of memory)
+            if (live != null) {
+                if (!live.contains(r[0])) continue;      // its process is gone (force-stopped, out of memory)
+                if (now - at > ALIVE_MS) continue;       // still in memory, but not used today
+            } else if (now - at > RECENT_MS) {
+                continue;                                // nobody to ask: the last 3 hours
+            }
             s.add(r[0]);
         }
         String front = Glass.front();
         if (front != null && !Glass.selfInFront() && closed.getLong(front, 0L) < LastOpened.get(c, front) + 1) s.add(front);
         return s;
+    }
+
+    /**
+     * The apps to switch between, newest first (the switcher): what quick() counts, TV apps only, in the order they
+     * were last in front; the app in front first. {package, when it was last in front}.
+     */
+    static List<String[]> recent(Context c, int max) {
+        Set<String> open = quick(c);
+        PackageManager pm = c.getPackageManager();
+        String front = Glass.selfInFront() ? null : Glass.front();
+        List<String[]> out = new ArrayList<>();
+        for (String[] r : LastOpened.recent(c, 24)) {
+            if (!open.remove(r[0])) continue;
+            if (r[0].equals(c.getPackageName()) || pm.getLeanbackLaunchIntentForPackage(r[0]) == null) continue;
+            if (r[0].equals(front)) out.add(0, r); else out.add(r);
+        }
+        // in front but never noted (started some other way): it's still the one on screen
+        if (front != null && open.contains(front) && !front.equals(c.getPackageName()) && pm.getLeanbackLaunchIntentForPackage(front) != null) {
+            out.add(0, new String[]{front, String.valueOf(System.currentTimeMillis())});
+        }
+        return out.size() > max ? new ArrayList<>(out.subList(0, max)) : out;
     }
 
     /** The same, after asking the helper for every app's process (in the background); `done` runs on the main thread. */

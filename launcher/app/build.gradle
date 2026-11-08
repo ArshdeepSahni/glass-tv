@@ -34,7 +34,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 22
-        versionName '5.1.2 glass updates'
+        versionName '5.2 glass switcher'
         buildConfigField 'String', 'UPDATE_URL', "\"${updateSetting('GLASS_UPDATE_URL')}\""
         buildConfigField 'String', 'UPDATE_TOKEN', "\"${updateSetting('GLASS_UPDATE_TOKEN')}\""
     }

@@ -4,8 +4,12 @@ One section per release. The heading is the version as in `launcher/app/build.gr
 word), and the `- ` lines under it are what the TV and the phone show as what's new, so they're short and in plain
 words. `tools/release.sh` won't tag a version that has no section here.
 
-## 5.1.2 — Tidier updates
+## 5.2 — The app switcher
 
+- Hold Home inside an app: the switcher opens over it, without going home first
+- Only apps that are really open show up, the one on screen first
+- ← → reach every app in the switcher, however many are open
+- Nothing around the chosen app is cut off any more
 - The downloaded update is cleared away once Glass has restarted on it
 
 ## 5.1.1 — The first update

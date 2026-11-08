@@ -153,9 +153,29 @@ final class Hud implements Desk {
         });
     }
 
+    /** Hold Home inside an app: the open apps over it (the app stays as it is underneath). Held again: away. */
+    void switcher() {
+        Sheet top = sheets.isEmpty() ? null : sheets.get(sheets.size() - 1);
+        if (top instanceof SwitcherSheet) {
+            dismiss(top);
+            return;
+        }
+        withTone(() -> show(new SwitcherSheet(this), null));
+    }
+
     @Override
     public void show(Sheet s, View anchor) {
         for (Sheet o : new ArrayList<>(sheets)) dismiss(o);
+        put(s, anchor);
+    }
+
+    /** Over what's open (a card's menu over the switcher): what's under it stays, and gets the focus back after. */
+    @Override
+    public void stack(Sheet s, View anchor) {
+        put(s, anchor);
+    }
+
+    private void put(Sheet s, View anchor) {
         ensureWindow();
         if (root == null) return;
         Ui.Tone saved = Ui.t;
@@ -173,11 +193,6 @@ final class Hud implements Desk {
     }
 
     @Override
-    public void stack(Sheet s, View anchor) {
-        show(s, anchor);
-    }
-
-    @Override
     public void dismiss(Sheet s) {
         if (s == null || s.closing || !sheets.contains(s)) return;
         sheets.remove(s);
@@ -187,6 +202,15 @@ final class Hud implements Desk {
             if (root != null) root.removeView(r);
             dropWindow();
         });
+        Sheet top = sheets.isEmpty() ? null : sheets.get(sheets.size() - 1);
+        if (top != null && !top.closing) {   // focus back where it was in the sheet under it
+            View back = s.anchor;
+            if (back != null && back.isAttachedToWindow() && back.isShown() && top.root.inside(back)) back.requestFocus();
+            else {
+                View f = top.firstFocus();
+                if (f != null) f.requestFocus();
+            }
+        }
     }
 
     // ---- the volume HUD -------------------------------------------------------------------------------------
@@ -540,6 +564,15 @@ final class Hud implements Desk {
         Intent i = svc.getPackageManager().getLaunchIntentForPackage(GlassKeys.ASSISTANT);
         if (i == null) return;
         GlassKeys.start(svc, GlassKeys.assistant(svc, i));
+    }
+
+    @Override
+    public void openAppInfo(String pkg) {
+        closeAll();
+        try {
+            svc.startActivity(SystemSettings.appInfo(svc, pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (RuntimeException ignored) {
+        }
     }
 
     @Override public List<String[]> allApps() { return GlassHomeActivity.apps(svc); }
