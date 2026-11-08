@@ -122,7 +122,7 @@ def check():
           f'sha256 starts {hashlib.sha256(tok.encode()).hexdigest()[:8]}')
     print(f'account ID: {"32 hex characters" if re.fullmatch(r"[0-9a-f]{32}", acc) else "NOT 32 hex characters"}, '
           f'sha256 starts {hashlib.sha256(acc.encode()).hexdigest()[:8]}')
-    good = True
+    good, located = True, False
     for name, path in (('verify (a user token)', '/user/tokens/verify'), ('verify (an account token)', f'/accounts/{acc}/tokens/verify'),
                        ('the accounts it reaches', '/accounts?per_page=50'), ('the workers.dev name', f'/accounts/{acc}/workers/subdomain')):
         status, j, wa = probe(API + path)
@@ -139,8 +139,12 @@ def check():
         if ok and 'workers.dev' in name:
             more = ', there' if (j.get('result') or {}).get('subdomain') else ', none yet'
         print(f'{name}: HTTP {status}{more}' + (f' ({said})' if said else '') + (f' [WWW-Authenticate: {wa}]' if wa else ''))
+        located |= '9109' in said
         if 'workers.dev' in name:
             good = ok or status == 404
+    if not good and located:
+        sys.exit('The token only works from certain IP addresses (its Client IP Address Filtering), and GitHub\'s machines '
+                 'aren\'t among them: in Cloudflare, edit the token and remove that filter (its value stays the same)')
     if not good:
         sys.exit('The Cloudflare token or account doesn\'t work from here: run tools/set-secrets.sh with a current token')
 

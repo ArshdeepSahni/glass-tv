@@ -29,7 +29,8 @@ note "GitHub repository: found"
 # ---- Cloudflare ----------------------------------------------------------------------------------------------------
 echo
 echo "Cloudflare: dash.cloudflare.com › My Profile › API Tokens › Create Token › \"Edit Cloudflare Workers\" › Use template,"
-echo "pick your account under Account Resources, then Continue › Create Token, and copy it."
+echo "pick your account under Account Resources, leave Client IP Address Filtering empty (GitHub's machines change"
+echo "address every run, so a filter shuts them out), then Continue › Create Token, and copy it."
 printf 'Paste the token here, then press Return (nothing shows while you paste): '
 read -rs CF; echo
 CF="$(printf '%s' "$CF" | tr -d '[:space:]')"

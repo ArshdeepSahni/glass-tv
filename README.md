@@ -62,7 +62,7 @@ and APKs. What the release workflow needs lives in GitHub's encrypted secrets, s
 
 | Secret | What it is |
 |---|---|
-| `CLOUDFLARE_API_TOKEN` | A Cloudflare token from the *Edit Cloudflare Workers* template: deploys the Worker and fills its storage |
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare token from the *Edit Cloudflare Workers* template: deploys the Worker and fills its storage. No *Client IP Address Filtering*: GitHub's machines change address every run |
 | `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account it's in |
 | `GLASS_UPDATE_TOKEN` | The update service's key: built into Glass, and the Worker answers nothing without it |
 | `ANDROID_KEYSTORE_B64` | This Mac's Android signing key, so builds on GitHub update the Glass already on the TV |
