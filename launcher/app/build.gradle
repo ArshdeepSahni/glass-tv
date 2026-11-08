@@ -43,14 +43,25 @@ android {
         buildConfig true
     }
 
+    signingConfigs {
+        // The key the Glass on the TV is signed with (Android only takes an update signed alike). The release
+        // workflow passes it as GLASS_KEYSTORE; on the Mac it's the Mac's own Android debug key, which is the same
+        // key. A debug keystore: "android" for both passwords, alias AndroidDebugKey.
+        glass {
+            storeFile file(System.getenv('GLASS_KEYSTORE') ?: "${System.getProperty('user.home')}/.android/debug.keystore")
+            storePassword 'android'
+            keyAlias 'AndroidDebugKey'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
         release {
             // R8 strips and optimises the code (AndroidX included): smaller APK, faster start on a slow TV CPU.
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.glass
         }
     }
 

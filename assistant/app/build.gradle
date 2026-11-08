@@ -37,12 +37,24 @@ android {
         buildConfigField 'String', 'OPENROUTER_MODEL', q('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct:free')
     }
     buildFeatures { buildConfig true }
+    signingConfigs {
+        // The key the Glass on the TV is signed with (Android only takes an update signed alike). The release
+        // workflow passes it as GLASS_KEYSTORE; on the Mac it's the Mac's own Android debug key, which is the same
+        // key. A debug keystore: "android" for both passwords, alias AndroidDebugKey.
+        glass {
+            storeFile file(System.getenv('GLASS_KEYSTORE') ?: "${System.getProperty('user.home')}/.android/debug.keystore")
+            storePassword 'android'
+            keyAlias 'AndroidDebugKey'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.glass
         }
     }
     compileOptions {

@@ -72,8 +72,7 @@ jobs:
         env:
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: |
-          mkdir -p ~/.android
-          (umask 077; printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore)
+          (umask 077; printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/glass.keystore")
           chmod +x launcher/gradlew assistant/gradlew
 
       - name: The Cloudflare token works
@@ -94,11 +93,13 @@ jobs:
         env:
           GLASS_UPDATE_URL: ${{ steps.svc.outputs.url }}
           GLASS_UPDATE_TOKEN: ${{ secrets.GLASS_UPDATE_TOKEN }}
+          GLASS_KEYSTORE: ${{ runner.temp }}/glass.keystore
         run: ./gradlew --no-daemon --console=plain assembleRelease
 
       - name: Build the assistant
         env:
           GLASS_ENV_FILE: ${{ secrets.GLASS_ENV_FILE }}
+          GLASS_KEYSTORE: ${{ runner.temp }}/glass.keystore
         run: |
           if [ -z "$GLASS_ENV_FILE" ]; then
             echo "No GLASS_ENV_FILE secret: this release leaves the assistant on the TVs as it is."
@@ -108,6 +109,23 @@ jobs:
           cd assistant
           GLASS_ENV="$RUNNER_TEMP/glass.env" ./gradlew --no-daemon --console=plain assembleRelease
           rm -f "$RUNNER_TEMP/glass.env"
+
+      - name: Signed with the TV's key
+        run: |
+          # The TV takes an update only when it's signed like the Glass it has (updates/signing-cert.sha256: that
+          # key's certificate, public in every APK). Anything else stops here, before it's published.
+          want=$(tr -d ' \n' < updates/signing-cert.sha256)
+          signer=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          key=$(keytool -list -v -keystore "$RUNNER_TEMP/glass.keystore" -storepass android 2>/dev/null | grep -m1 'SHA256:' | sed 's/.*SHA256: //' | tr -d ':' | tr 'A-F' 'a-f')
+          echo "the key in ANDROID_KEYSTORE_B64 is the TV's: $([ "$key" = "$want" ] && echo yes || echo NO)"
+          bad=0
+          for apk in launcher/app/build/outputs/apk/release/app-release.apk assistant/app/build/outputs/apk/release/app-release.apk; do
+            [ -f "$apk" ] || continue
+            got=$("$signer" verify --print-certs "$apk" | grep -m1 'SHA-256 digest' | sed 's/.*: //')
+            echo "${apk%%/*} is signed with the TV's key: $([ "$got" = "$want" ] && echo yes || echo NO)"
+            [ "$got" = "$want" ] || bad=1
+          done
+          if [ "$bad" = 1 ]; then echo "::error::Not signed with the key the TV has: nothing was published"; exit 1; fi
 
       - name: The release's list
         env:
@@ -140,7 +158,12 @@ jobs:
           RELEASE: ${{ steps.v.outputs.release }}
         run: |
           TAG="v$RELEASE"
-          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "$TAG has its release page already"; exit 0; fi
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            # published again: the page follows what the TVs now get
+            gh release edit "$TAG" -R "$GITHUB_REPOSITORY" --notes-file dist/notes.md >/dev/null
+            gh release upload "$TAG" -R "$GITHUB_REPOSITORY" dist/SHA256SUMS.txt --clobber
+            echo "$TAG's release page: updated"; exit 0
+          fi
           # "Run workflow" finishes the page of a version that's tagged already (when its tag's run stopped early)
           if [ "$GITHUB_REF_TYPE" != tag ] && ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
             echo "$TAG isn't tagged, so no release page (tools/release.sh tags a version)"; exit 0
@@ -149,4 +172,4 @@ jobs:
 
       - name: Forget the keys
         if: always()
-        run: rm -f ~/.android/debug.keystore "$RUNNER_TEMP/glass.env"
+        run: rm -f "$RUNNER_TEMP/glass.keystore" "$RUNNER_TEMP/glass.env"
