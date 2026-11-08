@@ -125,12 +125,14 @@ abstract class Sheet {
     }
 
     /**
-     * Full-screen and transparent: keeps focus inside the sheet; a push against the edge bumps. The next focus is
-     * looked for among the sheet's own views only. (Looked for in the whole window, a view of the desktop under the
-     * sheet, a widget or a dock icon, could be the nearest one in that direction; refused, it left focus stuck where
-     * it was: the switcher's cards couldn't be reached past the second.)
+     * Full-screen and transparent: keeps focus inside the sheet; a push against the edge bumps. The window's own
+     * search can find the nearest view that way outside the sheet: a desktop widget or dock icon under it. That one
+     * is refused, and then the nearest one inside is taken if it's in line with where focus is (the switcher's next
+     * card). Refusing it and stopping there is what left focus stuck on the switcher's second card.
      */
     static final class Trap extends FrameLayout {
+        private final android.graphics.Rect from = new android.graphics.Rect(), to = new android.graphics.Rect();
+
         Trap(Context c) {
             super(c);
             setClipChildren(false);
@@ -138,12 +140,25 @@ abstract class Sheet {
 
         @Override
         public View focusSearch(View focused, int direction) {
-            View next = focused != null && inside(focused)
-                    ? android.view.FocusFinder.getInstance().findNextFocus(this, focused, direction)
-                    : super.focusSearch(focused, direction);
+            View next = super.focusSearch(focused, direction);
             if (next != null && inside(next)) return next;
+            if (focused != null && inside(focused)) {
+                View own = android.view.FocusFinder.getInstance().findNextFocus(this, focused, direction);
+                if (own != null && own != focused && inLine(focused, own, direction)) return own;
+            }
             Sound.bump();
             return focused;
+        }
+
+        /** Side by side for ← →, one above the other for ↑ ↓ (overlapping across the move). */
+        private boolean inLine(View a, View b, int direction) {
+            a.getDrawingRect(from);
+            offsetDescendantRectToMyCoords(a, from);
+            b.getDrawingRect(to);
+            offsetDescendantRectToMyCoords(b, to);
+            if (direction == View.FOCUS_LEFT || direction == View.FOCUS_RIGHT) return to.top < from.bottom && to.bottom > from.top;
+            if (direction == View.FOCUS_UP || direction == View.FOCUS_DOWN) return to.left < from.right && to.right > from.left;
+            return true;
         }
 
         boolean inside(View v) {
