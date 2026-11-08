@@ -83,6 +83,10 @@ final class Widgets {
     }
 
     static List<String> on(Context c, String place) {
+        if (Sample.on && Sample.size >= 0 && "desktop".equals(place)) {   // a picture of one size: every widget at it
+            return new ArrayList<>(Sample.size == L ? Arrays.asList("clock", "weather", "playing")
+                    : Arrays.asList("clock", "weather", "playing", "calendar", "photos"));
+        }
         String s = Glass.prefs(c).getString(key(place), "");
         List<String> out = new ArrayList<>();
         for (String id : s.split(",")) if (!id.isEmpty()) out.add(id);
@@ -103,12 +107,14 @@ final class Widgets {
     }
 
     static int size(Context c, String id) {
+        if (Sample.on && Sample.size >= 0) return Sample.size;
         int d = "calendar".equals(id) ? L : M;
         return Math.max(S, Math.min(L, Glass.prefs(c).getInt("wsize_" + id, d)));
     }
 
     /** {x, y} in design px, or null when it hasn't been placed yet. */
     static float[] pos(Context c, String id) {
+        if (Sample.on && Sample.size >= 0) return null;   // wherever there's room, top left first
         String s = Glass.prefs(c).getString("wpos_" + id, null);
         if (s == null) return null;
         try {
@@ -120,6 +126,7 @@ final class Widgets {
     }
 
     static void keep(Context c, String id, float x, float y, int size) {
+        if (Sample.on && Sample.size >= 0) return;   // a picture's layout is never saved over the owner's
         Glass.prefs(c).edit().putString("wpos_" + id, Math.round(x) + "," + Math.round(y)).putInt("wsize_" + id, size).apply();
     }
 

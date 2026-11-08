@@ -372,29 +372,13 @@ def step_home(ui, c):
     else:
         t.open("keys")
         ui.say(title="Allow Glass's helper",
-               text="The TV asks once more, this time for Glass itself (glass@tv). Its helper lets your phone "
-                    "press keys inside any app, and lets Glass install its updates.",
+               text="The TV asks once more, this time for Glass itself (glass@tv). Glass uses it to install its own "
+                    "updates and, if you connect a phone as a remote, to press keys for it in any app.",
                lines=ALLOW, items=[], clock=True)
         ok = ui.wait(t.keys_up, every=2.0, timeout=120)
         ui.say(lines=[])
         items[4] = ["done", "Glass's helper", "running"] if ok else ["skip", "Glass's helper", "asks when needed"]
     show()
-    if c.facts and c.facts.get("vendor") == "homwee":
-        bloat = tvmod.debloat_list()
-        off = t.disabled()
-        todo = [p for p in bloat if p not in off]
-        if todo:
-            b = ui.choose("Turn off the TV's promotions?",
-                          "On this TV model, %d of its own apps only show ads and promoted rows or run in the "
-                          "background. They're turned off, not removed: ./glass restore turns them back on."
-                          % len(bloat), [("Turn them off", "recommended"), ("Leave them", "")])
-            if b == 0:
-                ui.say(text="Turning off the TV's promotions")
-                for i, p in enumerate(todo):
-                    t.sh("pm disable-user --user 0 %s" % p)
-                    ui.progress((i + 1) / float(len(todo)), "%d of %d" % (i + 1, len(todo)))
-                ui.say(progress=None)
-                ui.log("   turned off: %d of %d" % (len([p for p in todo if p in t.disabled()]), len(todo)))
     if t.awake():
         t.press_home()
     ui.done("Glass is home")

@@ -388,8 +388,8 @@ final class Updates {
      * Glass started again a moment ago after replacing itself, with About this TV on screen when Install was pressed:
      * that page comes back (saying it's updated) instead of the TV dropping into the app that was under Glass. Called
      * when the remote helper connects, which is what starts Glass again. An update started from a phone while another
-     * app was in front stays out of the way (Glass says so the next time it's opened). Updates started by 5.3 don't
-     * say where they started, and come back.
+     * app was in front stays out of the way (Glass says so the next time it's opened). An update started by an older
+     * Glass doesn't say where it started, and comes back.
      */
     static void comeBack(Context c) {
         String to = Glass.prefs(c).getString(PENDING, null);

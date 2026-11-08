@@ -192,21 +192,14 @@ def home(ui):
         pause(ui, 0.6)
         items[i][0] = "done"
     ui.say(title="Allow Glass's helper",
-           text="The TV asks once more, this time for Glass itself (glass@tv). Its helper lets your phone press "
-                "keys inside any app, and lets Glass install its updates.", lines=ALLOW, items=[], clock=True)
+           text="The TV asks once more, this time for Glass itself (glass@tv). Glass uses it to install its own "
+                "updates and, if you connect a phone as a remote, to press keys for it in any app.", lines=ALLOW,
+           items=[], clock=True)
     end = time.time() + 3.5
     ui.wait(lambda: time.time() > end, every=0.2)
     items[4] = ["done", "Glass's helper", "running"]
     ui.say(title="Make Glass home", text="", lines=[], items=[tuple(x) for x in items])
     pause(ui, 0.5)
-    b = ui.choose("Turn off the TV's promotions?",
-                  "On this TV model, 16 of its own apps only show ads and promoted rows or run in the background. "
-                  "They're turned off, not removed: ./glass restore turns them back on.",
-                  [("Turn them off", "recommended"), ("Leave them", "")])
-    if b == 0:
-        ui.say(text="Turning off the TV's promotions")
-        fill(ui, 1.6, lambda f: "%d of 16" % (f * 16))
-        ui.say(progress=None)
     ui.done("Glass is home")
 
 

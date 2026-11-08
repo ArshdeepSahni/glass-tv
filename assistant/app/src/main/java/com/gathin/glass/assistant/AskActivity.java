@@ -6,6 +6,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.RectF;
 import android.graphics.Canvas;
 import android.graphics.Outline;
 import android.graphics.Paint;
@@ -1146,17 +1149,19 @@ public final class AskActivity extends Activity {
         }
     }
 
-    /** The assistant's lens: an ink ring with a warm light inside that swells as you speak (level 0..1). */
+    /** Glass's mark, the glass orb holding a sunrise: it glows warmer and grows a little as it hears you. */
     static final class Lamp extends View {
-        private final Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG), dot = new Paint(Paint.ANTI_ALIAS_FLAG), glow = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint glow = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint pic = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+        private final RectF box = new RectF();
+        private final Bitmap orb;
         private final float size;
         private float level;
 
         Lamp(Context c, float size) {
             super(c);
             this.size = size;
-            ring.setStyle(Paint.Style.STROKE);
-            ring.setColor(Ui.t.ink);
+            orb = BitmapFactory.decodeResource(c.getResources(), R.drawable.glass_mark);
         }
 
         void setLevel(float l) {
@@ -1167,15 +1172,14 @@ public final class AskActivity extends Activity {
         @Override
         protected void onDraw(Canvas c) {
             float w = Ui.pxf(size), cx = getWidth() / 2f, cy = getHeight() / 2f;
-            float sw = w * 0.075f;
-            ring.setStrokeWidth(sw);
-            c.drawCircle(cx, cy, w / 2 - sw / 2, ring);
-            float r = w * 0.18f * (1f + 0.9f * level);
-            glow.setShader(new RadialGradient(cx, cy, r * 2.2f, new int[]{Ui.a(0xFF9664, .55f), 0x00FF9664}, null, Shader.TileMode.CLAMP));
-            c.drawCircle(cx, cy, r * 2.2f, glow);
-            dot.setShader(new RadialGradient(cx - r * .28f, cy - r * .32f, r * 1.3f, new int[]{0xFFFFE6CB, 0xFFFFA472, 0xFFE8604A},
-                    new float[]{0f, .55f, 1f}, Shader.TileMode.CLAMP));
-            c.drawCircle(cx, cy, r, dot);
+            if (level > 0.01f) {
+                float r = w * (0.62f + 0.5f * level);
+                glow.setShader(new RadialGradient(cx, cy, r, new int[]{Ui.a(0xFF9664, .12f + .42f * level), 0x00FF9664}, null, Shader.TileMode.CLAMP));
+                c.drawCircle(cx, cy, r, glow);
+            }
+            float s = w * (1f + 0.07f * level) / 2f;
+            box.set(cx - s, cy - s, cx + s, cy + s);
+            if (orb != null) c.drawBitmap(orb, null, box, pic);
         }
     }
 }

@@ -234,10 +234,14 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
             }
         }
         String sample = i == null ? null : i.getStringExtra("sample");
-        if (sample != null && (sample.equals("on") || sample.equals("off"))) {
+        if (sample != null) {
             i.removeExtra("sample");
-            if ((sample.equals("on")) != Sample.on) {
-                Sample.set(this, sample.equals("on"));
+            // on, off, or small / medium / large: every widget at that size (pictures of the sizes; on puts them back)
+            int size = sample.equals("small") ? Widgets.S : sample.equals("medium") ? Widgets.M : sample.equals("large") ? Widgets.L : -1;
+            boolean want = !sample.equals("off");
+            if (want != Sample.on || size != Sample.size) {
+                if (want != Sample.on) Sample.set(this, want);
+                Sample.size = want ? size : -1;
                 rebuild(i.getStringExtra(EXTRA_OPEN));
                 i.removeExtra(EXTRA_OPEN);
                 return;

@@ -43,7 +43,8 @@ def main(argv=None):
     from . import build as bld
     if opts.version or opts.command == "version":
         rel, name, code = bld.version()
-        sys.stdout.write("Glass %s (%s, versionCode %d)\n" % (rel, name, code))
+        sys.stdout.write(("Glass %s (versionCode %d)\n" % (rel, code)) if name == rel
+                         else ("Glass %s (%s, versionCode %d)\n" % (rel, name, code)))
         return 0
     if opts.no_color:
         os.environ["NO_COLOR"] = "1"

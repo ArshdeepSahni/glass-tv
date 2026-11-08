@@ -32,6 +32,9 @@ final class Sample {
     }
 
     static volatile boolean on;
+    /** Pictures of the widgets' sizes: every widget at this size (Widgets.S, M or L), wherever there's room. -1: as
+     * they are. Only while sample content is on, and never saved. */
+    static volatile int size = -1;
     private static Bitmap art;
 
     static final String PLACE = "Lisbon";
@@ -63,6 +66,7 @@ final class Sample {
     static void set(Context c, boolean v) {
         Glass.prefs(c).edit().putBoolean("sample", v).commit();
         on = v;
+        if (!v) size = -1;
         if (v) prepare(c);
         Media.changedBySample();
     }
