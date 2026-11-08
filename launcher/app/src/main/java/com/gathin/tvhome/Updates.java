@@ -362,6 +362,7 @@ final class Updates {
 
     /** Glass started again after replacing itself: what to say once (null when nothing happened). */
     static String afterRestart(Context c) {
+        tidy(c);
         SharedPreferences p = Glass.prefs(c);
         String to = p.getString(PENDING, null);
         if (to == null) return null;
@@ -378,6 +379,14 @@ final class Updates {
         }
         say("failed", "Glass " + version + " wasn't installed. Try again.", -1);
         return null;
+    }
+
+    /** What an installed update left behind: Glass can't delete its own APK (Android replaces it mid-way). */
+    private static void tidy(Context c) {
+        if (working()) return;
+        File dir = c.getExternalFilesDir("updates");
+        File[] left = dir == null ? null : dir.listFiles();
+        if (left != null) for (File f : left) f.delete();
     }
 
     /** For the phone's TV tab. */
