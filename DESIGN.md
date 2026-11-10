@@ -205,7 +205,7 @@ around them, never the layout.
 | ≥ 100 cols | Two columns: steps on the left (30 cols), the current step's status on the right |
 | No terminal (pipe, CI) | Plain lines, one per step change, no colour |
 
-**Website:** defined with the site (mobile-first; see the site's README when it exists).
+**Website:** [docs/design/site.md](docs/design/site.md).
 
 ---
 

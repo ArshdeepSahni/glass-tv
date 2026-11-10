@@ -121,34 +121,48 @@ def deploy(dist):
                                 ("index.js", "index.js", "application/javascript+module", WORKER)])
     cf.cf("PUT", "/workers/scripts/%s" % SCRIPT, body, ctype)
     cf.cf("POST", "/workers/scripts/%s/subdomain" % SCRIPT, json.dumps({"enabled": True}).encode(), "application/json")
-    sub = cf.subdomain(False)
-    where = "https://%s.%s.workers.dev" % (SCRIPT, sub) if sub else "(the account has no workers.dev name)"
+    where = os.environ.get("GLASS_SITE_URL", "").rstrip("/") or site_url()
+    say(where)
+
+
+def site_url(create=False):
+    """https://www.<the account's workers.dev name>.workers.dev; '' when the account has none (create: give it one,
+    as the update service does)."""
+    sub = cf.subdomain(create)
+    return "https://%s.%s.workers.dev" % (SCRIPT, sub) if sub else ""
+
+
+def say(where):
+    """Where the site is: on the run's summary page, as a link with the one-line installer, and in the log (and as
+    the step's output url, for a workflow that shows it as a deployment)."""
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a") as f:
-            f.write("The site is live: %s\n" % where)
-        print("site: deployed (its address is on this run's summary page)")
-    else:
-        print("site: deployed at " + where)
+            if where:
+                f.write("### Glass's site is live\n\n**[%s](%s/)**\n\nThe one-line installer: `curl -fsSL %s/install.sh "
+                        "| sh`\n" % (where, where, where))
+            else:
+                f.write("### Glass's site is deployed\n\nThis Cloudflare account has no workers.dev name yet, so it has "
+                        "no address: add one in Cloudflare (Workers & Pages, Subdomain) and run Site again.\n")
+    out = os.environ.get("GITHUB_OUTPUT")
+    if out and where:
+        with open(out, "a") as f:
+            f.write("url=%s/\n" % where)
+    print("site: deployed at %s" % (where or "(no workers.dev name)"))
 
 
 def address():
-    """The site's address, for the build's canonical links, sitemap and share card: GLASS_SITE_URL when it's set (a
-    custom domain), else the account's workers.dev name. In Actions it's masked in the log and handed to the next
-    steps; it's only ever shown on the run's summary page."""
-    url = os.environ.get("GLASS_SITE_URL", "").rstrip("/")
-    if not url:
-        sub = cf.subdomain(False)
-        url = "https://%s.%s.workers.dev" % (SCRIPT, sub) if sub else ""
+    """The site's address, for the build's canonical links, sitemap, share card and one-line installer: GLASS_SITE_URL
+    when it's set (a custom domain), else the account's workers.dev name (made for it if it has none, as the update
+    service does). It's a public address, so it isn't hidden in the log."""
+    url = os.environ.get("GLASS_SITE_URL", "").rstrip("/") or site_url(create=True)
     if not url:
         return
-    if os.environ.get("GITHUB_ACTIONS"):
-        print("::add-mask::" + url)
     env = os.environ.get("GITHUB_ENV")
     if env:
         with open(env, "a") as f:
             f.write("GLASS_SITE_URL=%s\n" % url)
-    print("site: its address is known")
+    print("site: its address is %s" % url)
 
 
 if __name__ == "__main__":
