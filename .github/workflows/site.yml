@@ -1,0 +1,72 @@
+name: Site
+
+# The website (site/), built and put on Cloudflare (a Worker named "www", static assets) whenever it or anything it
+# shows changes: the pages and their pictures, the version, the changelog, the credits, the tests. A release and a
+# weekly run keep the credits' people current too. Uses the same two Cloudflare secrets as the update service; its
+# address is written on the run's summary page.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'CHANGELOG.md'
+      - 'NOTICE.md'
+      - 'launcher/app/build.gradle'
+      - 'launcher/build.gradle'
+      - 'launcher/gradle/wrapper/gradle-wrapper.properties'
+      - 'assistant/app/build.gradle'
+      - 'launcher/app/src/test/**'
+      - 'assistant/app/src/test/**'
+      - 'tools/glasscli/flows.py'
+      - 'updates/publish.py'
+      - '.github/workflows/site.yml'
+  release:
+    types: [published]
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site
+  cancel-in-progress: true
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Pillow, for the AVIF copies of the pictures and the share card; rJSmin, to make the script small
+        run: python3 -m pip install --user --break-system-packages --quiet "pillow==11.3.0" "rjsmin==1.2.4"
+
+      - name: The AVIF copies made before (only the pictures that changed are made again)
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9   # v6.1.0
+        with:
+          path: site/.cache
+          key: avif-${{ hashFiles('site/assets/**/*.jpg', 'site/assets/**/*.png') }}
+          restore-keys: avif-
+
+      - name: The site's address (canonical links, sitemap, share card)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GLASS_SITE_URL: ${{ vars.GLASS_SITE_URL }}
+        run: python3 site/deploy.py --address
+
+      - name: Build the site
+        env:
+          GITHUB_TOKEN: ${{ github.token }}   # read-only: the credits' people
+        run: python3 site/build.py site/dist
+
+      - name: Put it on Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 site/deploy.py site/dist

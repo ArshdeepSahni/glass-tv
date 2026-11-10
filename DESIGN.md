@@ -177,7 +177,8 @@ Shadows come from the shape itself (elevation), soft and close: focus z 3, switc
 - Spend the sunrise on one thing per view: the mark, a progress fill, or the single most important action.
 - Say what happens, in a few plain words: "Glass restarts on the new version and says so."
 - Make everything undoable; ask before anything that loses data, and make the safe choice the default.
-- Show real captures of the real TV, with neutral sample content.
+- Show Glass's own screens, drawn from its layout (`tools/scenes.py`), with neutral sample content: the same in both
+  looks, by day in the light one and in the evening in the dark one.
 
 ### Don't
 - Don't draw the mark (or any hero art) as flat vector shapes: it is a rendered sphere of glass.

@@ -7,7 +7,7 @@ import time
 
 from .term import clip, glyph, width, wrap, SPINNER
 
-MIN_W, MIN_H = 60, 18
+MIN_W, MIN_H = 40, 18
 TWO_COLUMNS = 100
 
 
@@ -351,11 +351,18 @@ def numbered_line(cv, row, x, w, kind, text, theme):
         return row + max(1, min(3, len(lines)))
     if kind == "k":
         label, _, value = text.partition("\t")
-        cv.put(row, x, clip(label, 15), ("ink2",))
-        lines = wrap(value, max(10, w - 16))
-        for i, ln in enumerate(lines[:3]):
-            cv.put(row + i, x + 16, ln, ())
-        return row + max(1, min(3, len(lines)))
+        if w - 16 >= 26:
+            cv.put(row, x, clip(label, 15), ("ink2",))
+            lines = wrap(value, max(10, w - 16))
+            for i, ln in enumerate(lines[:3]):
+                cv.put(row + i, x + 16, ln, ())
+            return row + max(1, min(3, len(lines)))
+        # a narrow window: the label on its line, the value under it at the full width, so words stay whole
+        cv.put(row, x, clip(label, w), ("ink2",))
+        lines = wrap(value, w)
+        for i, ln in enumerate(lines[:4]):
+            cv.put(row + 1 + i, x, ln, ())
+        return row + 1 + max(1, min(4, len(lines)))
     if kind == "blank":
         return row + 1
     lines = wrap(text, w)

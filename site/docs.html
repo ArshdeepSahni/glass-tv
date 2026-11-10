@@ -1,0 +1,155 @@
+{{HEAD}}
+<a class="skip" href="#main">Skip to the content</a>
+{{NAV}}
+{{RAIL}}
+<main id="main" class="folds docs">
+
+  <section class="fold" id="requirements" aria-labelledby="h-docs">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h1 id="h-docs">Docs</h1>
+        <p class="lede">Everything about Glass <span class="ver">v{{VERSION}}</span>, from setting it up to how it was measured.</p>
+      </header>
+      <div class="body">
+        <div class="chunk">
+          <h2 id="h-req">{{i:list-checks}}Requirements</h2>
+          {{REQUIREMENTS}}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fold" id="setup" aria-labelledby="h-setup">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-setup">{{i:download}}Set up</h2>
+        <p class="lede">Four steps. The installer does the rest.</p>
+      </header>
+      <div class="body">{{SETUP_STEPS}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="installer" aria-labelledby="h-inst">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-inst">{{i:square-terminal}}The installer</h2>
+        <p class="lede">What <code>./glass</code> does, step by step. It's the same on every computer.</p>
+      </header>
+      {{TERM_INSTALL}}
+    </div>
+  </section>
+
+  <section class="fold" id="commands" aria-labelledby="h-cmd">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-cmd">{{i:terminal}}Commands</h2>
+        <p class="lede">Run them in the <code>glass-tv</code> folder. After the first setup, <code>./glass</code> alone opens a menu of all of them.</p>
+      </header>
+      {{CLI_TABS}}
+    </div>
+  </section>
+
+  <section class="fold" id="components" aria-labelledby="h-comp">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-comp">{{i:blocks}}Components</h2>
+        <p class="lede">What you see when you press Home, piece by piece.</p>
+      </header>
+      {{COMPONENTS}}
+    </div>
+  </section>
+
+  <section class="fold" id="remotes" aria-labelledby="h-rem">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-rem">{{i:pointer}}The remotes</h2>
+        <p class="lede">The TV's remote does a little more, and your phone becomes one.</p>
+      </header>
+      {{REMOTES_DOCS}}
+    </div>
+  </section>
+
+  <section class="fold" id="updates" aria-labelledby="h-upd">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-upd">{{i:refresh-cw}}Updates</h2>
+        <p class="lede">Glass never updates on its own. Either way, every setting stays.</p>
+      </header>
+      <div class="body">{{UPDATES_DOCS}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="privacy" aria-labelledby="h-priv">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-priv">{{i:shield}}Privacy</h2>
+        <p class="lede">No accounts, no ads, no tracking.</p>
+      </header>
+      <div class="body">{{PRIVACY}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="performance" aria-labelledby="h-perf">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-perf">{{i:gauge}}Performance</h2>
+        <p class="lede">Every number, against the TV's own home on the same TV.</p>
+      </header>
+      <div class="body">{{PERF}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="specs" aria-labelledby="h-spec">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-spec">{{i:cpu}}Specifications</h2>
+        <p class="lede">What Glass is, what it asks of the TV, and why.</p>
+      </header>
+      <div class="body">{{SPECS}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="trouble" aria-labelledby="h-trouble">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-trouble">{{i:life-buoy}}Troubleshooting</h2>
+        <p class="lede">Start with <code>./glass doctor</code>. It checks ten things and fixes what it can.</p>
+      </header>
+      <div class="body">{{TROUBLE}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="restore" aria-labelledby="h-rest">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-rest">{{i:undo-2}}Remove Glass</h2>
+        <p class="lede">One command, and the TV is as it was.</p>
+      </header>
+      <div class="body">{{RESTORE}}</div>
+    </div>
+  </section>
+
+  <section class="fold" id="changelog" aria-labelledby="h-log">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-log">{{i:history}}Changelog</h2>
+        <p class="lede">What changed, release by release.</p>
+      </header>
+      <div class="body">{{CHANGELOG}}</div>
+    </div>
+  </section>
+
+  <section class="fold last" id="credits" aria-labelledby="h-cred">
+    <div class="wrap dw fold-in">
+      <header class="head">
+        <h2 id="h-cred">{{i:heart}}Credits</h2>
+        <p class="lede">Glass started from the open-source tvhome launcher, and stands on these. Every licence is in <a href="{{REPO_URL}}/blob/main/NOTICE.md">NOTICE.md</a>.</p>
+      </header>
+      <div class="body">{{CREDITS}}</div>
+      {{FOOT}}
+    </div>
+  </section>
+
+</main>
+{{HALO}}
+<script src="assets/site.js" defer></script>

@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Control Center",
+    "pic": "controls",
+    "alt": "Control Center open over the desktop: Wi-Fi, Bluetooth, sleep, night volume, volume, brightness, text size, appearance and the phone",
+    "caption": "Press <span class=\"rk\">Menu</span> in any app."
+  },
+  {
+    "name": "Settings",
+    "pic": "settings",
+    "alt": "Settings: sections on the left, Display and text on the right with appearance, brightness, text size, motion and the wake animation",
+    "caption": "Every setting in one window, with search."
+  },
+  {
+    "name": "Open apps",
+    "pic": "switcher",
+    "alt": "The open apps over the desktop, as cards to choose from",
+    "caption": "Hold <span class=\"rk\">Home</span> for the apps that are open."
+  },
+  {
+    "name": "Weather",
+    "pic": "weather",
+    "alt": "The weather: now, today and the next four days, and the town it's for",
+    "caption": "Today and the next four days."
+  },
+  {
+    "name": "Search",
+    "pic": "search",
+    "alt": "Search: “net” finds Netflix, the Network & Bluetooth settings, and offers to ask Glass",
+    "caption": "Apps, settings, files and questions, in one box."
+  },
+  {
+    "name": "All apps",
+    "pic": "apps",
+    "alt": "All apps: every app on the TV in a grid",
+    "caption": "Every app on the TV, in one grid."
+  },
+  {
+    "name": "Files",
+    "pic": "files",
+    "alt": "Files: places on the left and what's in the chosen one",
+    "caption": "USB drives, downloads and what your phone sends."
+  },
+  {
+    "name": "Inputs",
+    "pic": "inputs",
+    "alt": "The TV's sources as a glass menu: HDMI 3, 2 and 1, AV and Live TV",
+    "caption": "Press <span class=\"rk\">Input</span> for the TV's sources."
+  },
+  {
+    "name": "Screen saver",
+    "pic": "saver-glass",
+    "alt": "The Glass screen saver: a glass sphere holding a sunrise, with the time and the widgets below",
+    "caption": "The glass, with a sunrise inside. One of six."
+  }
+]

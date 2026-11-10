@@ -1,0 +1,50 @@
+{
+ "about": "The landing page's things to ask Glass Assistant: each its words, a few words on what it shows, its picture by name (both looks, drawn by tools/scenes.py) or a film, and what the assistant answers there (done: the action it took; says: its words, as on the TV). One whose picture isn't there yet is left out.",
+ "asks": [
+  {
+   "ask": "Turn it down a bit",
+   "small": "Works offline",
+   "pic": "ask-volume",
+   "cap": "Understood on the TV itself. No internet needed.",
+   "alt": "Glass Assistant on the right of the screen: asked to turn it down a bit, it sets the volume to 16",
+   "says": "Turned it down to 16.",
+   "done": "Volume 16"
+  },
+  {
+   "ask": "Something light to watch tonight",
+   "small": "One pick, and where",
+   "pic": "ask-watch",
+   "cap": "One pick, where to watch it, and a button that plays it.",
+   "alt": "Asked for something light to watch tonight, the assistant suggests Glass Onion, where it's streaming, with buttons to play it or ask for another",
+   "says": "How about Glass Onion? A twisty comedy-mystery that’s easy to enjoy."
+  },
+  {
+   "ask": "Who's in it?",
+   "small": "Follows the conversation",
+   "pic": "ask-cast",
+   "cap": "A follow-up just works.",
+   "alt": "Asked who's in it, the assistant names the film's cast, following on from its suggestion",
+   "says": "Daniel Craig is back as detective Benoit Blanc, with Edward Norton, Janelle Monáe, Kathryn Hahn and Leslie Odom Jr."
+  },
+  {
+   "ask": "Remind me in 2 minutes to check the oven",
+   "small": "A note on screen",
+   "film": "remind",
+   "pic": "ask-remind",
+   "cap": "Two minutes later, a note comes up wherever you are on the TV.",
+   "alt": "Asked to remind you in 2 minutes to check the oven, the assistant sets a reminder; two minutes later a note comes up at the top of the screen",
+   "says": "Sure, I’ll remind you in 2 minutes to check the oven.",
+   "done": "Reminder at 10:32 AM",
+   "done_dark": "Reminder at 8:42 PM"
+  },
+  {
+   "ask": "Turn the TV off in an hour",
+   "small": "The sleep timer",
+   "pic": "ask-sleep",
+   "cap": "Changed your mind? Ask it to cancel the timer.",
+   "alt": "Asked to turn the TV off in an hour, the assistant sets the sleep timer to 60 minutes",
+   "says": "Sure, I’ll turn the TV off in an hour.",
+   "done": "Sleep in 60 min"
+  }
+ ]
+}

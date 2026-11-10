@@ -2,6 +2,11 @@
 # Glass's installer: ./glass (or ./glass help). It needs Python 3.8 or newer, which macOS has once its Command Line
 # Tools are installed, and Linux usually has.
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*|Windows*)
+    echo "Glass sets up from macOS or Linux. On Windows, use WSL: in PowerShell run  wsl --install , restart, open Ubuntu, and run ./glass there."
+    exit 1 ;;
+esac
 for py in python3 /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3; do
   if command -v "$py" >/dev/null 2>&1 && "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' 2>/dev/null; then
     PYTHONPATH="$ROOT/tools${PYTHONPATH:+:$PYTHONPATH}" exec "$py" -m glasscli "$@"

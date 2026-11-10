@@ -1,0 +1,164 @@
+{
+ "about": "The phone remote, seen from where you sit: the TV ahead, centred, and below it the phone in your hand, tilted away, its touches shown on its screen. The film is the phone film (tools/scenes.py draws it; without it the remote's film stands in, with the beats it has). Each beat plays one part of the film; each gesture is where a touch lands on the phone's screen (in % of its picture), a moment before the TV answered that press (the film's own timeline, site/data/FILM.json). A beat whose part the film doesn't have is left out.",
+ "film": "phone",
+ "phone": "remote",
+ "beats": [
+  {
+   "label": "Swipe",
+   "icon": "hand",
+   "part": "move",
+   "says": "Swipe on the phone, and the TV moves along the dock.",
+   "gestures": [
+    {
+     "press": 0,
+     "swipe": [
+      [
+       33,
+       44.6
+      ],
+      [
+       67,
+       44.6
+      ]
+     ]
+    },
+    {
+     "press": 1,
+     "swipe": [
+      [
+       33,
+       44.6
+      ],
+      [
+       67,
+       44.6
+      ]
+     ]
+    },
+    {
+     "press": 2,
+     "swipe": [
+      [
+       33,
+       44.6
+      ],
+      [
+       67,
+       44.6
+      ]
+     ]
+    },
+    {
+     "press": 3,
+     "swipe": [
+      [
+       33,
+       44.6
+      ],
+      [
+       67,
+       44.6
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "label": "Tap",
+   "icon": "pointer",
+   "part": "tap",
+   "says": "Tap the middle of the touchpad, and the TV opens what's chosen.",
+   "gestures": [
+    {
+     "press": 0,
+     "tap": [
+      50,
+      44.6
+     ]
+    }
+   ]
+  },
+  {
+   "label": "Back",
+   "icon": "undo-2",
+   "part": "back",
+   "says": "Back on the phone closes it again.",
+   "gestures": [
+    {
+     "press": 0,
+     "tap": [
+      17,
+      67.8
+     ]
+    }
+   ]
+  },
+  {
+   "label": "Volume",
+   "icon": "volume-2",
+   "part": "volume",
+   "says": "The volume, from the phone. The TV shows it as it changes.",
+   "gestures": [
+    {
+     "press": 0,
+     "tap": [
+      91.5,
+      78.4
+     ]
+    },
+    {
+     "press": 1,
+     "tap": [
+      91.5,
+      78.4
+     ]
+    },
+    {
+     "press": 2,
+     "tap": [
+      8.5,
+      78.4
+     ]
+    },
+    {
+     "press": 3,
+     "tap": [
+      8.5,
+      78.4
+     ]
+    }
+   ]
+  },
+  {
+   "label": "Home",
+   "icon": "house",
+   "part": "home",
+   "says": "Home on the phone: the weather closes and the desktop is back.",
+   "gestures": [
+    {
+     "press": 0,
+     "tap": [
+      39,
+      67.8
+     ]
+    }
+   ]
+  },
+  {
+   "label": "Glass",
+   "icon": "sparkles",
+   "part": "assistant",
+   "says": "Glass on the phone opens the assistant on the TV, listening.",
+   "gestures": [
+    {
+     "press": 0,
+     "tap": [
+      61,
+      67.8
+     ]
+    }
+   ]
+  }
+ ],
+ "fallback": "remote"
+}

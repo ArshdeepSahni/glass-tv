@@ -63,8 +63,8 @@ R try again · L show the log · Q quit
 ### Responsive behaviour
 | Terminal | Layout |
 |---|---|
-| < 60 × 18 | Only "Make the window a little bigger" (centred) |
-| 60–99 columns | Steps, a hairline, then the status below them |
+| < 40 × 18 | Only "Make the window a little bigger" (centred) |
+| 40–99 columns | Steps, a hairline, then the status below them. Under 42 columns of room, a labelled line puts its label above its value, so words stay whole |
 | ≥ 100 columns | Steps on the left (40 columns), the status on the right |
 | ≥ 30 rows | More air: 2 rows of top padding |
 | Not a terminal | Plain lines (`✓ Tools: Java 17 · Android SDK 34`), no colour, questions answered by flags |

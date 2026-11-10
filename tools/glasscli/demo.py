@@ -1,6 +1,7 @@
 """./glass demo: the real interface with nothing real happening. For trying it, for testing how it looks at every
 size, and for the website's recording. The words are the real commands' words; the TV, the address and the key are
-made up."""
+made up. GLASS_DEMO_PACE=1.6 slows every step down (the website's recordings), so each one can be read."""
+import os
 import random
 import string
 import time
@@ -9,12 +10,16 @@ from . import build as bld
 from .app import Failed, steps
 from .flows import ALLOW, HOWTO, PROVIDERS, SETUP_STEPS, UPDATE_STEPS
 
-TV_NAME = "realme-tv"
+TV_NAME = "living-room-tv"
 TV_HOST = "192.168.1.20"
+try:
+    PACE = max(0.2, float(os.environ.get("GLASS_DEMO_PACE", "1")))
+except ValueError:
+    PACE = 1.0
 
 
 def pause(ui, s):
-    end = time.time() + s
+    end = time.time() + s * PACE
     while time.time() < end:
         ui.check()
         time.sleep(0.05)
@@ -97,10 +102,10 @@ def allow(ui):
     pause(ui, 0.9)
     ui.say(text="Your TV is asking whether to allow this computer.", lines=ALLOW,
            note="Nothing on the TV after a minute? Press Q, then run setup again.", clock=True)
-    end = time.time() + 4.5
+    end = time.time() + 4.5 * PACE
     ui.wait(lambda: time.time() > end, every=0.2)
     ui.say(lines=[], note="")
-    ui.done("Realme TV")
+    ui.done("Living Room TV")
 
 
 def assistant(ui):
@@ -113,7 +118,8 @@ def assistant(ui):
         opts = [(n, d) for n, d, _, _, _ in PROVIDERS] + [("Skip", "TV commands only")]
         a = ui.choose("Give the assistant a way to answer questions?",
                       "It understands TV commands on its own (volume, play and pause, inputs, apps). To answer questions and "
-                      "talk, it uses a free AI service: paste a key from one, or skip and add one later.", opts)
+                      "talk, it uses a free AI service: paste a key from one, or skip and add one later.", opts,
+                      auto=len(PROVIDERS))
         if a is None or a == len(PROVIDERS):
             ui.skip("TV commands only")
             return
@@ -195,7 +201,7 @@ def home(ui):
            text="The TV asks once more, this time for Glass itself (glass@tv). Glass uses it to install its own "
                 "updates and, if you connect a phone as a remote, to press keys for it in any app.", lines=ALLOW,
            items=[], clock=True)
-    end = time.time() + 3.5
+    end = time.time() + 3.5 * PACE
     ui.wait(lambda: time.time() > end, every=0.2)
     items[4] = ["done", "Glass's helper", "running"]
     ui.say(title="Make Glass home", text="", lines=[], items=[tuple(x) for x in items])
@@ -219,7 +225,7 @@ def update(ui, opts):
     def code():
         ui.say(title="Get the newest Glass", text="Asking GitHub for anything newer.")
         pause(ui, 1.4)
-        ui.done("5.2.1 → %s" % rel if rel != "5.2.1" else "5.2 → 5.2.1")
+        ui.done("Glass %s" % rel)
 
     def quick(result, secs=0.8):
         def f():
@@ -228,7 +234,7 @@ def update(ui, opts):
         return f
 
     plan = [("code", code), ("tools", quick("Java 17 · SDK 34")), ("find", quick(TV_HOST)),
-            ("allow", quick("Realme TV")), ("build", lambda: build(ui)), ("install", lambda: install(ui))]
+            ("allow", quick("Living Room TV")), ("build", lambda: build(ui)), ("install", lambda: install(ui))]
     steps(ui, plan, optional=("code",))
     ui.finish("Glass %s is on your TV" % rel, "Its settings are as they were.",
               [("k", "On the TV\tGlass restarts on the new version and says so.")])
@@ -241,10 +247,10 @@ def status(ui, opts):
     pause(ui, 1.6)
     ui.say(progress=None)
     rel = bld.version()[0]
-    ui.board([("done", "TV", "Realme TV · Android 9 · 1280×720"), ("done", "Glass", rel),
-              ("done", "Glass Assistant", "3.5"), ("done", "Home screen", "Glass"), ("done", "Remote helper", "on"),
+    ui.board([("done", "TV", "Living Room TV · Android 9 · 1280×720"), ("done", "Glass", rel),
+              ("done", "Glass Assistant", rel), ("done", "Home screen", "Glass"), ("done", "Remote helper", "on"),
               ("done", "Keyboard", "Glass"), ("done", "Glass's helper", "running"),
-              ("info", "Memory", "412 MB free of 1478 MB"), ("done", "Crashes", "none since the TV started")])
+              ("info", "Memory", "341 MB free of 908 MB"), ("done", "Crashes", "none since the TV started")])
     with ui.lock:
         ui.s["hold_keys"] = [("R", "refresh")]
     ui.hold()
@@ -280,27 +286,28 @@ def doctor(ui, opts):
 
 def restore(ui, opts):
     from .flows import RESTORE_STEPS
-    ui.begin("Restore", "Back to the TV as it shipped",
-             "Glass and Glass Assistant are removed, with their settings, and the TV gets its own home screen "
-             "back. Your other apps and their data stay.", RESTORE_STEPS, version=bld.version()[0])
+    ui.begin("Restore", "Remove Glass",
+             "The TV goes back to its original home screen, keyboard and assistant button. Glass and its "
+             "assistant are removed. Your other apps and their data stay.",
+             RESTORE_STEPS, version=bld.version()[0])
     ui.step("tv", "Your TV")
     pause(ui, 0.8)
-    ui.done("Realme TV")
+    ui.done("Living Room TV")
     a = ui.choose("Remove Glass from this TV?",
                   "Glass's settings, widgets and pictures sent from phones go with it. You can set it up again "
-                  "later with ./glass setup.", [("Keep Glass", ""), ("Remove Glass and restore the TV", "")])
+                  "later with ./glass setup.", [("Keep Glass", ""), ("Remove Glass and restore the TV", "")], auto=1)
     if a != 1:
         for k in ("home", "apps", "remove"):
             ui.mark("skip", "", key=k)
         ui.finish("Nothing changed", "Glass stays on the TV.", [])
         return
-    for k, name, res in (("home", "The TV's own home", "back"), ("apps", "The TV's own apps", "16 turned back on"),
+    for k, name, res in (("home", "The TV's own home", "back"), ("apps", "The TV's own apps", "all on"),
                          ("remove", "Remove Glass", "Glass Assistant and Glass removed")):
         ui.step(k, name)
         pause(ui, 1.0)
         ui.done(res)
-    ui.finish("The TV is as it shipped", "Restart it from its own menu (not the wall switch) so it keeps the "
-              "changes.", [])
+    ui.finish("Glass is removed", "The TV's own home is back. Restart the TV from its own menu (not the wall switch) "
+              "so it keeps the changes.", [])
 
 
 FLOWS = {"setup": setup, "update": update, "status": status, "doctor": doctor, "restore": restore}

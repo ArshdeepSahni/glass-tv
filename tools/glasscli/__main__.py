@@ -11,7 +11,7 @@ Glass for Android TV
   ./glass update          build the newest Glass and put it on the TV
   ./glass status          how Glass and the TV are doing
   ./glass doctor          find what's off and fix it
-  ./glass restore         back to the TV as it shipped (removes Glass)
+  ./glass restore         remove Glass and bring back the TV's own home
   ./glass demo [what]     the interface with nothing real happening (setup, update, status, doctor, restore, fail)
 
   --tv ADDRESS            the TV's address (192.168.1.20), instead of finding it

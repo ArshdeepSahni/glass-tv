@@ -11,12 +11,18 @@ Realme TV with about 1 GB of memory and Android TV 9. No root. It's two apps, si
 ## Put Glass on your TV
 
 You need an Android TV (Android 8 or newer) and a Mac or a Linux computer (on Windows, WSL) on the same network,
-with about 4 GB free. Get this repository (`git clone`, or *Code › Download ZIP* on GitHub), then in a terminal:
+with about 4 GB free. In a terminal on that computer, paste the one-line installer from the website: it downloads
+Glass into `~/glass-tv` (no git needed) and starts it. Or get this repository (`git clone`, or *Code › Download ZIP*
+on GitHub) and run:
 
 ```
 cd glass-tv
 ./glass
 ```
+
+The one-line installer is `install.sh`. Before it downloads anything it checks the computer (macOS or Linux, Python
+3.8 or newer, curl or wget) and says what to do about anything missing, instead of stopping part-way. `./glass` does
+the same for Python, and on Windows it points to WSL.
 
 One screen walks through it, in about 15 minutes the first time: it gets Java 17 and the Android SDK into
 `~/.glass` (nothing system-wide, no administrator password), finds the TV on your network, waits while you allow
@@ -30,7 +36,7 @@ Logs go to `~/.glass/logs`; the screen only shows what's happening and what to d
 | `./glass update` | Gets the newest Glass (`git pull` when this is a clone), builds it and installs it, keeping its settings |
 | `./glass status` | Glass and the TV at a glance: versions, home screen, helpers, memory, crashes |
 | `./glass doctor` | Finds what's off (home screen, remote helper, keyboard, assistant button) and fixes it |
-| `./glass restore` | The TV as it shipped: its own home back, Glass and its assistant removed |
+| `./glass restore` | Removes Glass and its assistant and brings back the TV's original experience |
 | `./glass demo` | The whole interface with nothing real happening |
 
 `--tv 192.168.1.20` skips the search, `--yes` takes every recommended answer, `--plain` prints plain lines (used

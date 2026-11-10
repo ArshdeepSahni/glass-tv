@@ -1,0 +1,66 @@
+/* Glass's TV interface, drawn for the website (tools/scenes.py). Everything is placed in the TV's 1280 x 720 design
+   px, as the launcher places it (Ui.at), and the page is rendered at twice that. The fonts are the launcher's own. */
+@font-face { font-family: Inter; src: url(../../launcher/app/src/main/res/font/inter_regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../launcher/app/src/main/res/font/inter_medium.ttf); font-weight: 500; }
+@font-face { font-family: Inter; src: url(../../launcher/app/src/main/res/font/inter_semibold.ttf); font-weight: 600 900; }
+@font-face { font-family: Outfit; src: url(../../launcher/app/src/main/res/font/outfit.ttf); font-weight: 100 900; }
+
+html, body { margin: 0; background: #000; }
+#tv {
+  position: relative; width: 1280px; height: 720px; overflow: hidden;
+  font-family: Inter, sans-serif; color: var(--ink);
+  -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision;
+  font-feature-settings: "calt", "kern";
+}
+#tv * { box-sizing: border-box; }
+
+/* the two tones (Ui.DAY, Ui.NIGHT) */
+#tv.day {
+  --ink: #16181D; --ink2: rgba(22,24,29,.62); --ink3: rgba(22,24,29,.40); --hair: rgba(22,24,29,.08);
+  --hover: rgba(22,24,29,.06); --sel: #0E0E10; --selink: #FFFFFF; --field: rgba(255,255,255,.55);
+  --sep: rgba(22,24,29,.16); --glass2: rgba(255,255,255,.70); --edge: rgba(255,255,255,.65);
+  --lozenge: rgba(22,24,29,.10); --selSub: rgba(255,255,255,.66); --selChip: rgba(255,255,255,.18);
+  --focus: #FFFFFF; --focusSub: rgba(22,24,29,.58); --focusChip: rgba(22,24,29,.07); --focusEdge: rgba(22,24,29,.06);
+  --red: #E5372B; --wash: linear-gradient(rgba(255,255,255,.24), rgba(255,255,255,0));
+  --barShadow: 0 1px 10px rgba(255,255,255,.35);
+  --shadow: rgba(0,0,0,.24); --ambient: rgba(0,0,0,.09);
+}
+#tv.night, #tv .night {
+  --ink: #F2F2F5; --ink2: rgba(242,242,245,.62); --ink3: rgba(242,242,245,.38); --hair: rgba(255,255,255,.08);
+  --hover: rgba(255,255,255,.07); --sel: #F2F2F5; --selink: #0E0E10; --field: rgba(255,255,255,.08);
+  --sep: rgba(255,255,255,.16); --glass2: rgba(38,38,46,.72); --edge: rgba(255,255,255,.12);
+  --lozenge: rgba(255,255,255,.14); --selSub: rgba(14,14,16,.60); --selChip: rgba(14,14,16,.12);
+  --focus: rgba(255,255,255,.20); --focusSub: rgba(242,242,245,.72); --focusChip: rgba(255,255,255,.16); --focusEdge: rgba(255,255,255,.30);
+  --red: #FF6961; --wash: linear-gradient(rgba(0,0,0,.30), rgba(0,0,0,0));
+  --barShadow: 0 1px 10px rgba(0,0,0,.35);
+  --shadow: rgba(0,0,0,.42); --ambient: rgba(0,0,0,.12);
+}
+
+.abs { position: absolute; }
+.wall { position: absolute; inset: 0; background-size: 1280px 720px; }
+
+/* words: Android's TextView without font padding is exactly the font's ascent + descent high */
+.t { display: block; line-height: 1.21; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t.wrap { white-space: normal; }
+.t.o { line-height: 1.26; font-family: Outfit, Inter, sans-serif; font-weight: 300; letter-spacing: -0.02em; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+.row { display: flex; flex-direction: row; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.grow { flex: 1 1 0; min-width: 0; }
+.g { display: block; flex: none; }
+
+/* a pane: its glass is a canvas (tv.js draws it the way Pane.java does), its content sits on top */
+.pane { position: absolute; }
+.pane > canvas { position: absolute; left: 0; top: 0; }
+.pane > .in { position: absolute; inset: 0; overflow: hidden; }
+
+/* the menu bar */
+.bar .item { display: flex; align-items: center; height: 26px; padding: 0 8px; border-radius: 8px; }
+.bar .item.open { background: var(--lozenge); }
+.bar .t { text-shadow: var(--barShadow); }
+
+/* the focus platter (Ui.platter): white by day with a hairline, lit glass by night */
+.platter { background: var(--focus); box-shadow: inset 0 0 0 1px var(--focusEdge); }
+.lift { box-shadow: 0 3px 8px rgba(0,0,0,.14), 0 1px 2px rgba(0,0,0,.06); }
+#tv.night .lift { box-shadow: 0 3px 10px rgba(0,0,0,.30), 0 1px 2px rgba(0,0,0,.12); }

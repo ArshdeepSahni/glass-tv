@@ -1,0 +1,54 @@
+{
+ "duration": 21.5,
+ "parts": [
+  {
+   "key": "move",
+   "start": 0,
+   "presses": [
+    0.6,
+    1.4,
+    2.2,
+    3
+   ]
+  },
+  {
+   "key": "tap",
+   "start": 4.4,
+   "presses": [
+    5
+   ]
+  },
+  {
+   "key": "back",
+   "start": 7.2,
+   "presses": [
+    7.8
+   ]
+  },
+  {
+   "key": "volume",
+   "start": 9.2,
+   "presses": [
+    9.8,
+    10.4,
+    11.4,
+    12
+   ]
+  },
+  {
+   "key": "home",
+   "start": 13,
+   "presses": [
+    13.9
+   ]
+  },
+  {
+   "key": "assistant",
+   "start": 15.7,
+   "presses": [
+    16.2
+   ]
+  }
+ ],
+ "about": "The phone film (assets/tv/phone-*): where each button's part starts, and when the TV answered each press, in seconds. Written by tools/scenes.py from tools/scenes/films.js."
+}

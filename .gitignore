@@ -25,3 +25,8 @@ captures/
 # Python
 __pycache__/
 *.pyc
+site/dist/
+site/.cache/
+
+# What tools/scenes.py makes for itself
+tools/scenes/.cache/

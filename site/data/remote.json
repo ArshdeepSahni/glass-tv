@@ -1,0 +1,46 @@
+{
+ "duration": 20.5,
+ "parts": [
+  {
+   "key": "move",
+   "start": 0,
+   "presses": [
+    0.6,
+    1.3,
+    2,
+    3.2
+   ]
+  },
+  {
+   "key": "menu",
+   "start": 4.4,
+   "presses": [
+    5,
+    7.6
+   ]
+  },
+  {
+   "key": "hold-home",
+   "start": 8.4,
+   "presses": [
+    8.9,
+    10.6
+   ]
+  },
+  {
+   "key": "home",
+   "start": 11.3,
+   "presses": [
+    13.2
+   ]
+  },
+  {
+   "key": "assistant",
+   "start": 14.2,
+   "presses": [
+    14.7
+   ]
+  }
+ ],
+ "about": "The remote film (assets/tv/remote-*): where each button's part starts, and when the TV answered each press, in seconds. Written by tools/scenes.py from tools/scenes/films.js."
+}

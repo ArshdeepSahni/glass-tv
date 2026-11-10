@@ -1,0 +1,116 @@
+{
+ "raw": {
+  "glass_mem_fg": {
+   "Java Heap": 1736,
+   "Native Heap": 13592,
+   "Code": 6424,
+   "Stack": 84,
+   "Graphics": 0,
+   "Private Other": 1176,
+   "System": 6873
+  },
+  "stock_mem_fg": {
+   "Java Heap": 10536,
+   "Native Heap": 22916,
+   "Code": 28360,
+   "Stack": 32,
+   "Graphics": 0,
+   "Private Other": 3128,
+   "System": 7249
+  },
+  "swap_kb": {
+   "g_fg": 83,
+   "g_bg": 53,
+   "s_fg": 63,
+   "s_bg": 3688
+  },
+  "glass_frames": {
+   "frames": 425,
+   "janky": 68,
+   "janky_pct": 16.0,
+   "p50": 12,
+   "p90": 19,
+   "p95": 20,
+   "p99": 30
+  },
+  "stock_frames": {
+   "frames": 245,
+   "janky": 55,
+   "janky_pct": 22.45,
+   "p50": 8,
+   "p90": 29,
+   "p95": 65,
+   "p99": 129
+  },
+  "glass_cold": [
+   677,
+   650,
+   626,
+   624,
+   601
+  ],
+  "glass_warm": [],
+  "stock_cold": [
+   1477,
+   1153,
+   1035,
+   1057,
+   1047
+  ],
+  "stock_warm": [],
+  "mem_total_kb": 929480,
+  "mem_available_kb": {
+   "glass": 341484,
+   "stock": 274200
+  },
+  "cpu": [],
+  "sizes": {
+   "com.gathin.tvhome": "4983609",
+   "com.gathin.glass.assistant": "180968",
+   "com.google.android.tvlauncher": "7435499"
+  }
+ },
+ "memory": {
+  "glass_pss_mb": 29.2,
+  "glass_bg_pss_mb": 32.9,
+  "stock_pss_mb": 70.5,
+  "stock_bg_pss_mb": 81.5,
+  "glass_resident_mb": 29.1,
+  "stock_resident_mb": 70.5,
+  "glass_bg_resident_mb": 32.8,
+  "stock_bg_resident_mb": 77.9
+ },
+ "start": {
+  "glass_cold_ms": 626,
+  "glass_warm_ms": null,
+  "stock_cold_ms": 1057,
+  "stock_warm_ms": null,
+  "runs": 5
+ },
+ "frames": {
+  "glass_janky_pct": 16.0,
+  "stock_janky_pct": 22.45,
+  "glass_p95_ms": 20,
+  "stock_p95_ms": 65,
+  "glass_p99_ms": 30,
+  "stock_p99_ms": 129,
+  "glass_p50_ms": 12,
+  "stock_p50_ms": 8,
+  "glass_frames": 425,
+  "stock_frames": 245
+ },
+ "size": {
+  "glass_apk_mb": 5.0,
+  "assistant_apk_kb": 181,
+  "stock_apk_mb": 7.4
+ },
+ "update": {
+  "seconds": 33.1,
+  "installed_seconds": 10.9,
+  "glass_update_seconds": 108
+ },
+ "measured": "2026-11-09",
+ "glass": "1.0.0",
+ "device": "A 720p TV with 1 GB",
+ "tests": 314
+}

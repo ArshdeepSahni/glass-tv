@@ -66,3 +66,26 @@ the phone remote press keys inside apps. The TV asks once to allow each computer
 One Worker, `glass-updates`, and one KV namespace, `glass-releases` (the release list and its APKs, old ones
 removed at each release). Both are made and updated by the Release workflow; nothing to do by hand. The Worker
 answers only requests that carry the update key.
+
+## The website
+
+`site/` is built by `site/build.py` and put on Cloudflare by the **Site** workflow on every push that changes what it
+shows, on each release, and weekly. Nothing on it is typed twice: the version, the oldest Android, the tests, what it's
+built with, the changelog and the credits (with their links) come from the repository; the numbers from
+`site/data/bench.json`; the screens, the docs' components and the phone shot from `site/data/*.json`.
+
+New on the TV? Add it to `site/data/components.json`, and if it needs a new picture, a scene for it in
+`tools/scenes/tv.js` (laid out from the launcher's code, as the others are) and its name in `tools/scenes.py`. No TV
+needed:
+
+    python3 tools/scenes.py             # every picture, in light and in dark (half a minute)
+    python3 tools/scenes.py desktop     # or just some (python3 tools/scenes.py --list)
+    python3 tools/scenes.py --films     # the films too (about 25 minutes)
+    python3 site/build.py               # then look at site/dist/index.html
+
+A picture is a name: `x` means `x-light.jpg` and `x-dark.jpg` in `site/assets/tv`. An entry whose picture isn't there
+yet stays off the site until it is.
+
+Changed what the installer shows? Record it again (about 4 minutes; needs `pip install pyte`):
+
+    python3 tools/record_term.py --site   # ./glass demo, each flow at 100 x 30 and at 44 x 30 for phones

@@ -635,9 +635,10 @@ RESTORE_STEPS = [("tv", "Your TV"), ("home", "The TV's own home"), ("apps", "The
 
 
 def restore(ui, opts):
-    ui.begin("Restore", "Back to the TV as it shipped",
-             "Glass and Glass Assistant are removed, with their settings, and the TV gets its own home screen "
-             "back. Your other apps and their data stay.", RESTORE_STEPS, version=bld.version()[0])
+    ui.begin("Restore", "Remove Glass",
+             "The TV goes back to its original home screen, keyboard and assistant button. Glass and its "
+             "assistant are removed. Your other apps and their data stay.",
+             RESTORE_STEPS, version=bld.version()[0])
     ui.step("tv", "Your TV")
     t, why = quiet_tv(ui, opts)
     if not t:
@@ -679,8 +680,8 @@ def restore(ui, opts):
         gone.append("Glass")
     t.sh("sync")
     ui.done(" and ".join(gone) + " removed" if gone else "not on the TV")
-    ui.finish("The TV is as it shipped", "Restart it from its own menu (not the wall switch) so it keeps the changes.",
-              [])
+    ui.finish("Glass is removed", "The TV's own home is back. Restart the TV from its own menu (not the wall switch) "
+              "so it keeps the changes.", [])
 
 
 # ---- the menu --------------------------------------------------------------------------------------------------
@@ -694,6 +695,6 @@ def menu(ui, opts):
                    ("Status", "how Glass and the TV are doing"),
                    ("Check and fix", "find what's off and fix it"),
                    ("Set up again", "the whole setup"),
-                   ("Back to the TV as it shipped", "remove Glass"),
+                   ("Remove Glass", "back to the TV's own home"),
                    ("Quit", "")], back=True)
     return [None, "update", "status", "doctor", "setup", "restore", None][(a if a is not None else 5) + 1]

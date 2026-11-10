@@ -1,0 +1,435 @@
+{
+  "about": "The docs' component browser: kinds of thing on the left, each thing's picture on the right. Each item names its picture, never a file: 'x' is x-light.jpg with x-dark.jpg when both are in site/assets/tv (one for each look), else x.jpg. An item whose picture isn't there yet is left out until it is (tools/scenes.py draws them). tv: a whole screen; part: a piece of one; wide: a piece as wide as the screen, shown whole; strip: several screens; phones: the phone remote's screens; video: a film; list: words only. Text may hold the docs' own markup: rk, kbd, code, path. An item with a box shows its screen with that part marked: [left, top, right, bottom] in the TV's 1280 x 720 design px.",
+  "groups": [
+    {
+      "name": "Desktop",
+      "icon": "layout-dashboard",
+      "intro": "On the desktop. Hold <span class=\"rk\">OK</span> on a widget to move it, resize it or remove it.",
+      "items": [
+        {
+          "id": "desktop",
+          "title": "The desktop",
+          "icon": "monitor",
+          "tv": "desktop",
+          "text": "What Home opens: widgets on glass over your wallpaper, the bar along the top and the dock along the bottom.",
+          "alt": "The desktop: the clock and the weather on the left, a calendar and what's playing on the right, the dock along the bottom"
+        },
+        {
+          "title": "Clock",
+          "icon": "clock",
+          "text": "The time and the date.",
+          "part": "part-widget-clock",
+          "alt": "The clock widget: the time, and the date",
+          "id": "clock"
+        },
+        {
+          "title": "Weather",
+          "icon": "cloud-sun",
+          "text": "Now and the hours ahead, for any town.",
+          "part": "part-widget-weather",
+          "alt": "The weather widget: the town, the temperature now and the next four hours",
+          "id": "weather"
+        },
+        {
+          "title": "Now playing",
+          "icon": "music",
+          "text": "What any app is playing, with its controls.",
+          "part": "part-widget-playing",
+          "alt": "The now playing widget: a song, its artist, artwork and how far in it is",
+          "id": "now-playing"
+        },
+        {
+          "title": "Calendar",
+          "icon": "calendar-days",
+          "text": "Today, and the month.",
+          "part": "part-widget-calendar",
+          "alt": "The calendar widget: today's date large, and the month",
+          "id": "calendar"
+        },
+        {
+          "title": "Photos",
+          "icon": "images",
+          "text": "The photos you send from your phone.",
+          "part": "part-widget-photos",
+          "alt": "The photos widget: a photo sent from a phone",
+          "id": "photos"
+        },
+        {
+          "title": "Three sizes",
+          "icon": "scaling",
+          "text": "Every widget comes small, medium or large.",
+          "strip": [
+            {
+              "pic": "widgets-small",
+              "cap": "Small"
+            },
+            {
+              "pic": "widgets-medium",
+              "cap": "Medium"
+            },
+            {
+              "pic": "widgets-large",
+              "cap": "Large"
+            }
+          ],
+          "alt": "The desktop with every widget at one size",
+          "id": "three-sizes"
+        }
+      ]
+    },
+    {
+      "name": "Bar and dock",
+      "icon": "panel-top",
+      "intro": "The bar along the top of the screen, and the dock of your apps along the bottom.",
+      "items": [
+        {
+          "id": "bar",
+          "title": "The bar",
+          "icon": "panel-top",
+          "text": "Home and Inputs on the left. On the right, the Wi-Fi, the volume, search, Control Center, the assistant and the time.",
+          "alt": "The bar along the top of the screen: Glass, Home and Inputs on the left; Wi-Fi, the volume, search, Control Center, the assistant and the time on the right",
+          "tv": "desktop",
+          "box": [
+            0,
+            0,
+            1280,
+            34
+          ]
+        },
+        {
+          "title": "The dock",
+          "icon": "panel-bottom",
+          "text": "Your apps in your order. A dot marks the open ones. Hold <span class=\"rk\">OK</span> on an app to move it, close it or take it off.",
+          "part": "part-dock",
+          "alt": "The dock: YouTube chosen, then Netflix, Prime Video, Live TV, Spotify, YouTube Music, Play Store and VLC, and Glass's Files, Settings and All apps",
+          "id": "dock"
+        }
+      ]
+    },
+    {
+      "name": "Shortcuts",
+      "icon": "zap",
+      "intro": "One press on the remote, from anywhere: over the desktop or inside an app.",
+      "items": [
+        {
+          "title": "Control Center",
+          "icon": "sliders-horizontal",
+          "text": "<span class=\"rk\">Menu</span>. Wi-Fi, Bluetooth, sleep, volume, brightness, text size, and light or dark.",
+          "tv": "controls",
+          "alt": "Control Center over the desktop",
+          "id": "control-center"
+        },
+        {
+          "title": "Open apps",
+          "icon": "app-window",
+          "text": "Hold <span class=\"rk\">Home</span>. <span class=\"rk\">←</span> <span class=\"rk\">→</span> choose, <span class=\"rk\">OK</span> opens, <span class=\"rk\">↑</span> closes.",
+          "tv": "switcher",
+          "alt": "The open apps, as cards to choose from",
+          "id": "open-apps"
+        },
+        {
+          "title": "Inputs",
+          "icon": "cable",
+          "text": "<span class=\"rk\">Input</span>. HDMI and the TV's other sources.",
+          "tv": "inputs",
+          "alt": "The TV's sources as a glass menu",
+          "id": "inputs"
+        },
+        {
+          "title": "Assistant",
+          "icon": "mic",
+          "text": "<span class=\"rk\">Assistant</span>, then speak.",
+          "tv": "ask-volume",
+          "alt": "Glass Assistant on the right of the screen, asked to turn it down a bit",
+          "id": "assistant"
+        }
+      ]
+    },
+    {
+      "name": "Screens",
+      "icon": "app-window-mac",
+      "intro": "Windows you open from the desktop.",
+      "items": [
+        {
+          "title": "Search",
+          "icon": "search",
+          "text": "Apps, settings, files and questions, in one box. Search on the bar, or <span class=\"rk\">↑</span> from the dock.",
+          "tv": "search",
+          "alt": "Search: “net” finds Netflix, the Network & Bluetooth settings, and offers to ask Glass",
+          "id": "search"
+        },
+        {
+          "title": "Settings",
+          "icon": "settings",
+          "text": "Every setting in one window. Changes apply right away, and search finds any of them.",
+          "tv": "settings",
+          "alt": "Settings: the sections on the left, Display and text on the right",
+          "id": "settings"
+        },
+        {
+          "title": "All apps",
+          "icon": "layout-grid",
+          "text": "Every app on the TV, in one grid. The last one in the dock.",
+          "tv": "apps",
+          "alt": "All apps: every app on the TV in a grid",
+          "id": "all-apps"
+        },
+        {
+          "title": "Weather",
+          "icon": "cloud-sun",
+          "text": "<span class=\"rk\">OK</span> on the weather widget: now, today and the next four days.",
+          "tv": "weather",
+          "alt": "The weather: now, today and the next four days",
+          "id": "weather"
+        },
+        {
+          "title": "Connect a phone",
+          "icon": "qr-code",
+          "text": "Control Center, then Phone. A code to scan, and six digits if your phone has no camera handy.",
+          "tv": "phone",
+          "alt": "Connect your phone, on the TV: a code to scan, three steps, and a six-digit code",
+          "id": "connect-a-phone"
+        }
+      ]
+    },
+    {
+      "name": "Glass's own apps",
+      "icon": "blocks",
+      "intro": "Glass's own apps, made for the remote.",
+      "items": [
+        {
+          "title": "Glass Assistant",
+          "icon": "sparkles",
+          "text": "TV commands work offline. With a free AI key it also answers, suggests what to watch, sets reminders and timers, and follows the conversation.",
+          "strip": [
+            {
+              "pic": "ask-volume",
+              "cap": "“Turn it down a bit”",
+              "sub": "Offline"
+            },
+            {
+              "pic": "ask-watch",
+              "cap": "“Something light to watch tonight”",
+              "sub": "One pick, and where"
+            },
+            {
+              "pic": "ask-cast",
+              "cap": "“Who's in it?”",
+              "sub": "A follow-up"
+            },
+            {
+              "pic": "ask-sleep",
+              "cap": "“Turn the TV off in an hour”",
+              "sub": "The sleep timer"
+            }
+          ],
+          "alt": "Glass Assistant answering",
+          "id": "glass-assistant"
+        },
+        {
+          "title": "Files",
+          "icon": "folder-open",
+          "text": "USB drives, downloads, and the photos and videos your phone sends.",
+          "tv": "files",
+          "alt": "Files: places on the left, the files on the right",
+          "id": "files"
+        },
+        {
+          "title": "Keyboard",
+          "icon": "keyboard",
+          "text": "Big keys for the remote. Words come up as you type, and <span class=\"rk\">←</span> <span class=\"rk\">→</span> wrap around. Or type on your phone.",
+          "tv": "keyboard",
+          "alt": "Glass's keyboard along the bottom of the screen, under search",
+          "id": "keyboard"
+        },
+        {
+          "title": "Phone remote",
+          "icon": "smartphone",
+          "text": "In your phone's browser, nothing to install: a touchpad, your apps, the assistant and the TV's settings.",
+          "phones": [
+            {
+              "pic": "remote",
+              "cap": "Remote"
+            },
+            {
+              "pic": "apps",
+              "cap": "Apps"
+            },
+            {
+              "pic": "assistant",
+              "cap": "Glass"
+            },
+            {
+              "pic": "tv",
+              "cap": "TV"
+            }
+          ],
+          "alt": "The phone remote",
+          "id": "phone-remote"
+        }
+      ]
+    },
+    {
+      "name": "Make it yours",
+      "icon": "sliders-vertical",
+      "intro": "Yours to change in Settings. The most used are in Control Center too.",
+      "items": [
+        {
+          "title": "Appearance",
+          "icon": "sun-moon",
+          "text": "Light, Auto or Dark. Auto turns dark at 6 pm.",
+          "parts": [
+            {
+              "pic": "part-appearance-light",
+              "alt": "Appearance set to Light"
+            },
+            {
+              "pic": "part-appearance-dark",
+              "alt": "Appearance set to Dark"
+            }
+          ],
+          "id": "appearance"
+        },
+        {
+          "title": "Waking up",
+          "icon": "sunrise",
+          "text": "When the TV comes on, the glass lights up with a soft chime, then opens onto the desktop. You can turn it off.",
+          "video": "wake",
+          "alt": "Glass's wake animation: the screen lights up and opens onto the desktop",
+          "id": "waking-up"
+        },
+        {
+          "title": "Backgrounds",
+          "icon": "image",
+          "text": "Six, each with a day and a night. Pick one for light and one for dark.",
+          "strip": [
+            {
+              "light": "bg-field-d",
+              "dark": "bg-field-n",
+              "cap": "Light field"
+            },
+            {
+              "light": "bg-silk-d",
+              "dark": "bg-silk-n",
+              "cap": "Silk"
+            },
+            {
+              "light": "bg-dunes-d",
+              "dark": "bg-dunes-n",
+              "cap": "Dunes"
+            },
+            {
+              "light": "bg-orbs-d",
+              "dark": "bg-orbs-n",
+              "cap": "Glass"
+            },
+            {
+              "light": "bg-aurora-d",
+              "dark": "bg-aurora-n",
+              "cap": "Aurora"
+            },
+            {
+              "light": "bg-ridges-d",
+              "dark": "bg-ridges-n",
+              "cap": "Ridges"
+            }
+          ],
+          "alt": "A background",
+          "id": "backgrounds"
+        },
+        {
+          "title": "Screen savers",
+          "icon": "monitor",
+          "text": "Six. One starts after 5 minutes to an hour, as you choose.",
+          "strip": [
+            {
+              "pic": "saver-clock",
+              "cap": "Clock",
+              "sub": "The time, large"
+            },
+            {
+              "pic": "saver-drift",
+              "cap": "Drift",
+              "sub": "Backgrounds, drifting"
+            },
+            {
+              "pic": "saver-glass",
+              "cap": "Glass",
+              "sub": "A sunrise inside"
+            },
+            {
+              "pic": "saver-glow",
+              "cap": "Glow",
+              "sub": "Soft colours"
+            },
+            {
+              "pic": "saver-photos",
+              "cap": "Photos",
+              "sub": "From your phone"
+            },
+            {
+              "pic": "saver-night",
+              "cap": "Night",
+              "sub": "A dim clock"
+            }
+          ],
+          "alt": "A screen saver",
+          "id": "screen-savers"
+        },
+        {
+          "title": "And more",
+          "icon": "sliders-horizontal",
+          "text_ok": true,
+          "list": [
+            "<b>Text size</b>: S, M, L or XL, for every app",
+            "<b>Weather</b>: any town, or where the TV is",
+            "<b>Motion</b>: Full, or Reduced",
+            "<b>Sounds</b>: soft clicks as you move, at the TV's volume",
+            "<b>Night volume</b>: a limit after 11 pm",
+            "<b>Sleep timer</b>: 30 minutes to 2 hours"
+          ],
+          "id": "and-more"
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "icon": "bell-ring",
+      "intro": "Glass tells you things over whatever is on, then gets out of the way.",
+      "items": [
+        {
+          "title": "Reminders",
+          "icon": "alarm-clock",
+          "text": "The ones you asked the assistant for, with a soft chime.",
+          "part": "part-reminder",
+          "alt": "A note at the top of the screen: Reminder, Check the oven",
+          "id": "reminders"
+        },
+        {
+          "title": "Phone connected",
+          "icon": "smartphone",
+          "text": "When a phone you allowed connects.",
+          "part": "part-note-phone",
+          "alt": "A note: Phone connected",
+          "id": "phone-connected"
+        },
+        {
+          "title": "Updated",
+          "icon": "badge-check",
+          "text": "When Glass has just updated itself.",
+          "part": "part-note-updated",
+          "alt": "A note: Glass, updated to the new version",
+          "id": "updated"
+        },
+        {
+          "title": "Volume",
+          "icon": "volume-2",
+          "text": "The volume as you change it, and the limit at night.",
+          "part": "part-volume",
+          "alt": "The volume, as a glass pill",
+          "id": "volume"
+        }
+      ]
+    }
+  ]
+}

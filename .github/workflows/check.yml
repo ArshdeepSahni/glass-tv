@@ -50,7 +50,8 @@ jobs:
 
       - name: The release scripts are sound
         run: |
-          python3 -m py_compile updates/publish.py updates/manifest.py updates/fetch.py
+          python3 -m py_compile updates/publish.py updates/manifest.py updates/fetch.py site/build.py site/deploy.py
+          python3 site/build.py "$RUNNER_TEMP/site"
           node --input-type=module --check < updates/worker/index.js
           for f in tools/*.sh; do bash -n "$f"; done
           python3 updates/manifest.py version
