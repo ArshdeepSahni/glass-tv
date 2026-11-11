@@ -386,7 +386,8 @@
             "<b>Motion</b>: Full, or Reduced",
             "<b>Sounds</b>: soft clicks as you move, at the TV's volume",
             "<b>Night volume</b>: a limit after 11 pm",
-            "<b>Sleep timer</b>: 30 minutes to 2 hours"
+            "<b>Sleep timer</b>: 30 minutes to 2 hours",
+            "<b>Speed &amp; memory</b>: free up memory, quicker animations, and which apps run in the background or at all"
           ],
           "id": "and-more"
         }

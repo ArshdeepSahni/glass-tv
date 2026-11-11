@@ -175,7 +175,8 @@ Run them in the `glass-tv` folder. After the first setup, `./glass` alone opens 
 ./glass restore
 ```
 
-The TV's own home, keyboard and assistant button come back, then Glass goes. Your apps stay.
+The TV's own home, keyboard and assistant button come back, with any of its apps you turned off in
+Settings › Speed & memory, then Glass goes. Your apps stay.
 
 ## Under the hood
 

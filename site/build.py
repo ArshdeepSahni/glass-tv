@@ -954,15 +954,17 @@ def specs(fills):
                    ("Close background apps", "Freeing memory"),
                    ("Install apps", "Its own updates, when its helper isn't running"),
                    ("Exact alarms", "Reminders and the sleep timer"),
-                   ("System settings", "The screen saver, the keyboard, the assistant button, Location and sleep")], "Permissions")
+                   ("System settings", "The screen saver, the keyboard, the assistant button, Location, sleep and how "
+                                       "quick animations are")], "Permissions")
     runs = table([("Remote helper", "An accessibility service for Home, hold Home and Menu, Glass's panels over apps, and "
                                     "Brightness on TVs that keep their backlight to themselves"),
                   ("Keyboard", "Glass's input method"),
                   ("Screen saver", "The one you chose"),
                   ("Media listener", "What apps are playing, for Now playing. It reads no notifications."),
                   ("Phone remote", "A small web server on port 8765, on your home network"),
-                  ("Glass's helper", "<code>glass@tv</code>, through the TV's own debugging. Only on the TV, only for "
-                                     "Glass. It stops after 30 idle minutes.")], "What runs on the TV")
+                  ("Glass's helper", "<code>glass@tv</code>, through the TV's own debugging: the phone's keys inside apps, "
+                                     "Glass's updates, and the switches in Speed &amp; memory. Only on the TV, only for Glass. "
+                                     "It stops after 30 idle minutes.")], "What runs on the TV")
     return tabs("spec", "Specifications", [(icon("cpu") + "Glass", glass), (icon("lock") + "Permissions, and why", perms),
                                            (icon("layers") + "What runs on the TV", runs)])
 
@@ -988,9 +990,11 @@ def trouble():
 
 def restore_fold():
     d = diff([("+", "The TV's own home"), ("+", "The TV's own keyboard"), ("+", "The TV's own assistant button"),
-              ("-", "Glass"), ("-", "Glass Assistant"), (" ", "Your apps, and everything in them")])
+              ("+", "The TV's apps you turned off"), ("-", "Glass"), ("-", "Glass Assistant"),
+              (" ", "Your apps, and everything in them")])
     return ('<div class="duo"><div class="stack">%s<p class="prose">The TV\'s own home, keyboard and assistant button come '
-            'back, then Glass goes. Your apps stay. Restart the TV from its own menu afterwards, not the wall switch, so it '
+            'back, with any of its apps you turned off in Speed &amp; memory, then Glass goes. Your apps stay. Restart the '
+            'TV from its own menu afterwards, not the wall switch, so it '
             'keeps the changes.</p><p class="prose">To set Glass up again later, run <code>./glass</code>.</p></div>'
             '<div class="stack">%s%s</div></div>' % (cmd("./glass restore"), sub("git-branch", "What changes"), d))
 
@@ -1271,7 +1275,11 @@ def structured(page, title, description, base, fills):
                 ("How do I install Glass?", "On a Mac or Linux computer on the same Wi-Fi as the TV, turn on debugging "
                                             "on the TV, then run: %s. It takes about 15 minutes." % fills["INSTALL"]),
                 ("How do I remove Glass?", "Run ./glass restore. The TV's own home, keyboard and assistant button come "
-                                           "back, then Glass goes. Your apps stay."),
+                                           "back, with any of its apps you turned off, then Glass goes. Your apps stay."),
+                ("Can Glass make a slow TV faster?", "Yes. Settings, then Speed & memory, frees memory, makes animations "
+                                                     "quicker, keeps the apps you choose from running in the background, "
+                                                     "and turns off the TV's own extras you don't use. Nothing is "
+                                                     "uninstalled, and ./glass restore undoes it all."),
                 ("Does Glass update on its own?", "No. Run ./glass update when you're ready; every setting stays."),
                 ("What leaves the TV?", "Only when you use them: the weather (to Open-Meteo), your questions (to the AI "
                                         "service you chose) and update checks. No accounts, no ads, no tracking."),

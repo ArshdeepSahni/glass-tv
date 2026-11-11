@@ -122,7 +122,7 @@ and APKs. For your own update service, the release workflow's secrets live in Gi
 glass                         the installer (./glass), Python 3 standard library: tools/glasscli/
 launcher/                     Glass (Android, Gradle 8.9, AGP 8.5, Java 17, minSdk 26)
   app/src/main/java/…/Updates.java     checking, downloading, verifying, installing
-  app/src/main/java/…/KeyDaemon.java   the key helper (the TV's shell user; installs only from Glass's updates folder)
+  app/src/main/java/…/KeyDaemon.java   the key helper (the TV's shell user; installs only Glass's updates; turns off only Extras)
   app/src/main/java/…/SwitcherSheet.java  hold Home: the open apps
   app/src/main/assets/phone/           the phone remote
   app/src/test/                        unit tests (the Check workflow runs them)
