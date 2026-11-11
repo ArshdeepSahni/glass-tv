@@ -1,7 +1,14 @@
 package com.gathin.tvhome;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.wifi.ScanResult;
+import android.os.Build;
+import android.os.Process;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -43,6 +50,59 @@ final class Net {
         } catch (RuntimeException e) {
             return false;
         }
+    }
+
+    /** Android lists the networks around, and names the one the TV is on, to apps only while Location is on. */
+    @SuppressWarnings("deprecation")
+    static boolean locationOn(Context c) {
+        if (Build.VERSION.SDK_INT >= 29) {
+            LocationManager lm = c.getSystemService(LocationManager.class);
+            try {
+                return lm == null || lm.isLocationEnabled();
+            } catch (RuntimeException e) {
+                return true;
+            }
+        }
+        // Android 9 and before: its Wi-Fi asks for the location mode, which any allowed provider turns on
+        try {
+            return Settings.Secure.getInt(c.getContentResolver(), Settings.Secure.LOCATION_MODE) != Settings.Secure.LOCATION_MODE_OFF;
+        } catch (Settings.SettingNotFoundException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Location on, in its device-only kind: nothing goes to Google's location service, and nothing is asked (its
+     * network kind puts Google's consent screen on the TV and is switched back off until someone agrees). A TV has no
+     * GPS, so this finds no one's position; it only lets Android list the Wi-Fi around. Needs WRITE_SECURE_SETTINGS
+     * (the installer grants it). True when Location is on.
+     */
+    @SuppressWarnings("deprecation")
+    static boolean turnOnLocation(Context c) {
+        if (c.checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) return false;
+        ContentResolver cr = c.getContentResolver();
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                try {   // Android's own switch, where it lets Glass use it
+                    LocationManager lm = c.getSystemService(LocationManager.class);
+                    LocationManager.class.getMethod("setLocationEnabledForUser", boolean.class, UserHandle.class)
+                            .invoke(lm, true, Process.myUserHandle());
+                } catch (Exception ignored) {
+                }
+                if (!locationOn(c)) Settings.Secure.putInt(cr, Settings.Secure.LOCATION_MODE, 3);   // LOCATION_MODE_ON
+            } else {
+                // "device only": Android 9 writes it as the providers allowed, gps (it is only asked for while off)
+                Settings.Secure.putInt(cr, Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_SENSORS_ONLY);
+            }
+        } catch (RuntimeException e) {
+            return false;
+        }
+        return locationOn(c);
+    }
+
+    /** Glass can join networks and switch Wi-Fi itself (Android 10 keeps both for its own settings). */
+    static boolean inPlace() {
+        return Build.VERSION.SDK_INT < 29;
     }
 
     static String current(Context c) {

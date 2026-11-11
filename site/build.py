@@ -846,9 +846,9 @@ def cli_tabs():
                                                         "Glass", show_chapters=False))),
              (icon("gauge") + "Status", panel("<code>./glass status</code> shows how the TV and Glass are doing.",
                                               term("status", "./glass status", None, "Glass and the TV at a glance"))),
-             (icon("wrench") + "Doctor", panel("<code>./glass doctor</code> checks ten things and offers to fix what's off. "
+             (icon("wrench") + "Doctor", panel("<code>./glass doctor</code> checks twelve things and offers to fix what's off. "
                                                "Nothing changes without asking.",
-                                               term("doctor", "./glass doctor", None, "Ten checks, two things off, both "
+                                               term("doctor", "./glass doctor", None, "Twelve checks, two things off, both "
                                                     "fixed"))),
              (icon("undo-2") + "Restore", panel("<code>./glass restore</code> removes Glass. The TV is as it was.",
                                                 term("restore", "./glass restore", "RESTORE_STEPS", "Glass removed, the "
@@ -947,14 +947,16 @@ def specs(fills):
                    ("Built with", "%s, shrunk with R8" % fills["BUILT_WITH"]),
                    ("Tests", "%s unit tests, run on every change" % fills["TESTS"])], "Glass")
     perms = table([("Internet", "The weather, the assistant, updates, album art"),
-                   ("Wi-Fi and location", "Nearby Wi-Fi in Control Center. Android only allows that with location."),
+                   ("Wi-Fi and location", "Nearby Wi-Fi in Control Center. Android shows it only with Location on: Glass uses the "
+                                           "TV-only kind, with nothing sent to Google."),
                    ("Bluetooth", "The Bluetooth switch, and sending the sound to a device"),
                    ("Storage", "Files: USB drives, downloads, photos"),
                    ("Close background apps", "Freeing memory"),
                    ("Install apps", "Its own updates, when its helper isn't running"),
                    ("Exact alarms", "Reminders and the sleep timer"),
-                   ("System settings", "The screen saver, the keyboard, the assistant button and sleep")], "Permissions")
-    runs = table([("Remote helper", "An accessibility service for Home, hold Home and Menu, and Glass's panels over apps"),
+                   ("System settings", "The screen saver, the keyboard, the assistant button, Location and sleep")], "Permissions")
+    runs = table([("Remote helper", "An accessibility service for Home, hold Home and Menu, Glass's panels over apps, and "
+                                    "Brightness on TVs that keep their backlight to themselves"),
                   ("Keyboard", "Glass's input method"),
                   ("Screen saver", "The one you chose"),
                   ("Media listener", "What apps are playing, for Now playing. It reads no notifications."),
@@ -973,10 +975,11 @@ def trouble():
                   ("“The TV has another copy of Glass”", "It was made on another computer. Choose <b>Remove it and "
                                                          "install this one</b>, or update from that computer to keep its "
                                                          "settings."),
-                  ("Home opens the TV's own home", "<code>./glass doctor</code> makes Glass home again."),
+                  ("Home or the keyboard is the TV's own", "<code>./glass doctor</code> gives both back to Glass."),
+                  ("Bluetooth won't come on", "Restart the TV from its own menu. <code>./glass doctor</code> spots it."),
+                  ("No networks in Wi-Fi", "<b>Show the networks</b> turns on Location, which Android needs."),
                   ("The phone can't press keys in apps", "%s, then allow <code>glass@tv</code>."
                    % path("Settings", "Remote & keyboard", "Phone remote helper")),
-                  ("The TV's own keyboard is back", "<code>./glass doctor</code> puts Glass's back."),
                   ("A build stopped", "Press %s to try again, or %s for the log." % (kbd("R"), kbd("L"))),
                   ("<code>./glass</code> says it needs Python", "On a Mac, run <code>xcode-select --install</code>. On "
                                                                 "Linux, install <code>python3</code> with your package "

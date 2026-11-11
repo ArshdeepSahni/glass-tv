@@ -18,6 +18,11 @@ PORT = 5555
 KEYS_PORT = 8766       # Glass's key helper on the TV (127.0.0.1)
 PHONE_PORT = 8765      # the phone remote
 
+TURNED_OFF = "/data/local/tmp/glass-turned-off"   # on the TV: its own homes Glass turned off, for restore (and
+#                                                    Glass turns them off again if the TV turns them on as it starts)
+LOCATION_ON = "/data/local/tmp/glass-turned-on-location"   # on the TV: Location was off until the installer turned it on
+LIMITED = "/data/local/tmp/glass-background-limited"      # on the TV: apps Glass keeps from running in the background
+SETTINGS_BEFORE = "/data/local/tmp/glass-settings-before"  # on the TV: "<namespace> <name> <value>" Glass changed, as they were
 ADDRESS_HELP = "On the TV: Settings › Network & Internet › your network. It looks like 192.168.1.20."
 
 
@@ -260,9 +265,116 @@ class TV:
         out = self.sh("cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME")
         return out.strip().splitlines()[-1] if out.strip() else ""
 
+    def homes(self):
+        """Every home screen on the TV, as [(priority, "package/activity")]. A built-in home can carry a priority no
+        installed app can have, and then Android sends Home to it whatever is chosen as the home screen."""
+        out = self.sh("cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME")
+        found, pri = [], None
+        for ln in out.splitlines():
+            m = re.search(r"priority=(-?\d+)", ln)
+            if m:
+                pri = int(m.group(1))
+            elif pri is not None and "/" in ln.strip():
+                found.append((pri, ln.strip()))
+                pri = None
+        return found
+
+    def turned_off(self):
+        """The TV's own homes Glass turned off (kept on the TV itself, so restore works from any computer)."""
+        out = self.sh("cat %s 2>/dev/null" % TURNED_OFF)
+        return [p for p in dict.fromkeys(ln.strip() for ln in out.splitlines()) if re.fullmatch(r"[A-Za-z0-9_.]+", p)]
+
     def make_home(self):
-        self.sh("cmd package set-home-activity --user 0 %s/.GlassHomeActivity" % PKG)
-        return self.home_now().startswith(PKG)
+        """Glass as the TV's home screen. First it's simply chosen as home; on a TV whose own home outranks every app
+        (Xiaomi, Google TV and others), that home is turned off: never uninstalled, and noted on the TV so ./glass
+        restore turns it back on. The fallback home Android keeps for emergencies is never touched. True when Home,
+        a restart and the phone's Home all open Glass."""
+        comp = "%s/.GlassHomeActivity" % PKG
+        self.sh("cmd package set-home-activity --user 0 %s" % comp)
+        if self.home_now().startswith(PKG):
+            return True
+        for strict in (True, False):
+            homes = self.homes()
+            mine = max([p for p, c in homes if c.startswith(PKG + "/")] or [0])
+            over = sorted({c.split("/")[0] for p, c in homes if not c.startswith(PKG + "/") and p > -1000
+                           and (p > mine if strict else p >= mine)})
+            for pkg in over:
+                if "disabled" in self.sh("pm disable-user --user 0 %s" % pkg):
+                    self.sh("echo %s >> %s" % (pkg, TURNED_OFF))
+            self.sh("cmd package set-home-activity --user 0 %s" % comp)
+            if self.home_now().startswith(PKG):
+                return True
+        return False
+
+    def own_homes_back(self):
+        """Restore: the TV's own homes Glass turned off, on again, and the first of them home again. Their names."""
+        back = self.turned_off()
+        for pkg in back:
+            self.sh("pm enable %s" % pkg)
+        self.sh("rm -f %s" % TURNED_OFF)
+        return back
+
+    def location_on(self):
+        """Android shows apps the Wi-Fi networks around only while Location is on. True when it's on."""
+        if self.sdk() >= 29:
+            return self.sh("settings get secure location_mode").strip() not in ("", "0", "null")
+        return self.sh("settings get secure location_providers_allowed").strip() not in ("", "null")
+
+    def location(self):
+        """Location on, so Control Center can list nearby Wi-Fi. Its device-only kind: the network kind sends Google's
+        consent screen to the TV and stays off until someone agrees there, and a TV has no GPS, so this finds no one's
+        position. Android 9 counts any allowed provider as Location on, which is all its Wi-Fi asks for."""
+        if not self.location_on():
+            if self.sdk() >= 29:
+                self.sh("cmd location set-location-enabled true 2>/dev/null; settings put secure location_mode 3")
+            else:
+                self.sh("settings put secure location_providers_allowed +gps")
+            if self.location_on():
+                self.sh("touch %s" % LOCATION_ON)   # restore turns it off again
+        return self.location_on()
+
+    def location_back(self):
+        """Restore: Location off again, if Glass's installer is what turned it on."""
+        if "yes" not in self.sh("[ -f %s ] && echo yes" % LOCATION_ON):
+            return
+        if self.sdk() >= 29:
+            self.sh("cmd location set-location-enabled false 2>/dev/null; settings put secure location_mode 0")
+        else:
+            self.sh("settings put secure location_providers_allowed -gps")
+        self.sh("rm -f %s" % LOCATION_ON)
+
+    def speed_back(self):
+        """Restore: apps Glass kept from running in the background may again, and the settings it changed for speed
+        (Settings ▸ Speed & memory) as they were. The apps it turned off come back with the TV's homes (TURNED_OFF)."""
+        for p in [ln.strip() for ln in self.sh("cat %s 2>/dev/null" % LIMITED).splitlines()]:
+            if re.fullmatch(r"[A-Za-z0-9_.]+", p):
+                self.sh("cmd appops set %s RUN_ANY_IN_BACKGROUND allow" % p)
+        for ln in self.sh("cat %s 2>/dev/null" % SETTINGS_BEFORE).splitlines():
+            m = re.fullmatch(r"(global|secure|system) ([A-Za-z0-9_.]+) ([A-Za-z0-9_.:-]*)", ln.strip())
+            if m:
+                self.sh("settings put %s %s %s" % m.groups() if m.group(3) else "settings delete %s %s" % m.groups()[:2])
+        self.sh("rm -f %s %s" % (LIMITED, SETTINGS_BEFORE))
+
+    def bluetooth(self):
+        """"on", "off", or "failing": the TV's Bluetooth keeps stopping (its service crashing as it starts), which
+        leaves a Bluetooth remote on infrared, without its microphone. Only a restart of the TV clears that."""
+        d = self.sh("dumpsys bluetooth_manager")
+        if re.search(r"enabled:\s*true", d) and re.search(r"state:\s*ON\b", d):
+            return "on"
+        loops = self.sh("logcat -d -b main,system -t 4000 2>/dev/null | grep -c 'Entering STATE_OFF but mEnabled is true'",
+                        timeout=20).strip()
+        return "failing" if loops.isdigit() and int(loops) >= 2 else "off"
+
+    def restart(self):
+        """Restarts the TV (as its own menu does). It answers again about a minute later."""
+        self.a("reboot", timeout=15)
+        return True
+
+    def sdk(self):
+        try:
+            return int(self.sh("getprop ro.build.version.sdk").strip() or 0)
+        except ValueError:
+            return 0
 
     def keyboard(self):
         for _ in range(20):

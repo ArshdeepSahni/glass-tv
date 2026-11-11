@@ -24,8 +24,11 @@ import java.nio.charset.StandardCharsets;
  *
  * Lines in: the secret first, then "k <keycode>" (press), "t <text>" (type plain characters), "r" (which apps have a
  * process: package names, space-separated), "x <package>" (close an app: force-stop), "e <package>" / "d <package>"
- * (turn the TV's own home or its casting apps on / off, those only), "c <x> <y>" (a tap on the screen there: a phone's
- * pointer), "h <package/activity>" (make Glass or the TV's own
+ * (turn the TV's own home, its casting apps or one of its extras on / off, those only: Extras; noted on the TV with the
+ * homes Glass turned off, for the TV's start and ./glass restore), "b <package> <1|0>" (whether an app may run in the
+ * background: Android's own switch for it; never Android's, Google's services or assistant, or Glass's), "g <package>"
+ * (that switch now: "1" or "0"), "f" (close the apps waiting in the background, to free memory), "c <x> <y>" (a tap on
+ * the screen there: a phone's pointer), "h <package/activity>" (make Glass or the TV's own
  * home the home app), "m" (what the apps say is playing: one line of JSON), "a <package>" (that app's artwork, a small
  * JPEG in base64), "i <file>" (install an update Glass downloaded into its own updates folder: Glass's or the
  * assistant's, the way the TV's own installer would, so it needs no prompt), "v" (its version) or "p" (ping). Lines out: "ok", "no", or for "r" the names. Arguments are checked before anything
@@ -38,7 +41,7 @@ import java.nio.charset.StandardCharsets;
 public final class KeyDaemon {
     static final String PID = "/data/local/tmp/glass-keys.pid";
     /** Bumped with each new command: Glass restarts a helper left running by an older Glass ("v" answers it). */
-    static final String VERSION = "4";
+    static final String VERSION = "5";
     private static final long IDLE_MS = 30 * 60 * 1000L;
 
     private static volatile long last = SystemClock.uptimeMillis();
@@ -101,8 +104,16 @@ public final class KeyDaemon {
                     }
                     else if ("r".equals(line)) reply = running();
                     else if (line.startsWith("x ") && PKG.matcher(line.substring(2)).matches()) reply = yes(run("am", "force-stop", line.substring(2)));
-                    else if (line.startsWith("e ") && SWITCHABLE.contains(line.substring(2))) reply = yes(run("pm", "enable", line.substring(2)));
-                    else if (line.startsWith("d ") && SWITCHABLE.contains(line.substring(2))) reply = yes(run("pm", "disable-user", "--user", "0", line.substring(2)));
+                    else if (line.startsWith("e ") && switchable(line.substring(2))) reply = yes(run("pm", "enable", line.substring(2)) && note(TURNED_OFF, line.substring(2), false));
+                    else if (line.startsWith("d ") && switchable(line.substring(2))) reply = yes(run("pm", "disable-user", "--user", "0", line.substring(2)) && note(TURNED_OFF, line.substring(2), true));
+                    else if (line.startsWith("b ") && (line.endsWith(" 1") || line.endsWith(" 0")) && line.length() > 4
+                            && backgroundable(line.substring(2, line.length() - 2))) {
+                        String pkg = line.substring(2, line.length() - 2);
+                        boolean allow = line.endsWith(" 1");
+                        reply = yes(run("cmd", "appops", "set", pkg, "RUN_ANY_IN_BACKGROUND", allow ? "allow" : "ignore") && note(LIMITED, pkg, !allow));
+                    }
+                    else if (line.startsWith("g ") && PKG.matcher(line.substring(2)).matches()) reply = background(line.substring(2));
+                    else if ("f".equals(line)) reply = yes(run("am", "kill-all"));
                     else if (line.startsWith("h ") && home(line.substring(2))) reply = yes(run("cmd", "package", "set-home-activity", "--user", "0", line.substring(2)));
                     else if ("v".equals(line)) reply = VERSION;
                     else if (line.startsWith("i ") && UPDATE.matcher(line.substring(2)).matches()) reply = install(line.substring(2));
@@ -123,10 +134,51 @@ public final class KeyDaemon {
     private static final java.util.regex.Pattern PKG = java.util.regex.Pattern.compile("[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z0-9_]+)+");
     private static final java.util.regex.Pattern COMPONENT = java.util.regex.Pattern.compile("[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z0-9_]+)+/[a-zA-Z0-9_.$]+");
 
-    /** The only apps the helper turns on or off: the TV's own home and its casting apps (nothing else). */
+    /** The only apps the helper turns on or off: the TV's own home, its casting apps and its extras (nothing else). */
     private static final java.util.Set<String> SWITCHABLE = new java.util.HashSet<>(java.util.Arrays.asList(
             "com.google.android.tvlauncher", "com.google.android.apps.mediashell",
             "com.homwee.mmp.screenshare", "com.homwee.multiscreenshare"));
+
+    private static boolean switchable(String pkg) {
+        return SWITCHABLE.contains(pkg) || Extras.known(pkg);
+    }
+
+    private static boolean backgroundable(String pkg) {
+        return PKG.matcher(pkg).matches() && !Extras.backgroundProtected(pkg);
+    }
+
+    /** What Glass turned off (Homes.TURNED_OFF), and the apps it keeps from running in the background, on the TV. */
+    private static final String TURNED_OFF = "/data/local/tmp/glass-turned-off", LIMITED = "/data/local/tmp/glass-background-limited";
+
+    /** A package in or out of one of those notes (true when the note is as asked). */
+    private static boolean note(String path, String pkg, boolean in) {
+        java.util.LinkedHashSet<String> lines = new java.util.LinkedHashSet<>();
+        java.io.File f = new java.io.File(path);
+        if (f.isFile()) {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(new java.io.FileInputStream(f), StandardCharsets.UTF_8))) {
+                for (String l; (l = r.readLine()) != null; ) if (!l.trim().isEmpty()) lines.add(l.trim());
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        if (in ? !lines.add(pkg) : !lines.remove(pkg)) return true;
+        try (FileWriter w = new FileWriter(f)) {
+            for (String l : lines) w.write(l + "\n");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Whether an app may run in the background now: "1", or "0" where Android's switch for it is off. */
+    private static String background(String pkg) throws Exception {
+        Process p = new ProcessBuilder("cmd", "appops", "get", pkg, "RUN_ANY_IN_BACKGROUND").redirectErrorStream(true).start();
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8));
+        boolean off = false;
+        for (String l; (l = r.readLine()) != null; ) if (l.contains("RUN_ANY_IN_BACKGROUND") && l.contains("ignore")) off = true;
+        p.waitFor();
+        return off ? "0" : "1";
+    }
 
     /** A home activity of Glass or of the TV's own home, and nothing else. */
     private static boolean home(String component) {

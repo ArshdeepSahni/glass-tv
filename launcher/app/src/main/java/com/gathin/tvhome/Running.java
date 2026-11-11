@@ -78,6 +78,7 @@ final class Running {
      * were last in front; the app in front first. {package, when it was last in front}.
      */
     static List<String[]> recent(Context c, int max) {
+        if (Sample.on) return Sample.recents(c, max);   // pictures: a few well-known apps, open
         Set<String> open = quick(c);
         PackageManager pm = c.getPackageManager();
         String front = Glass.selfInFront() ? null : Glass.front();

@@ -578,6 +578,12 @@ final class PhoneServer {
                 break;
         }
         switch (k) {
+            case "home":
+                // Glass's desktop itself, not a Home key: a pressed key reaches only Android, which sends it to
+                // whatever the TV ranks as its home (on a Xiaomi, its own home, whatever was chosen)
+                if (Glass.original(c)) break;
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> GlassKeys.home(c));
+                return true;
             case "assistant":
                 return GlassKeys.start(c, new Intent().setClassName(GlassKeys.ASSISTANT, GlassKeys.ASSISTANT + ".AskActivity").putExtra("button", true));
             case "brightup":

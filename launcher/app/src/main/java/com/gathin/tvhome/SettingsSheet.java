@@ -52,10 +52,8 @@ final class SettingsSheet extends Sheet {
     static final String[][] SECTIONS = {
             {"display", "sun", "Display & text"}, {"looks", "sparkle", "Backgrounds & savers"}, {"sound", "volume", "Sound"},
             {"network", "wifi", "Network & Bluetooth"}, {"inputs", "input", "Inputs"}, {"apps", "apps", "Apps"},
-            {"remote", "remote", "Remote & keyboard"}, {"power", "moon", "Sleep & power"}, {"assistant", "assist", "Assistant"},
+            {"speed", "sliders", "Speed & memory"}, {"remote", "remote", "Remote & keyboard"}, {"power", "moon", "Sleep & power"}, {"assistant", "assist", "Assistant"},
             {"glass", "swap", "Glass & original home"}, {"tv", "tv", "TV settings"}, {"about", "info", "About this TV"}};
-    static final String GLASS_VOICE = "com.gathin.glass.assistant/.GlassVoiceService";
-    static final String GOOGLE_VOICE = "com.google.android.katniss/.search.serviceapi.KatnissVoiceInteractionService";
     static final String GLASS_IME = "com.gathin.tvhome/.GlassKeyboard";
     static final String GBOARD = "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME";
     static final String[] CASTING = {"com.google.android.apps.mediashell", "com.homwee.mmp.screenshare", "com.homwee.multiscreenshare"};
@@ -571,7 +569,9 @@ final class SettingsSheet extends Sheet {
             {"backlight", "brightness"}, {"volume", "volume"}, {"language", "language"}, {"time zone", "date & time"},
             {"subtitles", "captions"}, {"uninstall", "manage apps"}, {"storage", "storage"}, {"memory", "memory"},
             {"phone", "phone"}, {"helper", "phone remote helper"}, {"animation", "wake animation"},
-            {"upgrade", "check for updates"}, {"new version", "check for updates"}, {"version", "glass"}};
+            {"upgrade", "check for updates"}, {"new version", "check for updates"}, {"version", "glass"},
+            {"slow", "free up memory"}, {"lag", "free up memory"}, {"speed", "free up memory"}, {"fast", "free up memory"},
+            {"bloat", "free up memory"}, {"ram", "free up memory"}, {"background", "in the background"}};
 
     private void find(String q) {
         query = q.trim().toLowerCase(Locale.getDefault());
@@ -650,7 +650,7 @@ final class SettingsSheet extends Sheet {
         int s = section;
         section = -1;
         show(s);
-        for (View r : rows) if (row.equals(r.getContentDescription())) { r.requestFocus(); return; }
+        if (row != null) for (View r : rows) if (row.equals(r.getContentDescription())) { r.requestFocus(); return; }
     }
 
     private void toast(String s) {
@@ -671,7 +671,7 @@ final class SettingsSheet extends Sheet {
                     a.lookChanged("settings:display:Appearance");
                 });
                 if (Backlight.works(c)) {
-                    level("Brightness", "The TV's backlight", Backlight.get(c), d -> Backlight.step(c, d) ? Backlight.get(c) : -1);
+                    level("Brightness", Backlight.about(c), Backlight.get(c), d -> Backlight.step(c, d) ? Backlight.get(c) : -1);
                 }
                 float[] sizes = {0.85f, 1f, 1.15f, 1.3f};
                 float now = Settings.System.getFloat(cr, Settings.System.FONT_SCALE, 1f);
@@ -816,6 +816,37 @@ final class SettingsSheet extends Sheet {
                 nativeLink("Manage apps", "Storage, permissions, uninstall", Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
                 break;
             }
+            case "speed": {
+                ActivityManager am = c.getSystemService(ActivityManager.class);
+                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+                if (am != null) am.getMemoryInfo(mi);
+                link("Free up memory", "Closes the apps waiting in the background. " + (mi.availMem >> 20) + " MB of "
+                        + (mi.totalMem >> 20) + " MB free now", null, this::freeMemory);
+                float scale = Settings.Global.getFloat(cr, Settings.Global.WINDOW_ANIMATION_SCALE, 1f);
+                choice("Animations", "How quickly the TV's windows open and close. Glass's own motion stays as it is",
+                        new String[]{"Normal", "Quick"}, scale < 0.75f ? 1 : 0, k -> setAnimations(k == 1 ? 0.5f : 1f));
+                // apps that may keep running after you leave them (each holds memory the one you watch could use)
+                List<String[]> apps = backgroundApps();
+                if (!apps.isEmpty()) subhead("Apps in the background");
+                if (!indexing) loadBackground(apps);
+                for (String[] app : apps) {
+                    final String pkg = app[0];
+                    Boolean may = BG.get(pkg);
+                    boolean on = may == null || may;
+                    choice(app[1], on ? "Keeps running in the background after you leave it" : "Runs only while it's open",
+                            new String[]{"In background", "Only open"}, on ? 0 : 1, k -> setBackground(pkg, k == 0));
+                }
+                // the TV's own extras: off frees their memory and the TV's start (never uninstalled; restore brings them back)
+                boolean any = false;
+                for (String[] e : Extras.ALL) {
+                    if (!installed(e[0])) continue;
+                    if (!any) subhead("The TV's extras");
+                    any = true;
+                    final String pkg = e[0];
+                    onOff(e[1], e[2], enabled(pkg), k -> setExtra(pkg, e[1], k == 0));
+                }
+                break;
+            }
             case "remote": {
                 List<String[]> kb = keyboards();
                 String curIme = Settings.Secure.getString(cr, Settings.Secure.DEFAULT_INPUT_METHOD);
@@ -876,16 +907,9 @@ final class SettingsSheet extends Sheet {
                 break;
             }
             case "assistant": {
-                String svc = Settings.Secure.getString(cr, "voice_interaction_service");
-                boolean glass = svc != null && svc.startsWith("com.gathin.glass.assistant/");
+                boolean glass = Assist.owns(c);
                 choice("Assistant button", "What the remote's assistant button opens", new String[]{"Glass", "Google"}, glass ? 0 : 1, k -> {
-                    String to = k == 0 ? GLASS_VOICE : GOOGLE_VOICE;
-                    try {
-                        Settings.Secure.putString(cr, "voice_interaction_service", to);
-                        Settings.Secure.putString(cr, "assistant", to);
-                    } catch (RuntimeException e) {
-                        toast("Needs the installer's permission");
-                    }
+                    if (!Assist.set(c, k == 0)) toast("Needs the installer's permission");
                 });
                 boolean reads = Screen.reads(c);
                 choice("Reads the screen", "When you ask, what's on screen goes with your question", new String[]{"On", "Off"}, reads ? 0 : 1, k ->
@@ -1030,6 +1054,142 @@ final class SettingsSheet extends Sheet {
     private String focusedLabel() {
         for (View r : rows) if (r.hasFocus() && r.getContentDescription() != null) return r.getContentDescription().toString();
         return "Background";
+    }
+
+    // ---- speed & memory ---------------------------------------------------------------------------------------
+
+    /** Whether each app may run in the background, as the TV's key helper last said (Android's own switch). */
+    private static final java.util.Map<String, Boolean> BG = new java.util.concurrent.ConcurrentHashMap<>();
+    private static volatile boolean bgLoading;
+
+    /** A quiet label between rows (not focusable). */
+    private void subhead(String text) {
+        TextView t1 = Ui.line(c, 13, t.ink3, 500, text);
+        t1.setPadding(Ui.px(16), Ui.px(group.getChildCount() == 0 ? 12 : 18), Ui.px(16), Ui.px(4));
+        group.addView(t1, Ui.ll(-2, -1));
+    }
+
+    /** {package, name} of the apps on the TV's apps row that may be kept from the background (not Android's, Google's
+     *  services or assistant, or Glass), by name. */
+    private List<String[]> backgroundApps() {
+        android.content.pm.PackageManager pm = c.getPackageManager();
+        java.util.TreeMap<String, String[]> byName = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Intent i = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
+        for (android.content.pm.ResolveInfo ri : pm.queryIntentActivities(i, 0)) {
+            if (ri.activityInfo == null) continue;
+            String pkg = ri.activityInfo.packageName;
+            if (Extras.backgroundProtected(pkg) || Extras.known(pkg)) continue;
+            String name = String.valueOf(ri.loadLabel(pm));
+            byName.put(name + " " + pkg, new String[]{pkg, name});
+        }
+        return new ArrayList<>(byName.values());
+    }
+
+    /** What the helper says about each app, once per Glass start; the section follows when it's what you're in. */
+    private void loadBackground(List<String[]> apps) {
+        boolean all = true;
+        for (String[] a1 : apps) if (!BG.containsKey(a1[0])) all = false;
+        if (all || bgLoading || !"ready".equals(Keys.status())) return;
+        bgLoading = true;
+        new Thread(() -> {
+            boolean changed = false;
+            try {
+                for (String[] a1 : apps) {
+                    Boolean may = Keys.background(c, a1[0]);
+                    if (may == null) break;
+                    if (!may.equals(BG.put(a1[0], may))) changed = true;
+                }
+            } finally {
+                bgLoading = false;
+            }
+            if (!changed) return;
+            h.post(() -> {
+                // shown again only while the sections column has the focus: never pulled from under a row you're on
+                View f = root.findFocus();
+                if (section >= 0 && "speed".equals(SECTIONS[section][0]) && (f == null || !isInside(f, group))) {
+                    int s1 = section;
+                    section = -1;
+                    show(s1);
+                }
+            });
+        }, "glass-speed").start();
+    }
+
+    private static boolean isInside(View v, View parent) {
+        for (android.view.ViewParent p = v.getParent(); p != null; p = p.getParent()) if (p == parent) return true;
+        return false;
+    }
+
+    private boolean installed(String pkg) {
+        try {
+            c.getPackageManager().getApplicationInfo(pkg, android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** The helper must be up for these: it asks the TV once, and the row goes back to how it was meanwhile. */
+    private boolean helperUp(String row) {
+        if ("ready".equals(Keys.status())) return true;
+        Keys.askAgain(c);
+        toast("First allow Glass's helper on the TV (Remote & keyboard ▸ Phone remote helper)");
+        h.post(() -> again(row));
+        return false;
+    }
+
+    private void freeMemory() {
+        if (!helperUp("Free up memory")) return;
+        final ActivityManager am = c.getSystemService(ActivityManager.class);
+        new Thread(() -> {
+            ActivityManager.MemoryInfo before = new ActivityManager.MemoryInfo(), after = new ActivityManager.MemoryInfo();
+            if (am != null) am.getMemoryInfo(before);
+            boolean ok = Keys.freeMemory(c);
+            SystemClock.sleep(1500);
+            if (am != null) am.getMemoryInfo(after);
+            long freed = Math.max(0, (after.availMem - before.availMem) >> 20);
+            h.post(() -> {
+                toast(!ok ? "The TV wouldn't close its apps just now"
+                        : freed > 0 ? "Freed " + freed + " MB: " + (after.availMem >> 20) + " MB free" : "Nothing was waiting in the background");
+                again("Free up memory");
+            });
+        }, "glass-free").start();
+    }
+
+    private void setAnimations(float scale) {
+        try {
+            Settings.Global.putFloat(c.getContentResolver(), Settings.Global.WINDOW_ANIMATION_SCALE, scale);
+            Settings.Global.putFloat(c.getContentResolver(), Settings.Global.TRANSITION_ANIMATION_SCALE, scale);
+        } catch (RuntimeException e) {
+            toast("Needs the installer's permission");
+            h.post(() -> again("Animations"));
+        }
+    }
+
+    private void setBackground(String pkg, boolean allow) {
+        String row = null;
+        for (String[] a1 : backgroundApps()) if (a1[0].equals(pkg)) row = a1[1];
+        if (!helperUp(row)) return;
+        final String label = row;
+        new Thread(() -> {
+            boolean ok = Keys.setBackground(c, pkg, allow);
+            if (ok) BG.put(pkg, allow);
+            h.post(() -> {
+                if (!ok) toast("The TV wouldn't change that just now");
+                again(label);
+            });
+        }, "glass-speed").start();
+    }
+
+    private void setExtra(String pkg, String name, boolean on) {
+        if (!helperUp(name)) return;
+        new Thread(() -> {
+            boolean ok = Keys.enable(c, pkg, on);
+            h.post(() -> {
+                toast(!ok ? "The TV wouldn't change " + name + " just now" : name + (on ? " is on" : " is off"));
+                again(name);
+            });
+        }, "glass-speed").start();
     }
 
     // ---- keyboard, casting ------------------------------------------------------------------------------------

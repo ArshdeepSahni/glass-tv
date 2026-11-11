@@ -25,12 +25,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Control Center. Everything works right here, nothing sends you to the TV's settings:
+ * Control Center. Everything works right here; only what Android keeps for its own settings sends you there:
  *   main       Wi-Fi ›, Bluetooth ›, Sleep (OK steps the timer), Night volume (OK steps the ceiling),
- *              Volume and (where the TV lets Glass set its backlight) Brightness with ← →, where the sound goes ›,
+ *              Volume and Brightness (the TV's backlight, or else the picture dimmed) with ← →,
  *              Text size and Appearance (Light · Auto · Dark) with ← →, Phone ›
- *   wifi       the switch, the networks in reach, joining one (password typed here)
- *   bluetooth  the switch, your devices; OK sends the TV's sound to headphones or a speaker, or brings it back
+ *   wifi       the switch, the networks in reach, joining one (password typed here). With Location off, a row that
+ *              turns on its TV-only kind first. Android 10 and later keep the switch and joining for the TV's
+ *              own Wi-Fi page, which those open.
+ *   bluetooth  the switch, your devices; OK sends the TV's sound to headphones or a speaker, or brings it back.
+ *              Turned on here, it says "Turning on…" until it is, and if it never comes (a TV whose Bluetooth keeps
+ *              stopping), that a restart fixes it, with Restart the TV
  * Back from a page puts focus back on whatever opened it; a page's last action sits at the panel's foot.
  *   sound      volume, where the sound plays, the night ceiling (the bar's volume item opens this one)
  * Pages slide like cards; whatever has focus rises a little on a soft shadow, a row on the bright platter, a tile with
@@ -79,7 +83,8 @@ final class ControlsSheet extends Sheet {
         return this;
     }
 
-    /** Brightness shows where Glass can set the TV's backlight (Backlight); else that row is where the sound goes. */
+    /** Brightness shows wherever Glass can change it: the TV's backlight, or the picture dimmed (Backlight, Dim).
+     *  Only without Glass's helper is that row where the sound goes. */
     static boolean pictureWorks(android.content.Context c) {
         return Backlight.works(c);
     }
@@ -243,7 +248,11 @@ final class ControlsSheet extends Sheet {
         focusable(head);
         head.setOnClickListener(v -> {
             boolean want = !Net.on(c);
-            Net.set(c, want);
+            // Android 10 and later keep the Wi-Fi switch for their own settings: there it opens the TV's Wi-Fi page
+            if (!Net.inPlace() || !Net.set(c, want)) {
+                a.openSystem(Settings.ACTION_WIFI_SETTINGS);
+                return;
+            }
             Sound.toggle(want);
             sw.set(want);
             v.postDelayed(() -> go("wifi", 0), 1500);
@@ -257,7 +266,29 @@ final class ControlsSheet extends Sheet {
         scroll.setVerticalScrollBarEnabled(false);
         LinearLayout list = Ui.column(c);
         scroll.addView(list);
-        if (on) {
+        if (on && !Net.locationOn(c)) {
+            // Android names the networks around (and the one the TV is on) to apps only while Location is on
+            LinearLayout r = Ui.row(c);
+            r.setPadding(Ui.px(12), 0, Ui.px(12), 0);
+            r.addView(glyph(c, "location", t.ink2), Ui.ll(18, 18));
+            TextView name = Ui.line(c, 15, t.ink, 500, "Show the networks");
+            LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(0, -2, 1f);
+            nl.leftMargin = Ui.px(12);
+            r.addView(name, nl);
+            r.addView(Ui.line(c, 13, t.ink3, 400, "Turns on Location"), Ui.ll(-1, -1, 8, 0));
+            focusable(r);
+            r.setOnClickListener(v -> {
+                if (Net.turnOnLocation(c)) {
+                    Sound.toggle(true);
+                    go("wifi", 0);
+                } else {
+                    a.openSystem(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                }
+            });
+            list.addView(r, Ui.ll(-2, ROW));
+            list.addView(note("Android lists nearby Wi-Fi only while Location is on. Glass turns on the TV-only kind, "
+                    + "so nothing is sent to Google."));
+        } else if (on) {
             Net.scan(c);
             List<Net.Ap> aps = Net.list(c);
             if (aps.isEmpty()) list.addView(note("Looking for networks…"));
@@ -278,6 +309,10 @@ final class ControlsSheet extends Sheet {
                 focusable(r);
                 r.setOnClickListener(v -> {
                     if (ap.current) return;
+                    if (!Net.inPlace()) {   // Android 10 and later join networks in their own settings
+                        a.openSystem(Settings.ACTION_WIFI_SETTINGS);
+                        return;
+                    }
                     if (ap.secured && !ap.saved) {
                         joining = ap;
                         go("wifi", 0);
@@ -342,13 +377,61 @@ final class ControlsSheet extends Sheet {
         if (imm != null && password != null) imm.hideSoftInputFromWindow(password.getWindowToken(), 0);
     }
 
+    /** Bluetooth was turned on here and is still coming on until then (uptime); after it, if it isn't on, it failed. */
+    private static long btWaitUntil;
+    private static boolean btFailed;
+    private static final long BT_WAIT_MS = 12_000;
+    private static final android.os.Handler UI = new android.os.Handler(android.os.Looper.getMainLooper());
+    private TextView btNote;
+
+    /** Watches Bluetooth coming on after the switch: the page again once it's on, or once it clearly didn't come. */
+    private final Runnable btWatch = new Runnable() {
+        @Override
+        public void run() {
+            if (!"bluetooth".equals(current) || btNote == null || !btNote.isAttachedToWindow()) return;
+            if (Bt.on()) {
+                btWaitUntil = 0;
+                btFailed = false;
+                Sound.toggle(true);
+                go("bluetooth", 0);
+            } else if (SystemClock.uptimeMillis() >= btWaitUntil) {
+                btWaitUntil = 0;
+                btFailed = true;
+                Sound.bump();
+                go("bluetooth", 0);
+            } else {
+                UI.postDelayed(this, 600);
+            }
+        }
+    };
+
+    /** "waiting" (turned on here, still coming), "failing" (it doesn't come on), "on" or "off". */
+    private String btState() {
+        if (Bt.on()) {
+            btWaitUntil = 0;
+            btFailed = false;
+            return "on";
+        }
+        if (btWaitUntil != 0 && SystemClock.uptimeMillis() < btWaitUntil) return "waiting";
+        if (btWaitUntil != 0) {
+            btWaitUntil = 0;
+            btFailed = true;
+        }
+        return btFailed || Bt.stuck(c) ? "failing" : "off";
+    }
+
     private void bluetooth(FrameLayout p) {
-        boolean on = Bt.on();
+        String st = btState();
+        boolean on = "on".equals(st);
         LinearLayout head = header("Bluetooth", "main".equals(start) || !"bluetooth".equals(start));
-        Switch sw = new Switch(on);
+        Switch sw = new Switch(on || "waiting".equals(st));
         head.addView(sw.v);
         focusable(head);
         head.setOnClickListener(v -> {
+            if ("waiting".equals(btState())) {
+                Sound.bump();
+                return;
+            }
             boolean want = !Bt.on();
             // the remote may talk Bluetooth: turning it off asks twice, so it isn't done by a stray press
             if (!want && Bt.remoteConnected() && SystemClock.uptimeMillis() - btOffAsked > 4000) {
@@ -364,15 +447,46 @@ final class ControlsSheet extends Sheet {
             }
             Sound.toggle(want);
             sw.set(want);
-            v.postDelayed(() -> go("bluetooth", 0), 1600);
+            if (want) {
+                // it takes a few seconds, and on some TVs it never comes: the page says which
+                btWaitUntil = SystemClock.uptimeMillis() + BT_WAIT_MS;
+                btFailed = false;
+                go("bluetooth", 0);
+            } else {
+                v.postDelayed(() -> go("bluetooth", 0), 1600);
+            }
         });
         p.addView(head, Ui.at(12, 12, 380, HEAD));
         ScrollView scroll = new ScrollView(c);
         scroll.setVerticalScrollBarEnabled(false);
         LinearLayout list = Ui.column(c);
         scroll.addView(list);
+        if ("waiting".equals(st)) {
+            btNote = note("Turning on…");
+            list.addView(btNote);
+            UI.removeCallbacks(btWatch);
+            UI.postDelayed(btWatch, 600);
+        } else if ("failing".equals(st)) {
+            btNote = note("Bluetooth isn't starting on this TV, so a Bluetooth remote has no microphone. "
+                    + "Restarting the TV fixes it.");
+            list.addView(btNote);
+            if (HomeKeyService.canOpenPowerMenu()) {
+                LinearLayout r = Ui.row(c);
+                r.setPadding(Ui.px(12), 0, Ui.px(12), 0);
+                r.addView(glyph(c, "power", t.ink2), Ui.ll(18, 18));
+                TextView name = Ui.line(c, 15, t.ink, 500, "Restart the TV");
+                LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(0, -2, 1f);
+                nl.leftMargin = Ui.px(12);
+                r.addView(name, nl);
+                focusable(r);
+                r.setOnClickListener(v -> HomeKeyService.openPowerMenu());
+                list.addView(r, Ui.ll(-2, ROW));
+            }
+        } else {
+            btNote = null;
+        }
         List<Bt.Dev> devs = Bt.devices();
-        if (devs.isEmpty()) list.addView(note(Bt.on() ? "No devices yet. Pair headphones or a speaker below." : "Bluetooth is off."));
+        if (devs.isEmpty() && btNote == null) list.addView(note(on ? "No devices yet. Pair headphones or a speaker below." : "Bluetooth is off."));
         for (Bt.Dev d : devs) {
             LinearLayout r = Ui.row(c);
             r.setPadding(Ui.px(12), 0, Ui.px(12), 0);
@@ -494,10 +608,11 @@ final class ControlsSheet extends Sheet {
             boolean wifiOn = Net.on(c);
             String ssid = Net.current(c);
             wifiT.set(wifiOn, !wifiOn ? "Off" : ssid != null ? ssid : Glass.connected(c) ? "Connected" : "On");
-            boolean btOn = Bt.on();
+            String bt = btState();
+            boolean btOn = "on".equals(bt);
             boolean any = false;
             for (Bt.Dev d : Bt.devices()) any |= d.audio && d.connected;
-            btT.set(btOn, !btOn ? "Off" : any ? "Headphones" : "On");
+            btT.set(btOn, "waiting".equals(bt) ? "Turning on…" : "failing".equals(bt) ? "Not starting" : !btOn ? "Off" : any ? "Headphones" : "On");
             int left = SleepTimer.minutesLeft();
             sleepT.set(left > 0, left > 0 ? "In " + left + " min" : "Off");
             int ceil = Glass.prefs(c).getInt(Glass.NIGHT_CEILING, 0);

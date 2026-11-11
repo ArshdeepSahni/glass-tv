@@ -247,6 +247,35 @@ public class GlassHomeActivity extends Activity implements Bar.Host, Dock.Host, 
                 return;
             }
         }
+        String solo = i == null ? null : i.getStringExtra("solo");
+        if (solo != null) {   // pictures of one widget ("weather"), of none ("none"), or as they were ("off")
+            i.removeExtra("solo");
+            String want = Sample.on && !solo.equals("off") ? solo : null;
+            if (want == null ? Sample.solo != null : !want.equals(Sample.solo)) {
+                Sample.solo = want;
+                rebuild(i.getStringExtra(EXTRA_OPEN));
+                i.removeExtra(EXTRA_OPEN);
+                return;
+            }
+        }
+        String note = i == null ? null : i.getStringExtra("note");
+        if (note != null) {   // pictures of Glass's notes: "title|words|glyph"
+            i.removeExtra("note");
+            HomeKeyService ns = HomeKeyService.current();
+            if (Sample.on && ns != null) {
+                String[] n = note.split("\\|", -1);
+                if (n.length > 2 && !n[2].isEmpty()) Hud.of(ns).note(n[0], n[1], n[2]);
+                else Hud.of(ns).note(n[0], n.length > 1 ? n[1] : "");
+            }
+        }
+        String saver = i == null ? null : i.getStringExtra("saver");
+        if (saver != null) {
+            i.removeExtra("saver");
+            if (Sample.on) {   // pictures of each screen saver: that one, now
+                startActivity(new Intent(this, ClockActivity.class).putExtra(ClockActivity.STYLE, saver));
+                return;
+            }
+        }
         String audit = i == null ? null : i.getStringExtra("audit");
         if (audit != null) {
             i.removeExtra("audit");

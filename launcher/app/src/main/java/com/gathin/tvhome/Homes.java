@@ -95,6 +95,53 @@ final class Homes {
         }, "glass-homes").start();
     }
 
+    /** Where the installer notes, on the TV, the TV's own homes it turned off (in the TV shell's own folder). */
+    static final String TURNED_OFF = "/data/local/tmp/glass-turned-off";
+
+    /**
+     * At every start of the TV, in Glass's mode: the TV's own homes the installer turned off, off again, and Glass the
+     * home again. Some TVs turn their home back on as they start (a Xiaomi does: its home is an updated system app,
+     * which Android 9 scans again at every start, and the app comes back on), and then Android ranks it above any
+     * app. Only the TV's shell user can read the installer's note or turn an app off, so this goes through Glass's
+     * own key (LocalAdb), and only where the TV already allows that key: it never asks anything as the TV starts.
+     * Tried a few times: the TV's debugging can take a while to come up after a start.
+     */
+    /** keepOff is at work: the power-on chooser waits for it (it would offer a home that's about to go). */
+    static volatile boolean keeping;
+
+    static void keepOff(Context c) {
+        final Context app = c.getApplicationContext();
+        if (Glass.original(app) || !Keys.everAllowed(app)) return;
+        keeping = true;
+        // Google's assistant app may be in the note from a development build of 1.0.1: never turned off (GoogleApp)
+        final String skip = Takeover.GOOGLE;
+        // a word after each step: the connection gives up on a long silence (pm takes seconds on a 1 GB TV)
+        final String cmd = "F=" + TURNED_OFF + "; [ -f $F ] || { echo none; exit 0; }; echo go; "
+                + "for p in $(cat $F); do case \"$p\" in *[!A-Za-z0-9._]*|''|" + skip + ") continue;; esac; echo \"is $p\"; "
+                + "pm list packages -e \"$p\" 2>/dev/null | grep -qx \"package:$p\" && pm disable-user --user 0 \"$p\" >/dev/null 2>&1 && echo \"off $p\"; done; "
+                + "cmd package set-home-activity --user 0 " + GLASS_HOME + " >/dev/null 2>&1; echo done";
+        new Thread(() -> {
+            try {
+                for (int i = 0; i < 4; i++) {
+                    try {
+                        String out = LocalAdb.quiet(cmd);
+                        if (out.contains("done") || out.contains("none")) {
+                            android.util.Log.i(Keys.TAG, "homes at start: " + out.replace('\n', ' ').trim());
+                            return;
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.i(Keys.TAG, "homes at start: not yet (" + e.getClass().getSimpleName() + ")");
+                    }
+                    if (i == 0) keeping = false;   // the chooser waits for the first try only
+                    Thread.sleep(10_000L * (i + 1));
+                }
+            } catch (InterruptedException ignored) {
+            } finally {
+                keeping = false;
+            }
+        }, "glass-homes").start();
+    }
+
     /** After a switch back made while the helper was down: finish it once the helper is up (no question on the TV). */
     static void tidy(Context c) {
         final Context app = c.getApplicationContext();

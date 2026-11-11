@@ -24,6 +24,7 @@ import java.util.List;
  *   send (text)      something said; Glass replies (and does what it says, as on the TV); extras "turn": answers
  *                    that question back
  *   play (pick JSON) plays a pick on the TV
+ *   assist_entry     the desktop started: AssistEntry checks who answers the TV's assistant request
  */
 public final class ChatProvider extends ContentProvider {
     private static final Object LOCK = new Object();
@@ -49,6 +50,9 @@ public final class ChatProvider extends ContentProvider {
                         return out(send(c, arg == null ? "" : arg.trim(), extras == null ? -1 : extras.getInt("turn", -1)));
                     case "play":
                         return out(play(c, arg));
+                    case "assist_entry":   // the desktop started: answer the TV's assistant request only where nothing else does
+                        AssistEntry.check(c);
+                        return new Bundle();
                     default:
                         return null;
                 }

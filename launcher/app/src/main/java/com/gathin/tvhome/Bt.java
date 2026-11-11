@@ -36,6 +36,27 @@ final class Bt {
         }
     }
 
+    /** The adapter's state as Android tells apps (its low-energy-only states count as off). */
+    static int state() {
+        try {
+            BluetoothAdapter a = BluetoothAdapter.getDefaultAdapter();
+            return a == null ? BluetoothAdapter.STATE_OFF : a.getState();
+        } catch (RuntimeException e) {
+            return BluetoothAdapter.STATE_OFF;
+        }
+    }
+
+    /**
+     * The TV wants Bluetooth on (its own setting says so) and it isn't on, minutes after the TV started: its Bluetooth
+     * keeps stopping as it starts (a Xiaomi did, for days, until a restart). A Bluetooth remote falls back to infrared
+     * then, without its microphone, and some of its buttons send nothing.
+     */
+    static boolean stuck(Context c) {
+        if (android.os.SystemClock.elapsedRealtime() < 3 * 60_000L) return false;
+        int wants = android.provider.Settings.Global.getInt(c.getContentResolver(), "bluetooth_on", 0);
+        return (wants == 1 || wants == 2) && state() != BluetoothAdapter.STATE_ON;
+    }
+
     /** Turns Bluetooth on or off; false when the TV wouldn't. */
     static boolean set(boolean on) {
         try {

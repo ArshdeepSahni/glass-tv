@@ -61,6 +61,22 @@ Its keys never leave your computer, so it isn't part of GitHub's releases. When 
 The TV's network debugging has to stay on: Glass's key helper uses it to install updates without asking and to let
 the phone remote press keys inside apps. The TV asks once to allow each computer, and once for Glass itself.
 
+### What Glass handles by itself
+
+Some TVs fight a new home screen. Glass deals with these without anyone setting anything (first seen on a 1 GB Xiaomi
+with Android TV 9):
+
+| The TV | Glass |
+|---|---|
+| Turns its own home back on at every start (an updated system app, rescanned) | Turns it off again as it starts, with its own key, from the note the installer left on the TV |
+| Opens its own home app by itself at start and wake (Xiaomi's PatchWall) | Takes over until the first key press, and plays the wake film |
+| Sends the remote's Home as another key (Xiaomi: `BUTTON_2`, scan code 580) | Knows that one, and learns any other the first time the TV answers it with its own home |
+| Clears Android's assistant setting at every start (a low-RAM TV) | Keeps the assistant-button choice itself |
+| Hands the remote's mic button and its sound to Google's assistant app alone (its voice screen is a window over the apps) | Stops Google the moment its voice screen comes up, before it hears or answers anything, and Glass's assistant listens through the TV's speech recognizer |
+| Keeps its backlight out of apps' reach | Brightness dims the picture instead |
+| Has Location off, so apps can't list Wi-Fi | Control Center offers to turn on Location's TV-only kind (nothing goes to Google) |
+| Has a Bluetooth that keeps stopping (the remote falls back to infrared: no voice, some keys dead) | Control Center says so; a restart of the TV fixes it, and `./glass doctor` offers one |
+
 ## On Cloudflare
 
 One Worker, `glass-updates`, and one KV namespace, `glass-releases` (the release list and its APKs, old ones

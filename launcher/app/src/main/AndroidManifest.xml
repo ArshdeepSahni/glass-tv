@@ -50,6 +50,14 @@
     <queries>
         <package android:name="com.google.android.tvlauncher" />
         <package android:name="com.gathin.glass.assistant" />
+        <!-- Who answers the TV's assistant request (Assist: Glass's assistant steps back where another app does). -->
+        <intent>
+            <action android:name="android.intent.action.ASSIST" />
+        </intent>
+        <!-- The TV's Location page, for the Wi-Fi list where Glass can't turn Location on itself. -->
+        <intent>
+            <action android:name="android.settings.LOCATION_SOURCE_SETTINGS" />
+        </intent>
         <!-- The standard settings handlers, so package visibility doesn't hide them and send the pills to a vendor fallback by mistake. -->
         <intent>
             <action android:name="android.settings.SETTINGS" />

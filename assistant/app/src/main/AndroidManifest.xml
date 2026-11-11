@@ -31,11 +31,20 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <!-- The TV's assistant request (android.intent.action.ASSIST), answered here only on a TV where no other app
+             answers it. Where Google's assistant is there, the request goes to it and the desktop takes over from its
+             screen (the launcher's Takeover): two answers would make Android ask which one, at every press.
+             AssistEntry turns this on or off. -->
+        <activity-alias
+            android:name=".AssistEntry"
+            android:targetActivity=".AskActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </activity>
+        </activity-alias>
         <!-- Glass as the TV's assistant: the remote's assistant button opens Glass, not Google (set by the installer). -->
         <!-- Glass on a phone: the desktop asks this, for phones the TV allowed; only apps signed like this one may call it -->
         <provider android:name=".ChatProvider" android:authorities="com.gathin.glass.assistant.chat" android:exported="true" />

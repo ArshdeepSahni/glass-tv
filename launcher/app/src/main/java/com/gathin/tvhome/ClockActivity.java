@@ -20,6 +20,8 @@ public class ClockActivity extends Activity {
 
     /** Settings ▸ Try the screen saver: the chosen one, now. */
     static final String PREVIEW = "preview";
+    /** Pictures of each screen saver (only while sample content is on): this one instead of the chosen one. */
+    static final String STYLE = "style";
 
     private Saver saver;
 
@@ -27,7 +29,8 @@ public class ClockActivity extends Activity {
     @SuppressWarnings("deprecation")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        saver = new Saver(this, Looks.saver(this));
+        String want = Sample.on ? getIntent().getStringExtra(STYLE) : null;
+        saver = new Saver(this, want != null ? want : Looks.saver(this));
         setContentView(saver);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);

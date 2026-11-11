@@ -9,7 +9,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -26,11 +25,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The remote's assistant button, Glass's way. On this TV the button never reaches an app: the remote's own service
- * opens Google's voice screen directly. So the moment Google's screen appears, Glass covers it with its own
- * listening glass, closes Google's screen as soon as it has the TV's focus (before Google hears or answers
- * anything), and Glass's assistant listens instead (the remote's microphone answers any app that listens, so Glass
- * hears it directly). What's on the TV is noted first (Screen), before any window goes over it.
+ * The remote's assistant button, Glass's way. On these TVs the button never reaches an app: the remote's own service
+ * opens Google's voice screen directly. So the moment Google's screen appears, by the kind of screen it is:
+ *   an activity (a MediaTek TV): Glass covers it with its own listening glass and closes it as soon as it has the
+ *     TV's focus (before Google hears or answers anything), and Glass's assistant listens instead (the remote's
+ *     microphone answers any app that listens there).
+ *   a window over the apps (a Xiaomi): the remote's service hands the button and its sound to Google's app alone,
+ *     and Google's voice session keeps that sound for as long as it lives, window or not. Glass notes the TV
+ *     (GOOGLE_ONLY), stops Google at once (Android's Force stop, through Glass's own key), which frees the remote's
+ *     microphone, and Glass's assistant listens through the TV's speech recognizer. After a stop, the TV's next
+ *     press comes as an activity of Google's, which goes the same way on such a TV.
+ * What's on the TV is noted first (Screen), before any window goes over it.
  * Press the button again while Glass listens: what it heard so far is sent.
  * Settings > Assistant > Assistant button: Google leaves the button to Google entirely.
  */
@@ -40,6 +45,9 @@ final class Takeover {
 
     private static final String TAG = "GlassKeys";
     static final String GOOGLE = "com.google.android.katniss";
+    /** Seen on this TV: Google's voice screen is a window over the apps, and the remote's mic button and sound reach
+     *  only Google's app: Google is stopped at once whenever its voice screen comes up (googleAppeared). */
+    static final String GOOGLE_ONLY = "voice_button_only";
     private static final long QUIET_AFTER_MS = 1500;
 
     private static boolean active;
@@ -51,17 +59,23 @@ final class Takeover {
     private static View bead;
     private static long began;
 
-    /** Whether the button belongs to Glass (Settings > Assistant > Assistant button). */
+    /** Whether the button belongs to Glass (Settings > Assistant > Assistant button, kept by Glass: Assist). */
     static boolean glassOwnsButton(HomeKeyService s) {
-        String v = Settings.Secure.getString(s.getContentResolver(), "voice_interaction_service");
-        return v != null && v.startsWith(GlassKeys.ASSISTANT + "/");
+        return Assist.owns(s);
     }
 
-    /** A window of Google's assistant came up (HomeKeyService's window events). */
-    static void googleAppeared(HomeKeyService s) {
+    /**
+     * A window of Google's assistant came up (HomeKeyService's window events). overlay: it isn't an activity but a
+     * window over the apps (a Xiaomi's), whose remote hands the button and its sound to Google's app alone.
+     */
+    static void googleAppeared(HomeKeyService s, boolean overlay) {
         long now = SystemClock.uptimeMillis();
         if (active || now < quietUntil || !glassOwnsButton(s)) return;
         if (s.getPackageManager().getLaunchIntentForPackage(GlassKeys.ASSISTANT) == null) return;
+        if (overlay) Glass.prefs(s).edit().putBoolean(GOOGLE_ONLY, true).apply();
+        boolean googleOnly = Glass.prefs(s).getBoolean(GOOGLE_ONLY, false);
+        // where only Google's app hears the remote, Glass needs its own key to stop Google: without it, Google answers
+        if (googleOnly && !Keys.everAllowed(s)) return;
         active = true;
         svc = s;
         if (h == null) h = new Handler(Looper.getMainLooper());
@@ -72,8 +86,31 @@ final class Takeover {
         Ui.BG.execute(() -> Screen.snapshot(app));
         cover();
         Sound.glass();
-        h.postDelayed(Takeover::dismissGoogle, 60);
-        Log.i(TAG, "takeover: Google's voice screen covered");
+        if (googleOnly) {
+            // Google's voice session keeps the remote's sound while it lives, window or not: it's stopped at once,
+            // which frees the remote's microphone, and Glass's assistant listens through the TV's speech recognizer
+            Log.i(TAG, "takeover: Google's voice screen covered; Google stops, Glass listens");
+            stopGoogle(Takeover::handOver);
+        } else {
+            h.postDelayed(Takeover::dismissGoogle, 60);
+            Log.i(TAG, "takeover: Google's voice screen covered");
+        }
+    }
+
+    /** Google's assistant stopped as Android's own Force stop does (through Glass's own key, LocalAdb: it never asks
+     *  on the TV), before it answers anything; its recognizer comes back by itself when Glass's assistant asks for it. */
+    private static void stopGoogle(Runnable then) {
+        new Thread(() -> {
+            String out;
+            try {
+                out = LocalAdb.quiet("am force-stop " + GOOGLE + "; echo stopped");
+            } catch (Exception e) {
+                out = e.getClass().getSimpleName();
+            }
+            Log.i(TAG, "takeover: Google " + (out.contains("stopped") ? "stopped" : "not stopped (" + out.trim() + ")")
+                    + " after " + (SystemClock.uptimeMillis() - began) + " ms");
+            h.post(then);
+        }, "glass-takeover").start();
     }
 
     /** Google's screen goes as soon as it holds the TV's focus: a Back any earlier would land in the app (a film). */

@@ -42,8 +42,8 @@ android {
         applicationId 'com.gathin.glass.assistant'
         minSdk 26
         targetSdk 28
-        versionCode 6
-        versionName '1.0.0'
+        versionCode 7
+        versionName '1.0.1'
         buildConfigField 'String', 'CF_ACCOUNT_ID', q('CF_ACCOUNT_ID')
         buildConfigField 'String', 'CF_API_TOKEN', q('CF_API_TOKEN')
         buildConfigField 'String', 'CF_DECIDE_MODEL', q('CF_DECIDE_MODEL', '@cf/meta/llama-3.1-8b-instruct-fast')

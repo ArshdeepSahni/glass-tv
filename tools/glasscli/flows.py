@@ -341,20 +341,24 @@ def step_home(ui, c):
         ui.done("Glass is home")
         return
     a = ui.choose("Make Glass your TV's home screen?",
-                  "Home goes to Glass, with its keyboard, the assistant button and its screen saver. The TV's own "
-                  "home stays installed: ./glass restore brings it back.",
+                  "Home goes to Glass, with its keyboard, the assistant button and its screen saver. Some TVs always "
+                  "put their own home first: there it's turned off, never deleted, and ./glass restore turns it "
+                  "back on.",
                   [("Make Glass home", "recommended"), ("Not now", "")])
     if a != 0:
         ui.skip("Not now")
         return
     items = [["run", "Home screen", ""], ["todo", "Keyboard", ""], ["todo", "Assistant button", ""],
-             ["todo", "Screen saver", ""], ["todo", "Glass's helper", ""]]
+             ["todo", "Screen saver", ""], ["todo", "Wi-Fi list", ""], ["todo", "Glass's helper", ""]]
 
     def show():
         ui.say(title="Make Glass home", text="", items=[tuple(x) for x in items])
 
     show()
-    items[0] = ["done" if t.make_home() else "warn", "Home screen", ""]
+    home = t.make_home()
+    off = t.turned_off()
+    items[0] = ["done", "Home screen", "the TV's own turned off" if off else ""] if home else \
+        ["warn", "Home screen", "this TV keeps its own"]
     items[1][0] = "run"
     show()
     items[1] = ["done" if t.keyboard() else "warn", "Keyboard", ""]
@@ -367,8 +371,12 @@ def step_home(ui, c):
     items[3] = ["done", "Screen saver", ""]
     items[4][0] = "run"
     show()
+    # Android shows apps the Wi-Fi networks around only while Location is on (a TV has no GPS: the network kind)
+    items[4] = ["done", "Wi-Fi list", "Location on"] if t.location() else ["warn", "Wi-Fi list", "needs Location on"]
+    items[5][0] = "run"
+    show()
     if t.keys_up():
-        items[4] = ["done", "Glass's helper", "running"]
+        items[5] = ["done", "Glass's helper", "running"]
     else:
         t.open("keys")
         ui.say(title="Allow Glass's helper",
@@ -377,8 +385,12 @@ def step_home(ui, c):
                lines=ALLOW, items=[], clock=True)
         ok = ui.wait(t.keys_up, every=2.0, timeout=120)
         ui.say(lines=[])
-        items[4] = ["done", "Glass's helper", "running"] if ok else ["skip", "Glass's helper", "asks when needed"]
+        items[5] = ["done", "Glass's helper", "running"] if ok else ["skip", "Glass's helper", "asks when needed"]
     show()
+    if not home:
+        # never say Glass is home when the TV's own home still answers the Home button
+        ui.mark("warn", "the TV keeps its own home: ./glass doctor")
+        return
     if t.awake():
         t.press_home()
     ui.done("Glass is home")
@@ -539,7 +551,8 @@ def status(ui, opts):
 def doctor(ui, opts):
     checks = [("tools", "Tools"), ("tv", "The TV answers"), ("glass", "Glass"), ("home", "Home screen"),
               ("helper", "Remote helper"), ("keyboard", "Keyboard"), ("assistant", "Assistant button"),
-              ("keys", "Glass's helper"), ("crashes", "Crashes"), ("key", "Signing key")]
+              ("wifi", "Wi-Fi list"), ("bt", "Bluetooth"), ("keys", "Glass's helper"), ("crashes", "Crashes"),
+              ("key", "Signing key")]
     ui.begin("Doctor", "Check Glass and fix what's off", "Looks at this computer and the TV, then offers to fix "
              "what it can. Nothing changes without asking.", checks, version=bld.version()[0])
     fixes = []
@@ -593,13 +606,27 @@ def doctor(ui, opts):
         ui.mark("warn", "the TV's own")
         fixes.append(("Use Glass's keyboard", t.keyboard, "keyboard"))
     ui.step("assistant", "Assistant button")
-    if "GlassVoiceService" in t.sh("settings get secure voice_interaction_service"):
+    # a TV with little memory clears voice_interaction_service at every start; it keeps assistant, and so does Glass
+    if "GlassVoiceService" in t.sh("settings get secure voice_interaction_service; settings get secure assistant"):
         ui.done("Glass Assistant")
     elif t.version(tvmod.ASSISTANT):
         ui.mark("warn", "not Glass Assistant")
         fixes.append(("Give the button to Glass Assistant", t.assistant_button, "assistant"))
     else:
         ui.mark("skip", "the assistant isn't installed")
+    ui.step("wifi", "Wi-Fi list")
+    if t.location_on():
+        ui.done("Location on")
+    else:
+        ui.mark("warn", "Location is off, so no networks show")
+        fixes.append(("Turn on Location, for the Wi-Fi list", t.location, "wifi"))
+    ui.step("bt", "Bluetooth")
+    bt = t.bluetooth()
+    if bt == "failing":
+        ui.mark("fail", "keeps stopping: the remote has no voice")
+        fixes.append(("Restart the TV, which brings Bluetooth back", t.restart, "bt"))
+    else:
+        ui.done(bt)
     ui.step("keys", "Glass's helper")
     ui.done("running") if t.keys_up() else ui.mark("info", "starts when it's needed")
     ui.step("crashes", "Crashes")
@@ -654,11 +681,15 @@ def restore(ui, opts):
         ui.finish("Nothing changed", "Glass stays on the TV.", [])
         return
     ui.step("home", "The TV's own home")
+    t.own_homes_back()   # whatever home Glass turned off on this TV, on again
     t.sh("pm enable com.google.android.tvlauncher")
-    t.sh("cmd package set-home-activity --user 0 com.google.android.tvlauncher/.MainActivity")
+    own = [c for p, c in sorted(t.homes(), reverse=True) if not c.startswith(tvmod.PKG + "/") and p > -1000]
+    t.sh("cmd package set-home-activity --user 0 %s" % (own[0] if own else "com.google.android.tvlauncher/.MainActivity"))
     t.sh("settings put secure enabled_accessibility_services ''; settings put secure accessibility_enabled 0")
     t.sh("settings delete secure voice_interaction_service; settings delete secure assistant; "
          "settings delete secure screensaver_components")
+    t.location_back()
+    t.speed_back()
     t.sh("ime reset")
     ui.done("back")
     ui.step("apps", "The TV's own apps")

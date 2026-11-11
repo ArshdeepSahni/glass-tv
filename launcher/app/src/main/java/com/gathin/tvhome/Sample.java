@@ -35,6 +35,9 @@ final class Sample {
     /** Pictures of the widgets' sizes: every widget at this size (Widgets.S, M or L), wherever there's room. -1: as
      * they are. Only while sample content is on, and never saved. */
     static volatile int size = -1;
+    /** Pictures of one widget, or of none ("none"): only that one on the desktop, top left. null: as they are. Only
+     * while sample content is on, and never saved. */
+    static volatile String solo;
     private static Bitmap art;
 
     static final String PLACE = "Lisbon";
@@ -47,6 +50,8 @@ final class Sample {
     private static final String[] DEVICES = {"Living room speaker", "Headphones", "Game controller", "Keyboard"};
     private static final String[] PHONES = {"Phone", "Tablet", "Phone 2"};
     private static final String[] PHOTOS = {"walls/dunes-d.jpg", "walls/ridges-d.jpg", "walls/aurora-n.jpg", "walls/silk-d.jpg"};
+    /** What the photos are called where Files shows them. */
+    private static final String[] PHOTO_NAMES = {"Dunes.jpg", "Ridges.jpg", "Aurora.jpg", "Silk.jpg"};
     /** The apps pictures show, in the dock's order, when the TV has them; with the TV's Live TV and Glass's own. */
     static final String[] APPS = {"com.google.android.youtube.tv", "com.netflix.ninja", "com.amazon.amazonvideo.livingroom",
             "com.spotify.tv.android", "com.google.android.youtube.tvmusic", "com.android.vending", "org.videolan.vlc"};
@@ -66,7 +71,10 @@ final class Sample {
     static void set(Context c, boolean v) {
         Glass.prefs(c).edit().putBoolean("sample", v).commit();
         on = v;
-        if (!v) size = -1;
+        if (!v) {
+            size = -1;
+            solo = null;
+        }
         if (v) prepare(c);
         Media.changedBySample();
     }
@@ -83,8 +91,10 @@ final class Sample {
         }
         File dir = photoDir(c);
         if (!dir.isDirectory()) dir.mkdirs();
+        File[] old = dir.listFiles();   // only these: an older Glass named them otherwise
+        if (old != null) for (File f : old) if (!java.util.Arrays.asList(PHOTO_NAMES).contains(f.getName())) f.delete();
         for (int i = 0; i < PHOTOS.length; i++) {
-            File f = new File(dir, "photo-" + (i + 1) + ".jpg");
+            File f = new File(dir, PHOTO_NAMES[i]);
             if (f.isFile()) continue;
             try (InputStream in = c.getAssets().open(PHOTOS[i]); OutputStream out = new FileOutputStream(f)) {
                 byte[] buf = new byte[1 << 15];
@@ -95,11 +105,25 @@ final class Sample {
         }
     }
 
-    private static File photoDir(Context c) {
+    static File photoDir(Context c) {
         return new File(c.getCacheDir(), "sample-photos");
     }
 
     // ---- what shows instead ----------------------------------------------------------------------------------------
+
+    /** The open apps a picture shows (the switcher): the well-known apps the TV has, newest first, minutes apart.
+     * {package, when it was last in front}. */
+    static List<String[]> recents(Context c, int max) {
+        android.content.pm.PackageManager pm = c.getPackageManager();
+        List<String[]> out = new ArrayList<>();
+        long now = System.currentTimeMillis();
+        for (String a : APPS) {
+            if (out.size() >= max) break;
+            if (pm.getLeanbackLaunchIntentForPackage(a) == null) continue;
+            out.add(new String[]{a, String.valueOf(now - out.size() * 7L * 60_000L)});
+        }
+        return out;
+    }
 
     static Widgets.Weather.Now weather(Context c) {
         Widgets.Weather.Now n = new Widgets.Weather.Now();

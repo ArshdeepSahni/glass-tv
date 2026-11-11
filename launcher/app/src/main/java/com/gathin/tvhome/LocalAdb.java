@@ -47,6 +47,15 @@ final class LocalAdb {
 
     /** The command's output (up to 16 KB), or an exception: debugging off, not allowed, or no answer in time. */
     static String shell(String command, long allowWaitMs, Asking asking) throws Exception {
+        return shell(command, allowWaitMs, asking, true);
+    }
+
+    /** As shell, only where the TV already allows Glass's key: it never puts the question on the TV (at a start). */
+    static String quiet(String command) throws Exception {
+        return shell(command, 0, null, false);
+    }
+
+    private static String shell(String command, long allowWaitMs, Asking asking, boolean offer) throws Exception {
         try (Socket s = new Socket()) {
             s.connect(new InetSocketAddress("127.0.0.1", 5555), 1500);
             s.setSoTimeout(5000);
@@ -61,7 +70,7 @@ final class LocalAdb {
                 if (!signed) {
                     signed = true;
                     send(out, AUTH, SIGNATURE, 0, sign(m.data));
-                } else if (!offered) {
+                } else if (!offered && offer) {
                     offered = true;
                     String pub = publicKey();
                     if (asking != null) asking.asking(fingerprint(pub));

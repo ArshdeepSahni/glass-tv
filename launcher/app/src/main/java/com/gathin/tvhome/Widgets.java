@@ -34,6 +34,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -83,7 +84,11 @@ final class Widgets {
     }
 
     static List<String> on(Context c, String place) {
-        if (Sample.on && Sample.size >= 0 && "desktop".equals(place)) {   // a picture of one size: every widget at it
+        String solo = Sample.solo;
+        if (Sample.on && solo != null && "desk".equals(place)) {   // a picture of one widget, or of none
+            return "none".equals(solo) ? new ArrayList<>() : new ArrayList<>(Collections.singletonList(solo));
+        }
+        if (Sample.on && Sample.size >= 0 && "desk".equals(place)) {   // a picture of one size: every widget at it
             return new ArrayList<>(Sample.size == L ? Arrays.asList("clock", "weather", "playing")
                     : Arrays.asList("clock", "weather", "playing", "calendar", "photos"));
         }
@@ -114,7 +119,7 @@ final class Widgets {
 
     /** {x, y} in design px, or null when it hasn't been placed yet. */
     static float[] pos(Context c, String id) {
-        if (Sample.on && Sample.size >= 0) return null;   // wherever there's room, top left first
+        if (Sample.on && (Sample.size >= 0 || Sample.solo != null)) return null;   // wherever there's room, top left first
         String s = Glass.prefs(c).getString("wpos_" + id, null);
         if (s == null) return null;
         try {
@@ -126,7 +131,7 @@ final class Widgets {
     }
 
     static void keep(Context c, String id, float x, float y, int size) {
-        if (Sample.on && Sample.size >= 0) return;   // a picture's layout is never saved over the owner's
+        if (Sample.on && (Sample.size >= 0 || Sample.solo != null)) return;   // a picture's layout is never saved over the owner's
         Glass.prefs(c).edit().putString("wpos_" + id, Math.round(x) + "," + Math.round(y)).putInt("wsize_" + id, size).apply();
     }
 

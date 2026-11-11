@@ -65,6 +65,22 @@ final class Keys {
         return send(c, (on ? "e " : "d ") + pkg);
     }
 
+    /** Whether an app may run in the background (Android's switch for it), or null when the helper isn't up. */
+    static Boolean background(Context c, String pkg) {
+        String r = ask(c, "g " + pkg);
+        return "1".equals(r) ? Boolean.TRUE : "0".equals(r) ? Boolean.FALSE : null;
+    }
+
+    /** Lets an app run in the background, or keeps it to the times it's open (Settings ▸ Speed & memory). */
+    static boolean setBackground(Context c, String pkg, boolean allow) {
+        return send(c, "b " + pkg + (allow ? " 1" : " 0"));
+    }
+
+    /** Closes the apps waiting in the background, to free memory. */
+    static boolean freeMemory(Context c) {
+        return send(c, "f");
+    }
+
     /** Makes an activity the TV's home app. */
     static boolean home(Context c, String component) {
         return send(c, "h " + component);

@@ -47,7 +47,7 @@ final class GlassKeys {
                     + " from " + (d != null ? d.getName() : "?"));
         }
 
-        if (code == KeyEvent.KEYCODE_HOME) {
+        if (isHome(svc, e)) {
             if (down) {
                 if (e.getRepeatCount() > 0) return true;
                 homeHeld = false;
@@ -128,6 +128,51 @@ final class GlassKeys {
             return true;
         }
         return false;   // the app does the rest
+    }
+
+    // ---- Home, whatever key it arrives as --------------------------------------------------------------------------
+
+    /** Keys Glass learned are this TV's Home button ("code:scan"), from the TV answering them with its own home. */
+    static final String HOME_KEYS = "home_keys";
+    /** Known before any press: a Xiaomi TV's Bluetooth remote sends Home as BUTTON_2 (scan code 580, KEY_APPSELECT),
+     *  and the TV opens its own home (PatchWall) for it. */
+    private static final String[] KNOWN_HOMES = {KeyEvent.KEYCODE_BUTTON_2 + ":580"};
+
+    static boolean isHome(Context c, KeyEvent e) {
+        int code = e.getKeyCode();
+        if (code == KeyEvent.KEYCODE_HOME) return true;
+        if (!couldBeHome(code)) return false;
+        String k = code + ":" + e.getScanCode();
+        for (String h : KNOWN_HOMES) if (h.equals(k)) return true;
+        return Glass.prefs(c).getStringSet(HOME_KEYS, java.util.Collections.emptySet()).contains(k);
+    }
+
+    /** Never learned as Home: the arrows, OK, Back, volume, media, numbers and letters, power, and what Glass answers. */
+    static boolean couldBeHome(int code) {
+        switch (code) {
+            case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_DPAD_LEFT:
+            case KeyEvent.KEYCODE_DPAD_RIGHT: case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_ESCAPE: case KeyEvent.KEYCODE_DEL:
+            case KeyEvent.KEYCODE_VOLUME_UP: case KeyEvent.KEYCODE_VOLUME_DOWN: case KeyEvent.KEYCODE_VOLUME_MUTE:
+            case KeyEvent.KEYCODE_MUTE: case KeyEvent.KEYCODE_POWER: case KeyEvent.KEYCODE_WAKEUP:
+            case KeyEvent.KEYCODE_SLEEP: case KeyEvent.KEYCODE_TV_POWER: case KeyEvent.KEYCODE_MENU:
+            case KeyEvent.KEYCODE_SETTINGS: case KeyEvent.KEYCODE_TV_INPUT: case KeyEvent.KEYCODE_SEARCH:
+            case KeyEvent.KEYCODE_ASSIST: case KeyEvent.KEYCODE_VOICE_ASSIST: case KeyEvent.KEYCODE_CHANNEL_UP:
+            case KeyEvent.KEYCODE_CHANNEL_DOWN: case KeyEvent.KEYCODE_UNKNOWN:
+                return false;
+            default:
+                return code != KeyEvent.KEYCODE_HEADSETHOOK
+                        && !(code >= KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && code <= KeyEvent.KEYCODE_MEDIA_FAST_FORWARD)
+                        && !(code >= KeyEvent.KEYCODE_MEDIA_PLAY && code <= KeyEvent.KEYCODE_MEDIA_RECORD)
+                        && !(code >= KeyEvent.KEYCODE_0 && code <= KeyEvent.KEYCODE_9)
+                        && !(code >= KeyEvent.KEYCODE_A && code <= KeyEvent.KEYCODE_Z);
+        }
+    }
+
+    static void learnHome(Context c, int code, int scan) {
+        SharedPreferences p = Glass.prefs(c);
+        java.util.Set<String> s = new java.util.HashSet<>(p.getStringSet(HOME_KEYS, java.util.Collections.emptySet()));
+        if (s.add(code + ":" + scan)) p.edit().putStringSet(HOME_KEYS, s).apply();
     }
 
     private static Runnable held;

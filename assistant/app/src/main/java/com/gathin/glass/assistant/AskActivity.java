@@ -99,6 +99,8 @@ public final class AskActivity extends Activity {
     @Override
     protected void onCreate(Bundle st) {
         super.onCreate(st);
+        final android.content.Context app = getApplicationContext();
+        new Thread(() -> AssistEntry.check(app), "assist-entry").start();
         Ui.init(this);
         Sound.init(this);
         brain = new Brain(this);
@@ -869,17 +871,27 @@ public final class AskActivity extends Activity {
         hideTyping();
         partial = null;
         listening = true;
-        rowText.setText("Listening…");
+        // "Listening" once the recognizer is: on a TV where it starts cold (Google's, just stopped) that takes a moment
+        rowText.setText("One moment…");
         rowText.setTextColor(Ui.t.ink3);
         hint();
         breathe(true);
         idleClose(60_000);
+        final long asked = android.os.SystemClock.uptimeMillis();
+        final float[] loudest = {-100f};
         try {
             speech = SpeechRecognizer.createSpeechRecognizer(this);
             speech.setRecognitionListener(new RecognitionListener() {
-                @Override public void onReadyForSpeech(Bundle b) { }
-                @Override public void onBeginningOfSpeech() { breathe(false); }
+                @Override public void onReadyForSpeech(Bundle b) {
+                    if (partial == null) rowText.setText("Listening…");
+                    note("ready after " + (android.os.SystemClock.uptimeMillis() - asked) + " ms");
+                }
+                @Override public void onBeginningOfSpeech() {
+                    breathe(false);
+                    note("speech began after " + (android.os.SystemClock.uptimeMillis() - asked) + " ms");
+                }
                 @Override public void onRmsChanged(float db) {
+                    loudest[0] = Math.max(loudest[0], db);
                     if (breathe != null) return;
                     float target = Math.max(0f, Math.min(1f, (db + 2f) / 12f));
                     level += (target - level) * 0.45f;
@@ -889,6 +901,7 @@ public final class AskActivity extends Activity {
                 @Override public void onEndOfSpeech() { lamp.setLevel(.15f); }
                 @Override public void onEvent(int t, Bundle b) { }
                 @Override public void onError(int error) {
+                    note("error " + error + " after " + (android.os.SystemClock.uptimeMillis() - asked) + " ms, loudest " + Math.round(loudest[0]) + " dB");
                     listening = false;
                     breathe(false);
                     lamp.setLevel(0f);
@@ -913,6 +926,7 @@ public final class AskActivity extends Activity {
                     listening = false;
                     breathe(false);
                     String w = first(b);
+                    note("heard " + (w == null ? 0 : w.length()) + " characters after " + (android.os.SystemClock.uptimeMillis() - asked) + " ms, loudest " + Math.round(loudest[0]) + " dB");
                     if ((w == null || w.trim().isEmpty()) && partial != null) w = partial;
                     if (w == null || w.trim().isEmpty()) { onError(SpeechRecognizer.ERROR_NO_MATCH); return; }
                     send(w, null);
@@ -933,6 +947,11 @@ public final class AskActivity extends Activity {
             listening = false;
             showTyping();
         }
+    }
+
+    /** For tuning how the TV's speech recognizer does (times, lengths and loudness; never the words). */
+    private static void note(String what) {
+        android.util.Log.i("GlassKeys", "listening: " + what);
     }
 
     /** Your words along the row; the word still being said is dimmer. */

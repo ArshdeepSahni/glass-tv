@@ -259,14 +259,16 @@ def status(ui, opts):
 def doctor(ui, opts):
     checks = [("tools", "Tools"), ("tv", "The TV answers"), ("glass", "Glass"), ("home", "Home screen"),
               ("helper", "Remote helper"), ("keyboard", "Keyboard"), ("assistant", "Assistant button"),
-              ("keys", "Glass's helper"), ("crashes", "Crashes"), ("key", "Signing key")]
+              ("wifi", "Wi-Fi list"), ("bt", "Bluetooth"), ("keys", "Glass's helper"), ("crashes", "Crashes"),
+              ("key", "Signing key")]
     ui.begin("Doctor", "Check Glass and fix what's off", "Looks at this computer and the TV, then offers to fix "
              "what it can. Nothing changes without asking.", checks, version=bld.version()[0])
     results = {"tools": ("done", "Java 17 · SDK 34"), "key": ("done", "~/.glass/glass.keystore"),
                "tv": ("done", TV_HOST), "glass": ("done", bld.version()[0]), "home": ("warn", "the TV's own"),
                "helper": ("fail", "off"), "keyboard": ("done", "Glass"), "assistant": ("done", "Glass Assistant"),
+               "wifi": ("done", "Location on"), "bt": ("done", "on"),
                "keys": ("info", "starts when it's needed"), "crashes": ("done", "none since the TV started")}
-    for k in ["tools", "key", "tv", "glass", "home", "helper", "keyboard", "assistant", "keys", "crashes"]:
+    for k in ["tools", "key", "tv", "glass", "home", "helper", "keyboard", "assistant", "wifi", "bt", "keys", "crashes"]:
         ui.step(k, dict(checks)[k])
         pause(ui, 0.45)
         ui.mark(*results[k])

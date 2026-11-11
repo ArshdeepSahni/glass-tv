@@ -71,6 +71,10 @@ public class HomeKeyService extends AccessibilityService {
     private final Set<String> stockHome = new HashSet<>();
     /** stock_home_redirect, the stock launcher's package. */
     private String stockHomePackage = "";
+    /** Without stock_home_redirect: the packages of the TV's own home screens (stockHome's), whichever they are. */
+    private final Set<String> ownHomes = new HashSet<>();
+    /** The TV's own home apps give way to Glass when the TV opens them itself, at a start or a wake (ownHomeApp). */
+    private boolean ownAppsAtPowerOn;
     /** power_on_home: the Live TV package to send back to Home, empty when off; armed until this uptime or a key. */
     private String powerOnLiveTv = "";
     private long powerOnUntil;
@@ -147,6 +151,7 @@ public class HomeKeyService extends AccessibilityService {
     @Override
     public void onDestroy() {
         if (running == this) running = null;
+        Dim.release();
         PhoneServer.stop();
         RemoteKeys.release(this);
         stopWaitingForUnlock();
@@ -212,11 +217,26 @@ public class HomeKeyService extends AccessibilityService {
         frontAppScancodes = RemoteKeys.parseFrontAppScancodes(config.appKeys);
         boolean watchFront = !frontAppKeys.isEmpty() || !frontAppScancodes.isEmpty();
         stockHome.clear();
+        ownHomes.clear();
         stockHomePackage = config.stockHomeRedirect;
         if (!config.stockHomeRedirect.isEmpty()) {
             Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(config.stockHomeRedirect);
             for (ResolveInfo ri : getPackageManager().queryIntentActivities(home, PackageManager.MATCH_DISABLED_COMPONENTS)) {
                 stockHome.add(ri.activityInfo.name);
+            }
+        } else {
+            // any TV: the TV's own home screens that are on now. Some TVs turn theirs back on as they start (a Xiaomi
+            // does), or rank it above any app; until Homes.keepOff has turned it off again, it is sent back here
+            // whenever it comes up, as stock_home_redirect does for the TVs it was written for.
+            for (ResolveInfo ri : getPackageManager().queryIntentActivities(
+                    new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)) {
+                if (ri.activityInfo == null || ri.priority <= -1000) continue;   // Android's fallback home, for the first seconds of a start
+                String p = ri.activityInfo.packageName;
+                if (p.equals(getPackageName()) || p.equals("com.android.tv.settings") || p.equals("com.android.settings")
+                        || p.contains("setup") || p.contains("provision")) continue;
+                stockHome.add(ri.activityInfo.name);
+                ownHomes.add(p);
+                if (stockHomePackage.isEmpty()) stockHomePackage = p;
             }
         }
         // power_on_home, off by default. Not with boot_to_live_tv, or with Live TV picked as the Open on start app:
@@ -226,7 +246,11 @@ public class HomeKeyService extends AccessibilityService {
         powerOnLiveTv = config.powerOnHome && !config.bootToLiveTv && !config.liveTvPackage.equals(openOnStart)
                 ? config.liveTvPackage : "";
         powerOnAlways = config.powerOnHomeAlways && !config.bootToLiveTv && openOnStart.isEmpty();
-        if (!powerOnLiveTv.isEmpty() || powerOnAlways) {
+        // any TV: the TV's own home app, opened by the TV itself as it starts or wakes, gives way to Glass until the
+        // first key (Xiaomi opens PatchWall at every start, whatever the home is). Not where Glass opens something on
+        // purpose at the start.
+        ownAppsAtPowerOn = !config.bootToLiveTv && openOnStart.isEmpty();
+        if (!powerOnLiveTv.isEmpty() || powerOnAlways || ownAppsAtPowerOn) {
             armPowerOnHome();
         } else if (screenOnReceiver != null) {
             unregisterReceiver(screenOnReceiver);
@@ -241,12 +265,22 @@ public class HomeKeyService extends AccessibilityService {
             info.flags |= AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS | AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
             setServiceInfo(info);
         }
-        if (!stockHome.isEmpty() || !powerOnLiveTv.isEmpty()) probeAtBoot();
+        if (!config.stockHomeRedirect.isEmpty() || !powerOnLiveTv.isEmpty()) probeAtBoot();
+        else if (SystemClock.elapsedRealtime() < BOOT_WINDOW_MS) frontAtStart(0);
+        if (firstBindAfterBoot(Settings.Global.getInt(getContentResolver(), Settings.Global.BOOT_COUNT, -1),
+                getSharedPreferences("boot", MODE_PRIVATE).getInt("homes_boot", -1), SystemClock.elapsedRealtime())) {
+            getSharedPreferences("boot", MODE_PRIVATE).edit()
+                    .putInt("homes_boot", Settings.Global.getInt(getContentResolver(), Settings.Global.BOOT_COUNT, -1)).apply();
+            Homes.keepOff(this);   // the TV's own homes, off again where the TV turned them back on as it started
+        }
+        Dim.restore(this);   // the picture as dim as it was left
+        final android.content.Context app = getApplicationContext();
+        Ui.BG.execute(() -> Assist.keep(app));   // the assistant button's settings, where a start cleared them
         armStandbyExit();
         // Glass II: the power-on chooser once per boot, and the night volume ceiling.
         if (!glassBootAsked && SystemClock.elapsedRealtime() < BOOT_WINDOW_MS) {
             glassBootAsked = true;
-            handler.postDelayed(() -> GlassKeys.powerOn(this), 3000);
+            handler.postDelayed(() -> bootChooser(0), 3000);
         }
         GlassKeys.watchNight(this, handler);
         handler.postDelayed(() -> Updates.comeBack(this), 600);   // after Glass replaced itself, its page again
@@ -304,8 +338,23 @@ public class HomeKeyService extends AccessibilityService {
         return false;
     }
 
+    /** The last key let through to the TV (code, scan code) and when it was let go: if the TV answers it by bringing up
+     *  its own home, it's this remote's Home button (onAccessibilityEvent learns it: GlassKeys.isHome). */
+    private int passedCode, passedScan;
+    private long passedAt;
+
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
+        boolean taken = takeKey(event);
+        if (!taken && event.getAction() == KeyEvent.ACTION_UP && GlassKeys.couldBeHome(event.getKeyCode())) {
+            passedCode = event.getKeyCode();
+            passedScan = event.getScanCode();
+            passedAt = SystemClock.uptimeMillis();
+        }
+        return taken;
+    }
+
+    private boolean takeKey(KeyEvent event) {
         Probe.key(this, event);   // Glass IV: first three days, key names only
         // Glass waking up: any key but power ends the film (Home too, which never reaches the desktop as a key)
         if (event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() != KeyEvent.KEYCODE_POWER
@@ -341,7 +390,7 @@ public class HomeKeyService extends AccessibilityService {
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) openHome();
             return true;
         }
-        if (event.getKeyCode() == KeyEvent.KEYCODE_HOME && !stockHome.isEmpty()) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_HOME && !stockHome.isEmpty() && !Glass.original(this)) {
             redirectHomeKey(event);
             return false;
         }
@@ -419,7 +468,8 @@ public class HomeKeyService extends AccessibilityService {
             } else {
                 // the remote's assistant button opened Google's voice screen: Glass takes it from here
                 android.util.Log.i("GlassKeys", "google assistant window: " + cls);
-                Takeover.googleAppeared(this);
+                // not an activity: Google's voice screen is a window over the apps (a Xiaomi's), which Glass rides
+                Takeover.googleAppeared(this, !isActivity(Takeover.GOOGLE, cls));
             }
         }
         // Glass II: the app in front and the one before it (Flip, Resume). Activities only.
@@ -448,9 +498,78 @@ public class HomeKeyService extends AccessibilityService {
             openHome();
             return;
         }
+        // any TV: the TV's own home app came up by itself as the TV started or woke, before anyone pressed a key
+        if (ownAppsAtPowerOn && !Glass.original(this) && stillArmed(SystemClock.elapsedRealtime(), powerOnUntil)
+                && ownHomeApp(event.getPackageName()) && event.getClassName() != null
+                && isActivity(event.getPackageName().toString(), event.getClassName().toString())) {
+            android.util.Log.i("GlassKeys", "the TV opened its own home app at power-on: Glass instead");
+            openHome();
+            return;
+        }
+        // any TV: a key Glass let through brought up the TV's own home, so it's this remote's Home button (a Xiaomi's
+        // arrives as BUTTON_2). Glass learns it, and from the next press it is Glass's Home (GlassKeys.isHome).
+        if (passedAt != 0 && SystemClock.uptimeMillis() - passedAt < 2500 && !Glass.original(this)
+                && event.getClassName() != null && event.getPackageName() != null
+                && (stockHome.contains(event.getClassName().toString()) || ownHomeApp(event.getPackageName()))
+                && isActivity(event.getPackageName().toString(), event.getClassName().toString())) {
+            android.util.Log.i("GlassKeys", "the remote's Home is " + KeyEvent.keyCodeToString(passedCode) + " scan=" + passedScan);
+            GlassKeys.learnHome(this, passedCode, passedScan);
+            passedAt = 0;
+            openHome();
+            return;
+        }
         // stock_home_redirect: the firmware turned the stock launcher back on and its home screen came up.
         CharSequence cls = event.getClassName();
         if (!stockHome.isEmpty() && cls != null && stockHome.contains(cls.toString()) && !Glass.original(this)) openHome();
+    }
+
+    /** The power-on chooser, once per boot, after the TV's own homes are off again (Homes.keepOff): asked any earlier,
+     *  it would offer a home that's about to go. */
+    private void bootChooser(int waited) {
+        if (Homes.keeping && waited < 20) {
+            handler.postDelayed(() -> bootChooser(waited + 1), 1000);
+            return;
+        }
+        GlassKeys.powerOn(this);
+    }
+
+    /** One of the TV's own home apps: one of its home screens (ownHomes), or an app whose name says it is its home
+     *  (Xiaomi's PatchWall, com.mitv.tvhome.atv, isn't a home screen to Android). Never Glass, Android's own apps,
+     *  settings or a setup screen. */
+    private boolean ownHomeApp(CharSequence pkg) {
+        if (pkg == null) return false;
+        String p = pkg.toString();
+        if (ownHomes.contains(p)) return true;
+        if (p.equals(getPackageName()) || p.startsWith("com.gathin.") || p.startsWith("com.android.") || p.equals("android")
+                || p.contains("setup") || p.contains("settings")) return false;
+        String q = p.toLowerCase(java.util.Locale.ROOT);
+        return q.contains("tvhome") || q.contains("launcher") || q.contains("patchwall") || q.contains("homeshell")
+                || q.endsWith(".home") || q.contains(".home.");
+    }
+
+    /** The checks of frontAtStart, so a wake's can replace a start's. */
+    private static final Object FRONT = new Object();
+
+    /** At a start or a wake: the TV's own home app may be in front before Android bound this helper (or before the
+     *  wake's note came), and no window event comes for it then. Looked at now and twice more, a few seconds apart,
+     *  until the first key; sent back here if it is. */
+    private void frontAtStart(int tries) {
+        if (tries > 2 || !stillArmed(SystemClock.elapsedRealtime(), powerOnUntil) || Glass.original(this)) return;
+        try {
+            android.view.accessibility.AccessibilityNodeInfo r = getRootInActiveWindow();
+            if (r != null) {
+                CharSequence p = r.getPackageName();
+                r.recycle();
+                if (p != null && (ownHomes.contains(p.toString()) || (ownAppsAtPowerOn && ownHomeApp(p)))) {
+                    android.util.Log.i("GlassKeys", "the TV's own home was in front at the start: Glass instead");
+                    openHome();
+                    return;
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // nothing readable yet
+        }
+        handler.postAtTime(() -> frontAtStart(tries + 1), FRONT, SystemClock.uptimeMillis() + (tries == 0 ? 1800 : 3500));
     }
 
     /** How long power_on_home stays armed after the screen turns on without a reboot. */
@@ -467,7 +586,15 @@ public class HomeKeyService extends AccessibilityService {
             @Override
             public void onReceive(Context context, Intent intent) {
                 powerOnUntil = SystemClock.elapsedRealtime() + SCREEN_ON_WINDOW_MS;
-                handler.postDelayed(() -> GlassKeys.powerOn(HomeKeyService.this), 1500);   // Glass IV: light first
+                // the TV's own home may already be up (a Xiaomi brings its own at every wake, often before this
+                // note arrives): looked at in a moment, and twice more
+                if (ownAppsAtPowerOn) {
+                    handler.removeCallbacksAndMessages(FRONT);
+                    handler.postAtTime(() -> frontAtStart(0), FRONT, SystemClock.uptimeMillis() + 600);
+                }
+                if (!powerOnLiveTv.isEmpty() || powerOnAlways) {   // armed for the TV's own apps only: no chooser here
+                    handler.postDelayed(() -> GlassKeys.powerOn(HomeKeyService.this), 1500);   // Glass IV: light first
+                }
                 if (powerOnAlways) handler.postDelayed(HomeKeyService.this::homeAtPowerOn, POWER_ON_ALWAYS_DELAY_MS);
             }
         };

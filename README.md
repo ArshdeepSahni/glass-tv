@@ -156,7 +156,7 @@ Run them in the `glass-tv` folder. After the first setup, `./glass` alone opens 
 |---|---|
 | `./glass update` | The newest Glass on the TV. Every setting stays |
 | `./glass status` | How the TV and Glass are doing |
-| `./glass doctor` | Checks ten things and offers to fix what's off |
+| `./glass doctor` | Checks twelve things and offers to fix what's off |
 | `./glass restore` | Removes Glass. The TV is as it was |
 | `./glass demo` | The installer, with nothing really happening |
 

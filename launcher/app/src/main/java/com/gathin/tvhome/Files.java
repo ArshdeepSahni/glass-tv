@@ -62,7 +62,7 @@ final class Files {
     static List<Place> favourites(Context c) {
         List<Place> p = new ArrayList<>();
         // photos and videos sent from a phone (Show): first, so what just arrived is a click away
-        p.add(new Place("phones", "From phones", "phone", Show.dir(c), 0));
+        p.add(new Place("phones", "From phones", "phone", Sample.on ? Sample.photoDir(c) : Show.dir(c), 0));
         p.add(new Place("recents", "Recents", "clock", null, -1));
         p.add(new Place("downloads", "Downloads", "down", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), 0));
         p.add(new Place("movies", "Movies", "film", null, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO));
