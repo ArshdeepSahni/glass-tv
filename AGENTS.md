@@ -2,7 +2,8 @@
 
 Glass is a home screen and assistant for Android TV, with its installer (`./glass`), its update service and its
 website. One maintainer releases it; agents do much of the work. These rules always apply, to every change. When a
-task and a rule disagree, follow the rule and say so.
+task and a rule disagree, follow the rule and say so. On the owner's computer, a CONTEXT.md beside this file holds the
+whole story (it's kept out of git): read it once first.
 
 ## Where things are
 
