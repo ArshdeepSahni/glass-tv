@@ -120,6 +120,14 @@
           "id": "control-center"
         },
         {
+          "title": "Wi-Fi",
+          "icon": "wifi",
+          "text": "<span class=\"rk\">Menu</span>, then Wi-Fi: the networks in reach. Join one with Glass's keyboard. Where Android lists them only with Location on, one row turns on its TV-only kind.",
+          "tv": "controls-wifi",
+          "alt": "Control Center's Wi-Fi page: the switch, the networks in reach with the one the TV is on, and Network settings",
+          "id": "wifi"
+        },
+        {
           "title": "Open apps",
           "icon": "app-window",
           "text": "Hold <span class=\"rk\">Home</span>. <span class=\"rk\">←</span> <span class=\"rk\">→</span> choose, <span class=\"rk\">OK</span> opens, <span class=\"rk\">↑</span> closes.",
@@ -138,7 +146,7 @@
         {
           "title": "Assistant",
           "icon": "mic",
-          "text": "<span class=\"rk\">Assistant</span>, then speak.",
+          "text": "<span class=\"rk\">Assistant</span> or the mic button, then speak.",
           "tv": "ask-volume",
           "alt": "Glass Assistant on the right of the screen, asked to turn it down a bit",
           "id": "assistant"
@@ -377,6 +385,14 @@
           "id": "screen-savers"
         },
         {
+          "title": "Speed & memory",
+          "icon": "gauge",
+          "text": "Settings, then Speed &amp; memory: free up memory, quicker animations, which apps keep running in the background, and the TV's own extras on or off. Nothing is uninstalled, and <code>./glass restore</code> turns it all back on.",
+          "tv": "settings-speed",
+          "alt": "Settings open on Speed and memory: free up memory, quicker animations, and for each app, in the background or only while it's open",
+          "id": "speed"
+        },
+        {
           "title": "And more",
           "icon": "sliders-horizontal",
           "text_ok": true,
@@ -386,8 +402,7 @@
             "<b>Motion</b>: Full, or Reduced",
             "<b>Sounds</b>: soft clicks as you move, at the TV's volume",
             "<b>Night volume</b>: a limit after 11 pm",
-            "<b>Sleep timer</b>: 30 minutes to 2 hours",
-            "<b>Speed &amp; memory</b>: free up memory, quicker animations, and which apps run in the background or at all"
+            "<b>Sleep timer</b>: 30 minutes to 2 hours"
           ],
           "id": "and-more"
         }

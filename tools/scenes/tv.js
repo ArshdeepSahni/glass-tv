@@ -735,10 +735,77 @@ function controls(o) {
   return p;
 }
 
+/** Control Center's Wi-Fi page (ControlsSheet.wifi): the switch, the networks in reach (Sample.networks: Home is the
+ *  one the TV is on, the first two are saved, all are secured), and the page's last action at the panel's foot. */
+function controlsWifi(o) {
+  o = Object.assign({focus: 1}, o || {});
+  const W = 404, TILE = 64, SLIDE = 76, SEG = 52, LINK = 56, GAP = 8, HEAD = 52, ROW = 44, FOOTH = 40;
+  const H = 12 + 2 * TILE + 2 * SLIDE + 2 * SEG + LINK + 6 * GAP + 12, FOOT = H - 12 - FOOTH;
+  const p = pane({x: 1280 - 16 - W, y: 42, w: W, h: H, r: 28});
+  const s = h('div', {style: {position: 'absolute', inset: 0}});
+  p.inner.append(s);
+  const knob = on => {   // ControlsSheet.Switch: ink when on, a quiet track when off
+    const v = h('div', {style: {position: 'relative', width: '44px', height: '26px', borderRadius: '13px', flex: 'none',
+      background: on ? 'var(--sel)' : (NIGHT ? 'rgba(255,255,255,.20)' : 'rgba(22,24,29,.18)')}});
+    v.append(at(h('div', {style: {borderRadius: '50%', background: on ? 'var(--selink)' : '#FFFFFF', boxShadow: '0 1px 1px rgba(0,0,0,.18)'}}),
+      on ? 21 : 3, 3, 20, 20));
+    return v;
+  };
+  s.append(at(row({padding: '0 14px 0 12px'}, glyph('chev_l', 20, '--ink2'),
+    txt(17, '--ink', 600, 'Wi-Fi', {style: {flex: '1 1 0', marginLeft: '6px'}}), knob(true)), 12, 12, 380, HEAD));
+  const list = col({});
+  [['Home', -44], ['Home 5G', -52], ['Studio', -69], ['Guest', -81]].forEach(([name, level], i) => {
+    const bars = level >= -55 ? 3 : level >= -67 ? 2 : level >= -78 ? 1 : 0;
+    const r = row({height: px(ROW), padding: '0 12px', borderRadius: '12px', flex: 'none'},
+      glyph(bars >= 3 ? 'wifi' : bars === 2 ? 'wifi2' : 'wifi1', 18, i === 0 ? '--ink' : '--ink2'),
+      txt(15, '--ink', i === 0 ? 600 : 400, name, {style: {flex: '1 1 0', marginLeft: '12px'}}));
+    if (i < 2) r.append(txt(13, '--ink3', 400, i === 0 ? 'Connected' : 'Saved', {style: {marginLeft: '8px'}}));
+    r.append(h('div', {style: {marginLeft: '8px', display: 'flex'}}, glyph('lock', 14, '--ink3')));
+    if (i === o.focus) platter(r, 12);
+    list.append(r);
+  });
+  s.append(at(list, 12, 12 + HEAD + 4, 380, FOOT - 12 - HEAD - 12));
+  s.append(at(row({padding: '0 12px 0 14px', borderRadius: '16px', background: 'var(--hover)'},
+    txt(15, '--ink', 500, 'Network settings', {style: {flex: '1 1 0'}}), glyph('chev_r', 18, '--ink3')), 12, FOOT, 380, FOOTH));
+  TV.append(p);
+  return p;
+}
+
 // ---- Settings (SettingsSheet) -------------------------------------------------------------------------------------
-const SECTIONS = [['sun', 'Display & text'], ['sparkle', 'Backgrounds & savers'], ['volume', 'Sound'], ['wifi', 'Network & Bluetooth'],
-  ['input', 'Inputs'], ['apps', 'Apps'], ['remote', 'Remote & keyboard'], ['moon', 'Sleep & power'], ['assist', 'Assistant'],
-  ['swap', 'Glass & original home'], ['tv', 'TV settings'], ['info', 'About this TV']];
+const SECTIONS = [['sun', 'Display & text', 'display'], ['sparkle', 'Backgrounds & savers', 'looks'], ['volume', 'Sound', 'sound'],
+  ['wifi', 'Network & Bluetooth', 'network'], ['input', 'Inputs', 'inputs'], ['apps', 'Apps', 'apps'], ['sliders', 'Speed & memory', 'speed'],
+  ['remote', 'Remote & keyboard', 'remote'], ['moon', 'Sleep & power', 'power'], ['assist', 'Assistant', 'assistant'],
+  ['swap', 'Glass & original home', 'glass'], ['tv', 'TV settings', 'tv'], ['info', 'About this TV', 'about']];
+
+/** A section's rows (SettingsSheet.fill), as the sample TV has them: {label, sub, end} rows, {head} subheads. */
+const chevron = () => h('div', {style: {marginLeft: '6px'}}, glyph('chev_r', 16, '--ink3'));
+const SETTING_ROWS = {
+  display: () => [
+    {label: 'Appearance', sub: 'Auto follows the time of day: light by day, dark from 6 pm', end: () => choice(['Auto', 'Light', 'Dark'], NIGHT ? 2 : 1)},
+    {label: 'Brightness', sub: "The TV's backlight", end: () => row({}, h('div', {style: {width: '150px', height: '6px', borderRadius: '3px', background: 'var(--ink)'}}),
+      txt(15, '--ink2', 500, '100', {style: {width: '44px', marginLeft: '10px', textAlign: 'right'}}),
+      h('div', {style: {marginLeft: '8px'}}, glyph('chev_l', 14, '--ink3')), h('div', {style: {marginLeft: '2px'}}, glyph('chev_r', 14, '--ink3')))},
+    {label: 'Text size', sub: 'Every app, not just Glass', end: () => choice(['S', 'M', 'L', 'XL'], 1)},
+    {label: 'Motion', sub: 'How much things move', end: () => choice(['Full', 'Reduced'], 0)},
+    {label: 'Wake animation', sub: 'The glass and its sound when the TV comes on', end: () => choice(['On', 'Off'], 0)},
+    {label: 'Show it now', sub: 'Plays the wake animation', end: chevron},
+  ],
+  // the apps on the TV's apps row, by name (Sample.APPS), then the TV's own extras (Extras.ALL) that this TV has
+  speed: () => {
+    const bg = (name, keep) => ({label: name, sub: keep ? 'Keeps running in the background after you leave it' : "Runs only while it's open",
+      end: () => choice(['In background', 'Only open'], keep ? 0 : 1)});
+    const extra = (name, what, on) => ({label: name, sub: what, end: () => choice(['On', 'Off'], on ? 0 : 1)});
+    return [
+      {label: 'Free up memory', sub: 'Closes the apps waiting in the background. 418 MB of 976 MB free now', end: chevron},
+      {label: 'Animations', sub: "How quickly the TV's windows open and close. Glass's own motion stays as it is", end: () => choice(['Normal', 'Quick'], 1)},
+      {head: 'Apps in the background'},
+      bg('Netflix', false), bg('Prime Video', false), bg('Spotify', true), bg('VLC', false), bg('YouTube', true), bg('YT Music', true),
+      {head: "The TV's extras"},
+      extra('Chromecast built-in', 'The cast button in YouTube, Netflix and Chrome', true),
+      extra('Recommendations', "Sponsored rows for Android TV's home", false),
+    ];
+  },
+};
 
 function field(size, hint, r, withGlyph, hh, value) {
   const f = row({height: px(hh), padding: '0 12px', borderRadius: px(r), background: 'var(--field)',
@@ -762,7 +829,8 @@ function settings(o) {
   const p = pane({x: X, y: Y, w: W, h: H, r: 28});
   const side = at(col({padding: '18px 16px 14px', background: 'var(--hover)'}), 0, 0, SB, H);
   side.append(field(14, 'Search settings', 10, true, 36));
-  const list = col({paddingTop: '12px'});
+  // the sections scroll (a ScrollView 12 px down, as tall as the column leaves it): at M the last is a little cut off
+  const list = col({paddingTop: '12px', height: px(H - 18 - 14 - 36), overflow: 'hidden', boxSizing: 'border-box', flex: 'none'});
   SECTIONS.forEach(([gname, name], i) => {
     const r = row({height: '36px', padding: '0 10px', marginTop: i ? '2px' : 0, borderRadius: '10px', flex: 'none'});
     r.append(h('div', {style: {width: '24px', height: '24px', borderRadius: '7px', background: 'var(--field)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none'}},
@@ -773,23 +841,19 @@ function settings(o) {
   side.append(list);
   const rule = at(h('div', {style: {background: 'var(--hair)'}}), SB - 1, 0, 1, H);
   const right = at(col({paddingTop: '22px'}), SB, 0, W - SB, H);
-  right.append(txt(24, '--ink', 600, SECTIONS[o.section][1], {style: {padding: '0 24px 16px', letterSpacing: '-0.02em'}}));
-  const group = col({margin: '4px 24px 0', borderRadius: '16px', background: 'var(--field)', boxShadow: 'inset 0 0 0 1px var(--hair)'});
-  const rows = [
-    ['Appearance', 'Auto follows the time of day: light by day, dark from 6 pm', () => choice(['Auto', 'Light', 'Dark'], NIGHT ? 2 : 1)],
-    ['Brightness', "The TV's backlight", () => row({}, h('div', {style: {width: '150px', height: '6px', borderRadius: '3px', background: 'var(--ink)'}}),
-      txt(15, '--ink2', 500, '100', {style: {width: '44px', marginLeft: '10px', textAlign: 'right'}}),
-      h('div', {style: {marginLeft: '8px'}}, glyph('chev_l', 14, '--ink3')), h('div', {style: {marginLeft: '2px'}}, glyph('chev_r', 14, '--ink3')))],
-    ['Text size', 'Every app, not just Glass', () => choice(['S', 'M', 'L', 'XL'], 1)],
-    ['Motion', 'How much things move', () => choice(['Full', 'Reduced'], 0)],
-    ['Wake animation', 'The glass and its sound when the TV comes on', () => choice(['On', 'Off'], 0)],
-    ['Show it now', 'Plays the wake animation', () => h('div', {style: {marginLeft: '6px'}}, glyph('chev_r', 16, '--ink3'))],
-  ];
-  rows.forEach(([label, sub, end], i) => {
-    if (i) group.append(h('div', {style: {height: '1px', background: 'var(--hair)', margin: '0 16px', flex: 'none'}}));
-    group.append(row({padding: '12px 16px', minHeight: '54px'}, col({flex: '1 1 0', minWidth: 0, marginRight: '16px'},
-      txt(15, '--ink', 500, label), txt(13, '--ink3', 400, sub, {style: {marginTop: '3px'}})), end()));
-  });
+  right.append(txt(24, '--ink', 600, SECTIONS[o.section][1], {style: {padding: '0 24px 16px', letterSpacing: '-0.02em', flex: 'none'}}));
+  const group = col({margin: '4px 24px 0', borderRadius: '16px', background: 'var(--field)', boxShadow: 'inset 0 0 0 1px var(--hair)', flex: 'none'});
+  let n = 0;
+  for (const r of SETTING_ROWS[SECTIONS[o.section][2]]()) {
+    if (r.head) {   // SettingsSheet.subhead: quiet words inside the group, no line above
+      group.append(txt(13, '--ink3', 500, r.head, {style: {padding: `${n ? 18 : 12}px 16px 4px`, flex: 'none'}}));
+    } else {
+      if (n) group.append(h('div', {style: {height: '1px', background: 'var(--hair)', margin: '0 16px', flex: 'none'}}));
+      group.append(row({padding: '12px 16px', minHeight: '54px', flex: 'none'}, col({flex: '1 1 0', minWidth: 0, marginRight: '16px'},
+        txt(15, '--ink', 500, r.label), txt(13, '--ink3', 400, r.sub, {style: {marginTop: '3px'}})), r.end()));
+    }
+    n++;
+  }
   right.append(group);
   p.inner.append(side, rule, right);
   TV.append(p);
@@ -1302,6 +1366,18 @@ const SCENES = {
     dock();
     bar({context: 'Settings'});
     settings();
+  },
+  'settings-speed'() {
+    wallpaper();
+    dock();
+    bar({context: 'Settings'});
+    settings({section: 6});
+  },
+  'controls-wifi'() {
+    wallpaper();
+    dock();
+    bar({open: 'controls'});
+    controlsWifi();
   },
   weather() {
     wallpaper();

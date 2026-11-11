@@ -7,9 +7,9 @@
   },
   {
     "name": "Settings",
-    "pic": "settings",
-    "alt": "Settings: sections on the left, Display and text on the right with appearance, brightness, text size, motion and the wake animation",
-    "caption": "Every setting in one window, with search."
+    "pic": "settings-speed",
+    "alt": "Settings: the sections on the left, and Speed and memory on the right: free up memory, quicker animations, and which apps keep running in the background",
+    "caption": "Every setting in one window, with search. Speed &amp; memory frees up a slow TV."
   },
   {
     "name": "Open apps",

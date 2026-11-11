@@ -4,6 +4,10 @@ workers.dev address (a custom domain can be added to it in Cloudflare's dashboar
 
   site/deploy.py DIST     uploads DIST (made by site/build.py), deploys it, and says where it is
 
+Only what's released goes live: while CHANGELOG.md has lines under "## Unreleased" (changes the TVs can't get yet),
+nothing is deployed and the run says so. tools/release.sh pushes the release's dated changelog once GitHub has
+published it, and that push puts the site live, so the site, the docs, the TVs' updates and GitHub agree.
+
 Needs CLOUDFLARE_API_TOKEN (an "Edit Cloudflare Workers" token) and CLOUDFLARE_ACCOUNT_ID: the same secrets as the
 update service. Only files that changed are uploaded. Standard library only.
 """
@@ -18,7 +22,9 @@ import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "updates"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
 import publish as cf  # noqa: E402  (the update service's Cloudflare helpers: cf(), multipart(), subdomain())
+import changelog  # noqa: E402  (tools/changelog.py)
 
 SCRIPT = "www"
 # The Worker itself only answers what isn't a file (a page that isn't there); everything else is served as an asset.
@@ -125,6 +131,23 @@ def deploy(dist):
     say(where)
 
 
+def waiting():
+    """How many lines wait under "## Unreleased": while there are any, the site isn't deployed."""
+    u = changelog.unreleased()
+    return len(u.items) if u else 0
+
+
+def hold(n):
+    """Says, on the run's page and in its log, why nothing was deployed."""
+    words = ("CHANGELOG.md has %d line%s under \"## Unreleased\": changes the TVs can't get yet. The site goes live with "
+             "the release that ships them (tools/release.sh), so it never shows what the TVs don't have." % (n, "" if n == 1 else "s"))
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a") as f:
+            f.write("### The site waits for the release\n\n%s\n" % words)
+    print("::notice title=The site waits for the release::%s" % words if os.environ.get("GITHUB_ACTIONS") else "site: " + words)
+
+
 def site_url(create=False):
     """https://www.<the account's workers.dev name>.workers.dev; '' when the account has none (create: give it one,
     as the update service does)."""
@@ -174,6 +197,9 @@ if __name__ == "__main__":
         sys.exit(0)
     if len(sys.argv) != 2 or not os.path.isdir(sys.argv[1]):
         sys.exit("site/deploy.py DIST   (DIST from site/build.py), or site/deploy.py --address")
+    if waiting():
+        hold(waiting())
+        sys.exit(0)
     try:
         deploy(sys.argv[1])
     except cf.Refused as e:

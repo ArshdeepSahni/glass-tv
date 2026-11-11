@@ -5,10 +5,12 @@
   manifest.py build DIST          DIST/manifest.json, DIST/notes.md and DIST/SHA256SUMS.txt, for the APKs in DIST:
                                   glass-<release>-launcher.apk and, when built, glass-<release>-assistant.apk
 
-What's new comes from CHANGELOG.md: the "- " lines under the heading "## <release>". Each APK's package and version are
-read from the APK itself (aapt2, from the Android SDK) and must agree with its build.gradle.
+What's new comes from CHANGELOG.md (tools/changelog.py reads it): the "- " lines under "## <release>", and its title
+and day, which tools/release.sh wrote when it tagged the release. On a tag, the build stops unless that day is the day
+the tagged commit was made, so the date on the TVs, the release page, the site and the changelog is one date. Each
+APK's package and version are read from the APK itself (aapt2, from the Android SDK) and must agree with its
+build.gradle.
 """
-import datetime
 import glob
 import hashlib
 import json
@@ -18,6 +20,8 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'tools'))
+import changelog  # noqa: E402  (tools/changelog.py: CHANGELOG.md, read the one way every tool shares)
 APPS = {
     'launcher': {'pkg': 'com.gathin.tvhome', 'name': 'Glass', 'gradle': 'launcher/app/build.gradle'},
     'assistant': {'pkg': 'com.gathin.glass.assistant', 'name': 'Glass Assistant', 'gradle': 'assistant/app/build.gradle'},
@@ -54,19 +58,27 @@ def badging(apk):
     return (m.group(1), int(m.group(2)), m.group(3)) if m else None
 
 
+def section(release):
+    """The release's section in CHANGELOG.md: its title, its day and its "- " lines (at most 12 go to the TVs)."""
+    s = changelog.find(release)
+    if s is None or not s.items:
+        sys.exit(f'CHANGELOG.md has no "- " lines under "## {release}": tools/release.sh makes that section from '
+                 f'"## Unreleased"')
+    if s.date is None:
+        sys.exit(f'CHANGELOG.md\'s {release} has no day on its title line: tools/release.sh writes it as it tags')
+    return s
+
+
 def notes(release):
-    with open(os.path.join(ROOT, 'CHANGELOG.md')) as f:
-        lines = f.read().splitlines()
-    out, inside = [], False
-    for line in lines:
-        if line.startswith('## '):
-            inside = re.match(r'##\s+' + re.escape(release) + r'(\s|$)', line) is not None
-            continue
-        if inside and line.startswith('- '):
-            out.append(line[2:].strip())
-    if not out:
-        sys.exit(f'CHANGELOG.md has no "- " lines under "## {release}": write what\'s new first')
-    return out[:12]
+    return section(release).items[:12]
+
+
+def tagged_day():
+    """The day the commit being built was made, in the time zone it was made in (tools/release.sh dates the changelog
+    with that same day, a moment before it tags)."""
+    out = subprocess.run(['git', '-C', ROOT, 'log', '-1', '--format=%cd', '--date=format:%Y-%m-%d'],
+                         capture_output=True, text=True)
+    return out.stdout.strip() if out.returncode == 0 else ''
 
 
 def sha256(path):
@@ -96,11 +108,17 @@ def build(dist):
             'pkg': info['pkg'], 'name': info['name'], 'version': plain(want_name), 'code': want_code,
             'file': os.path.basename(path), 'size': os.path.getsize(path), 'sha256': sha256(path),
         })
-    what = notes(release)
+    sec = section(release)
+    what = sec.items[:12]
+    if os.environ.get('GITHUB_REF_TYPE') == 'tag':
+        made = tagged_day()
+        if made and made != sec.date.isoformat():
+            sys.exit(f'CHANGELOG.md dates {release} {changelog.human(sec.date)}, but its tag is on a commit made on '
+                     f'{made}: tag with tools/release.sh, which dates the changelog as it tags')
     manifest = {
         'schema': 1,
         'release': release,
-        'date': datetime.date.today().isoformat(),
+        'date': sec.date.isoformat(),
         'notes': what,
         'apps': apps,
     }
@@ -111,6 +129,7 @@ def build(dist):
         for a in apps:
             f.write(f'{a["sha256"]}  {a["file"]}\n')
     with open(os.path.join(dist, 'notes.md'), 'w') as f:
+        f.write(f'**{sec.title}.** {changelog.human(sec.date)}.\n\n')
         f.write(f'What\'s new in Glass {release}:\n\n' + ''.join(f'- {n}\n' for n in what))
         f.write('\nOn the TV: Settings › About this TV › Check for updates (or the phone remote\'s TV tab).\n\n')
         f.write('The APKs are on the update service only (the assistant\'s carries its keys). What the TVs download:\n\n')

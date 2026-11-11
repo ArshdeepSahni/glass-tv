@@ -1,0 +1,723 @@
+{
+ "about": "What each picture of the TV was drawn from, by SHA-256: the launcher's files its scene mirrors and the scenes' own code (tools/scenes.py writes it as it draws), and the README's pictures from the site's (tools/readme_pictures.py). tools/parity.py, run by every site build, fails when one of them changed after its picture was made: draw it again and look at it.",
+ "pictures": {
+  "apps": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/AppsSheet.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b11d749ab0f622f0770bc09df1ae4a82ad49c97583772f9006badecc871d85f3"
+  },
+  "ask-cast": {
+   "from": [
+    "assistant/app/src/main/java/com/gathin/glass/assistant/AskActivity.java",
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a22eca5a739114e8582bd01386658c3cf5d4ac5d6e4c29ddfaed2b8c7d1b2dd1"
+  },
+  "ask-remind": {
+   "from": [
+    "assistant/app/src/main/java/com/gathin/glass/assistant/AskActivity.java",
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a22eca5a739114e8582bd01386658c3cf5d4ac5d6e4c29ddfaed2b8c7d1b2dd1"
+  },
+  "ask-sleep": {
+   "from": [
+    "assistant/app/src/main/java/com/gathin/glass/assistant/AskActivity.java",
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a22eca5a739114e8582bd01386658c3cf5d4ac5d6e4c29ddfaed2b8c7d1b2dd1"
+  },
+  "ask-volume": {
+   "from": [
+    "assistant/app/src/main/java/com/gathin/glass/assistant/AskActivity.java",
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a22eca5a739114e8582bd01386658c3cf5d4ac5d6e4c29ddfaed2b8c7d1b2dd1"
+  },
+  "ask-watch": {
+   "from": [
+    "assistant/app/src/main/java/com/gathin/glass/assistant/AskActivity.java",
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a22eca5a739114e8582bd01386658c3cf5d4ac5d6e4c29ddfaed2b8c7d1b2dd1"
+  },
+  "controls": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/ControlsSheet.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "fbf8181824dddf3774eb6bdf6e491046311d107e8ec948554972dc8dd5199711"
+  },
+  "controls-wifi": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/ControlsSheet.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Net.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "7aba778ded79ac74c884c20dad495cbc4edb66240251b724b658b80a265e2deb"
+  },
+  "desktop": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Bar.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Dock.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "3b7e7a9cd2131a4e7bc1eca2754df07f94dbd6aba4ebadf53fb6b25022d6aea7"
+  },
+  "dock": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Bar.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Dock.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "f4335207577a05afb60fb36102f085a8101252e7a15dd6905799aa23973e2f90"
+  },
+  "files": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/FilesSheet.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b4526478b10e816b931230510344b59c919136221d1ece38c18a52bdcd48159b"
+  },
+  "inputs": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/GlassInputs.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sheet.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "45fb14a216adc33b5f44af6cdda547bc0885e5ec8cf507137906269ed7f40da7"
+  },
+  "keyboard": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/GlassKeyboard.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "528ceb1b1e2cccb1ee2564b44391932a4c05d31b99e12df7e111fcef7ae185aa"
+  },
+  "note-phone": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Hud.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "8bb3ee6f6677e441a0becfcc20a4d72f697979e74bc33df3466de92a0cfa03f5"
+  },
+  "note-reminder": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Hud.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "8bb3ee6f6677e441a0becfcc20a4d72f697979e74bc33df3466de92a0cfa03f5"
+  },
+  "note-updated": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Hud.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "8bb3ee6f6677e441a0becfcc20a4d72f697979e74bc33df3466de92a0cfa03f5"
+  },
+  "phone": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/PhoneSheet.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "3b616e77df4ea1185e7bdbca6a533b595da8ac6b40648f4bc5d6bc1f82c6a6c7"
+  },
+  "saver-clock": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Saver.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a4a1a2adb09496cd913729a55a94f8ebe0a716d090af2bc18b83385031d9fa87"
+  },
+  "saver-drift": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Saver.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a4a1a2adb09496cd913729a55a94f8ebe0a716d090af2bc18b83385031d9fa87"
+  },
+  "saver-glass": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Saver.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a4a1a2adb09496cd913729a55a94f8ebe0a716d090af2bc18b83385031d9fa87"
+  },
+  "saver-glow": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Saver.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a4a1a2adb09496cd913729a55a94f8ebe0a716d090af2bc18b83385031d9fa87"
+  },
+  "saver-night": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Saver.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a4a1a2adb09496cd913729a55a94f8ebe0a716d090af2bc18b83385031d9fa87"
+  },
+  "saver-photos": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Saver.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a4a1a2adb09496cd913729a55a94f8ebe0a716d090af2bc18b83385031d9fa87"
+  },
+  "search": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/SearchSheet.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "a7e3f8425bea37abea9b75216e08338f0ee760d22f37bd3761568285e0e78fdd"
+  },
+  "settings": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Backlight.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/SettingsSheet.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "8e046bfbbc6d74458ce28de22fffa1f635c9287c3b7e8d92fae107d2dc0da112"
+  },
+  "settings-speed": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Extras.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/SettingsSheet.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "78629afbd7c3f517199714d5c2fdc3042b638edf83b9a64b1803f7ccb5d31000"
+  },
+  "solo-calendar": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "solo-clock": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "solo-photos": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "solo-playing": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "solo-weather": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "switcher": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/SwitcherSheet.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b3ac1daef46eb52aa6a3de048f3650e030e82f99839fa8c433991d6a581fcda0"
+  },
+  "volume": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Hud.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "8bb3ee6f6677e441a0becfcc20a4d72f697979e74bc33df3466de92a0cfa03f5"
+  },
+  "weather": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/WeatherSheet.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "c0ca22b1e320fa6661214edb07fb1e1fbf8a4c91779f58c60c89506632824623"
+  },
+  "widgets-large": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "widgets-medium": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  },
+  "widgets-small": {
+   "from": [
+    "launcher/app/src/main/assets/walls/orbs-n.jpg",
+    "launcher/app/src/main/assets/walls/silk-d.jpg",
+    "launcher/app/src/main/assets/walls/silk-n.jpg",
+    "launcher/app/src/main/java/com/gathin/tvhome/Glyph.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Sample.java",
+    "launcher/app/src/main/java/com/gathin/tvhome/Widgets.java",
+    "tools/scenes.py",
+    "tools/scenes/tv.css",
+    "tools/scenes/tv.html",
+    "tools/scenes/tv.js"
+   ],
+   "sha256": "b987023a0f99fcc76c107fbbde886d6e47ca46975d46852be74bce03204fbbed"
+  }
+ },
+ "readme": {
+  "docs/readme/ask-watch-dark.webp": {
+   "from": [
+    "site/assets/tv/ask-watch-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "225a3b5130c78595ee9728b1bd415f03b2684a91718c64afeb04af5264ba9532"
+  },
+  "docs/readme/ask-watch-light.webp": {
+   "from": [
+    "site/assets/tv/ask-watch-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "e6eb659a7a52ba029fc260e301ca838469cf0cb055abc99995c20a798159da6e"
+  },
+  "docs/readme/controls-dark.webp": {
+   "from": [
+    "site/assets/tv/controls-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "077890cc8e11684787bb76dad0bc1043b7506760570f741b0bac13c1e8d96dde"
+  },
+  "docs/readme/controls-light.webp": {
+   "from": [
+    "site/assets/tv/controls-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "abd1f9d222ce231047a293c9f8ef797dec2351afb132be4e72cf7b8a7fcdf649"
+  },
+  "docs/readme/desktop-dark.webp": {
+   "from": [
+    "site/assets/tv/desktop-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "e5390dfb115f2e81036dd6c2a569531a8edf9d5ca3b3791178e54a140c52c0d3"
+  },
+  "docs/readme/desktop-light.webp": {
+   "from": [
+    "site/assets/tv/desktop-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "3d55d922c99468afa6bbec346524ebf829acb966b7a9d158cf0cf96de2f26d37"
+  },
+  "docs/readme/phone-apps-dark.webp": {
+   "from": [
+    "site/assets/phone/apps-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "53b3e878737e669c5acf41e7c732bcdb3e74f7e1e5278b7cf5cfea602a721e5d"
+  },
+  "docs/readme/phone-apps-light.webp": {
+   "from": [
+    "site/assets/phone/apps-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "276358aae87af5d36432e75e55dd273167a2cd89995f0b50a174d04f745ef153"
+  },
+  "docs/readme/phone-assistant-dark.webp": {
+   "from": [
+    "site/assets/phone/assistant-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "311f8963562c04fa7dd90ccc1fafeb8700c9db4724ae01afdfa6cd4103cf8fb9"
+  },
+  "docs/readme/phone-assistant-light.webp": {
+   "from": [
+    "site/assets/phone/assistant-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "185779a79a7eb160ce25d038e76888d3c86af8798a4b62b9f297a74b7e21de54"
+  },
+  "docs/readme/phone-remote-dark.webp": {
+   "from": [
+    "site/assets/phone/remote-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "d0b869ca344e493b7ce95ec6fd4d5424f64b8a4a8fed9be953983f78ec895f96"
+  },
+  "docs/readme/phone-remote-light.webp": {
+   "from": [
+    "site/assets/phone/remote-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "6810cda2f0fe0365bd3478ed553a9c52fa81939857ec32427d5a84b6b6418d77"
+  },
+  "docs/readme/phone-tv-dark.webp": {
+   "from": [
+    "site/assets/phone/tv-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "e963cb65c29c849964e295e33a45140d539dd054272b4bafac1b026d08c4c0aa"
+  },
+  "docs/readme/phone-tv-light.webp": {
+   "from": [
+    "site/assets/phone/tv-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "f2ac380f8bb9ebf0e9005f193c9b7ab7e5b6828c77b440ef73d6e17064e247d8"
+  },
+  "docs/readme/search-dark.webp": {
+   "from": [
+    "site/assets/tv/search-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "b87ccc69c20a1caafd1f4060cab3ccf5f1fa5ccf58b2f2e860dee85086d9dd4e"
+  },
+  "docs/readme/search-light.webp": {
+   "from": [
+    "site/assets/tv/search-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "7c156592d5f6151f90d85cb056deb166189769259e51b5fa8ab569c9128583a5"
+  },
+  "docs/readme/settings-dark.webp": {
+   "from": [
+    "site/assets/tv/settings-speed-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "a7f8ea8602161eaf3ea1cb61a8a4d5883da0dbf435b2905d9fd46074e5221c4e"
+  },
+  "docs/readme/settings-light.webp": {
+   "from": [
+    "site/assets/tv/settings-speed-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "0fdf1a49ef3d968bcddf9a5671f3377ff979874c91a7f2eed37ba83c05f41b48"
+  },
+  "docs/readme/switcher-dark.webp": {
+   "from": [
+    "site/assets/tv/switcher-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "3fc84df532bd317e2c942d877897b96cf506fa36fe4578a9b711366a6f10e663"
+  },
+  "docs/readme/switcher-light.webp": {
+   "from": [
+    "site/assets/tv/switcher-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "9d909e0524d0165feaa37ca09aaec3ba2b3dbf344c7e4feb457461f5d2ed959e"
+  },
+  "docs/readme/weather-dark.webp": {
+   "from": [
+    "site/assets/tv/weather-dark.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "8ab92091967645c1542a361d8dd4f43953dd6cf2e6664dfb1249296e7a62e14f"
+  },
+  "docs/readme/weather-light.webp": {
+   "from": [
+    "site/assets/tv/weather-light.jpg",
+    "tools/readme_pictures.py"
+   ],
+   "sha256": "45eeabdbe9b501cfc28c8a55b5e9a5bef69dfb25caed7949b8dd4d1a9efa0e67"
+  }
+ }
+}

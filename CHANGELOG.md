@@ -1,11 +1,14 @@
 # Changelog
 
 Each release, newest first. The lines under a version are what the TV and the phone show as what's new, so they're
-short and plain. `tools/release.sh` won't tag a version that has no section here.
+short and plain. New lines go under `## Unreleased`: a title line, then `- ` lines. `tools/release.sh` turns that into
+the version's section with the day it's released, so no date is typed here by hand.
+
+## Unreleased
 
 ## 1.0.1
 
-Glass on more TVs. 10 November 2026.
+Glass on more TVs. 11 November 2026.
 
 - Starts on Glass even on TVs that bring back their own home at every start, like Xiaomi's
 - Brightness on every TV: where the TV keeps its backlight to itself, Glass dims the picture

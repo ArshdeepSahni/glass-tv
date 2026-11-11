@@ -5,20 +5,23 @@ What to do, and what to do when something goes wrong. Commands run on your compu
 
 ## A release
 
-1. Make the change. Bump `versionCode` (+1) and `versionName` in `launcher/app/build.gradle` (the first word of
-   `versionName` is the release: `5.3`). The assistant's own version only when the assistant changed.
-2. Add `## 5.3 — <a few words>` to `CHANGELOG.md`, with `- ` lines in plain words: they're what the TV and the phone
-   show as what's new.
-3. Commit (the **Check** workflow builds both apps and runs the tests on every push), then `tools/release.sh`.
-4. `gh run watch` follows the **Release** workflow (about ten minutes; a few with the build cache warm).
-5. On the TV: Settings › About this TV › Check for updates › Install. Glass restarts and says it's updated.
+1. Make the change, with everything that shows it: its lines under `## Unreleased` in `CHANGELOG.md` (a title line,
+   then `- ` lines in plain words: what the TV and the phone show), the site's words and data, the docs, the README's
+   template and the pictures (AGENTS.md has the rules).
+2. Bump `versionCode` (+1) and `versionName` in `launcher/app/build.gradle` (the first word of `versionName` is the
+   release: `1.0.2`). The assistant's own version only when the assistant changed.
+3. Commit, then `tools/release.sh`: it waits for GitHub's **Check** run, dates the changelog and tags, waits for the
+   **Release** run, then puts the site and the README out and checks every surface (about 20 minutes).
+4. On the TV: Settings › About this TV › Check for updates › Install. Glass restarts and says it's updated.
 
-Without an update service of your own, `./glass update` builds what's here and installs it over the network.
+[RELEASING.md](../RELEASING.md) has every step, and what to do when one stops. Without an update service of your own,
+`./glass update` builds what's here and installs it over the network.
 
 ## Undoing a release
 
 The TV never goes back to an older version, so a bad release is undone by a newer one: revert the change, bump the
-version again, release. The workflow refuses to publish a version older than the one already out.
+version again, release. The workflow refuses to publish a version older than the one already out. Tags and release
+pages stay as they are: a pushed version is spent.
 
 ## When the Release workflow stops
 
@@ -30,8 +33,11 @@ version again, release. The workflow refuses to publish a version older than the
 | Signed with the TV's key | An APK isn't signed like the Glass on the TV | Check `ANDROID_KEYSTORE_B64` is this computer's signing key, and `updates/signing-cert.sha256` its certificate (`set-secrets.sh` uploads the one and writes the other) |
 | Publish to the update service | Older than what's published, or Cloudflare refused | Bump `versionCode`; or read the error and run *Run workflow* again |
 | Ask it the way a TV does | The service didn't show the new release in time | Usually a slow first deploy: *Run workflow* on the Actions tab publishes it again |
+| The release's list | The changelog's date for the version isn't the day of the tagged commit | Tag with `tools/release.sh`, which dates the changelog as it tags; then `tools/release.sh --abandon` and release again |
 
-A run that stopped before *Publish* changed nothing: TVs still see the previous release.
+A run that stopped before *Publish* changed nothing: TVs still see the previous release, and the site and the README
+wait (`tools/release.sh` pushes them only after the release is out). Once the run goes through on GitHub,
+`tools/release.sh --finish` puts them out.
 
 ## Keys
 
@@ -86,9 +92,11 @@ answers only requests that carry the update key.
 ## The website
 
 `site/` is built by `site/build.py` and put on Cloudflare by the **Site** workflow on every push that changes what it
-shows, on each release, and weekly. Nothing on it is typed twice: the version, the oldest Android, the tests, what it's
-built with, the changelog and the credits (with their links) come from the repository; the numbers from
-`site/data/bench.json`; the screens, the docs' components and the phone shot from `site/data/*.json`.
+shows, and weekly, but only when nothing waits under `## Unreleased` in `CHANGELOG.md`: until then the run says the
+site waits for the release, and the live site stays as it is. Nothing on it is typed twice: the version, the oldest
+Android, the tests, what it's built with, the changelog and the credits (with their links) come from the repository;
+the numbers from `site/data/bench.json`; the screens, the docs' components and the phone shot from `site/data/*.json`.
+Every build runs `tools/parity.py`, and a build it stops deploys nothing: each line it prints says what to do.
 
 New on the TV? Add it to `site/data/components.json`, and if it needs a new picture, a scene for it in
 `tools/scenes/tv.js` (laid out from the launcher's code, as the others are) and its name in `tools/scenes.py`. No TV
@@ -99,8 +107,11 @@ needed:
     python3 tools/scenes.py --films     # the films too (about 25 minutes)
     python3 site/build.py               # then look at site/dist/index.html
 
-A picture is a name: `x` means `x-light.jpg` and `x-dark.jpg` in `site/assets/tv`. An entry whose picture isn't there
-yet stays off the site until it is.
+    python3 tools/readme_pictures.py    # then the README's, from the site's
+
+A picture is a name: `x` means `x-light.jpg` and `x-dark.jpg` in `site/assets/tv`. `site/data/pictures.json` says what
+each was drawn from (the launcher's files its scene mirrors, and the scenes' code); when one of those changes, the
+build fails until the picture is drawn again. An entry naming a picture that isn't drawn fails the build too.
 
 Changed what the installer shows? Record it again (about 4 minutes; needs `pip install pyte`):
 

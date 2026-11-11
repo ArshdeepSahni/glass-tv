@@ -4,6 +4,10 @@
   site/build.py [OUT]              the real site (default site/dist): full HTML documents
   site/build.py --preview OUT      the same for a preview page whose host adds the document around each page
 
+Then tools/parity.py checks the site and the repository (and the build fails when they're out of step): the changelog and
+the version, the pictures no older than the screens they show, every picture the data names there, the README its
+template filled in, nothing private. --no-checks leaves that out, for a look at a page while it's being made only.
+
 Each page is a run of folds, each at least one screen high, that the page snaps between; nothing scrolls inside a
 fold (one that can't fit its screen grows, and the page scrolls through it: site.js). The chart and the terminals sit in mdxcn's frame; the steps, keys, endpoints, tree, diff and changelog
 follow mdxcn without one.
@@ -48,6 +52,9 @@ except Exception:   # Pillow isn't required
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import changelog as changelog_md  # noqa: E402  (tools/changelog.py: CHANGELOG.md, read the one way every tool shares)
+import parity  # noqa: E402  (tools/parity.py: the site, the docs, the README and the TV in step)
 TV = os.path.join(HERE, "assets", "tv")
 CACHE = os.path.join(HERE, ".cache")
 ICONS = json.load(open(os.path.join(HERE, "icons.json"), encoding="utf-8"))
@@ -507,7 +514,7 @@ REMOTE_ALL = [("move", "← → ↑ ↓", "Move along the dock and through every
               ("home", "Home", "The desktop. Anything open closes."),
               ("hold-home", "hold Home", "The open apps, over the app you're in"),
               ("menu", "Menu", "Control Center, over any app"),
-              ("assistant", "Assistant", "Glass Assistant, or Google's if you choose it"),
+              ("assistant", "Assistant", "Glass Assistant (the mic too), or Google's if you choose it"),
               (None, "Input", "The TV's sources, as a glass menu"),
               (None, "Volume", "Hold it for bigger steps"),
               (None, "hold OK", "Move, close or more, for what's chosen"),
@@ -910,8 +917,9 @@ def updates_docs(seconds):
     own = steps([("Fork Glass on GitHub", "<p>In your fork, run <code>bash tools/set-secrets.sh</code> and commit the "
                                           "file it writes.</p>"),
                  ("Run <code>./glass update</code> once", "<p>The TV learns where your updates come from.</p>"),
-                 ("To release", "<p>Raise the version, add a section to <code>CHANGELOG.md</code>, run "
-                                "<code>tools/release.sh</code>.</p>")])
+                 ("To release", "<p>Write what's new under <code>## Unreleased</code> in <code>CHANGELOG.md</code>, "
+                                "raise the version, then run <code>tools/release.sh</code>. The site follows the "
+                                "release.</p>")])
     return ('<div class="duo"><div class="stack">%s%s<p class="prose">Builds the newest Glass and puts it on the TV. Every '
             'setting stays. About 2 minutes.</p></div><div class="stack">%s<p class="prose">%s, then <b>Install</b>. About '
             '%s seconds. It needs your own update service.</p></div></div>%s'
@@ -1008,22 +1016,18 @@ def inline(s):
 
 
 def changelog():
-    """mdxcn's changelog: each release, newest first, its changes with a + each."""
+    """mdxcn's changelog: each release, newest first, its changes with a + each. Only what's released: what waits under
+    "## Unreleased" isn't on the TVs yet, so it isn't here either (tools/changelog.py reads the file)."""
     out = []
-    blocks = re.split(r"^## ", read("CHANGELOG.md"), flags=re.M)[1:]
-    for n, block in enumerate(blocks):
-        head, _, body = block.partition("\n")
-        items = re.findall(r"^- (.+)$", body, flags=re.M)
-        text = " ".join(l.strip() for l in body.splitlines() if l.strip() and not l.startswith("- "))
-        date = re.search(r"(\d{1,2} [A-Z][a-z]+ \d{4})", text)
-        text = re.sub(r"\s*\d{1,2} [A-Z][a-z]+ \d{4}\.?", "", text).strip()
-        ver = head.strip()
+    for n, r in enumerate(changelog_md.releases(read("CHANGELOG.md"))):
+        text = (r.title + "." if r.title else "") + (" " + r.rest if r.rest else "")
+        ver = r.head
         out.append('<article class="release" id="v%s"><header><span class="v">v%s</span>%s%s</header>%s%s</article>'
                    % (esc(ver.replace(".", "-")), esc(ver), '<span class="latest">Latest</span>' if n == 0 else "",
-                      '<time>%s</time>' % esc(date.group(1)) if date else "",
-                      "<p>%s</p>" % inline(esc(text)) if text else "",
+                      '<time datetime="%s">%s</time>' % (r.date.isoformat(), esc(changelog_md.human(r.date))) if r.date else "",
+                      "<p>%s</p>" % inline(esc(text.strip())) if text.strip() else "",
                       '<ul class="changes">%s</ul>' % "".join('<li><span class="cg" aria-hidden="true">+</span><span>%s</span>'
-                                                             '</li>' % inline(esc(i)) for i in items) if items else ""))
+                                                             '</li>' % inline(esc(i)) for i in r.items) if r.items else ""))
     return "".join(out)
 
 
@@ -1863,5 +1867,11 @@ def wrap(body, host_like=False):
 if __name__ == "__main__":
     args = sys.argv[1:]
     preview = "--preview" in args
-    args = [a for a in args if a != "--preview"]
-    build(args[0] if args else os.path.join(HERE, "dist"), preview)
+    checks = "--no-checks" not in args
+    args = [a for a in args if a not in ("--preview", "--no-checks")]
+    out_ = args[0] if args else os.path.join(HERE, "dist")
+    build(out_, preview)
+    if checks and not parity.run(out_, quiet=True):
+        sys.exit("✗ The site and the repository are out of step (above): nothing is deployed until they're in step")
+    if checks:
+        print("✓ in step: the changelog and the version, the pictures, the README, nothing private")

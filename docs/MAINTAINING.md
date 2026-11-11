@@ -53,16 +53,19 @@ signed in to your fork, then `bash tools/set-secrets.sh` in a terminal. It gives
 
 ### Releasing
 
-1. Change what you like. Bump `versionCode` (+1) and `versionName` in `launcher/app/build.gradle` (and in
+1. Write what's new under `## Unreleased` in `CHANGELOG.md`: a title line, then `- ` lines (what the TV and the phone
+   show). Bump `versionCode` (+1) and `versionName` in `launcher/app/build.gradle` (and in
    `assistant/app/build.gradle` when the assistant changed). The first word of the launcher's `versionName` is the
-   release (`5.2`).
-2. Write what's new in `CHANGELOG.md`, under `## 5.2`: the `- ` lines are what the TV and the phone show.
-3. Commit, then `tools/release.sh`. It tags `v5.2` and pushes; `gh run watch` follows the build (about ten minutes).
+   release (`1.0.2`).
+2. Bring the site, the docs, the README's template and the pictures up to date in the same commit.
+3. `tools/release.sh`. It dates the changelog, tags, waits for the build, then puts the site and the README out after
+   the update service has the release, and checks that every surface says the same version and date (about 20
+   minutes).
 4. On the TV: Settings › About this TV › Check for updates › Install.
 
-When something stops or needs changing (a key, the TV after a reset), [RUNBOOK.md](RUNBOOK.md) says what to do.
-*Run workflow* on the Actions tab publishes what's on a branch the same way; it makes the release page only for a
-version that's tagged already and has none (a tag run that stopped early).
+[RELEASING.md](../RELEASING.md) has the checklist, each step, and what to do when one stops. *Run workflow* on the
+Actions tab publishes what's on a branch the same way; it makes the release page only for a version that's tagged
+already and has none (a tag run that stopped early).
 
 ## The tools underneath
 
@@ -76,7 +79,8 @@ maintainer:
 | `tools/install-tv.sh --service` | Installs the newest published release instead, exactly what the TVs download |
 | `tools/install-tv.sh --setup` | Also sets up a TV that never had Glass: home screen, keyboard, assistant button, screen saver |
 | `tools/set-secrets.sh` | Once, in a terminal: gives your fork the secrets its release workflow needs |
-| `tools/release.sh` | Tags the version and pushes it |
+| `tools/release.sh` | Releases everywhere at once: the update service, GitHub's release page, the site and the README ([RELEASING.md](../RELEASING.md)) |
+| `tools/verify-release.sh` | Checks a release says the same version and date on every surface |
 | `tools/tv.sh` | The TV's upkeep: `status`, `check` (the debloat again after a TV update or reset), `restore-stock` |
 
 They find Java 17, the Android SDK, Gradle 8.9 and adb in `GLASS_HOME/toolchain` (or `GLASS_TOOLCHAIN`,
@@ -119,6 +123,8 @@ and APKs. For your own update service, the release workflow's secrets live in Gi
 ## What's where
 
 ```
+AGENTS.md                     the rules every change follows (CLAUDE.md loads it for Claude Code)
+RELEASING.md                  releasing: the checklist, the steps, and what to do when one stops
 glass                         the installer (./glass), Python 3 standard library: tools/glasscli/
 launcher/                     Glass (Android, Gradle 8.9, AGP 8.5, Java 17, minSdk 26)
   app/src/main/java/…/Updates.java     checking, downloading, verifying, installing
@@ -132,7 +138,8 @@ updates/manifest.py           the release's list, notes and SHA-256s from the AP
 updates/publish.py            checks the token, deploys the Worker, uploads the APKs and the list, asks it as a TV would
 updates/fetch.py              downloads the newest release as a TV does (tools/install-tv.sh --service)
 updates/signing-cert.sha256   the certificate releases must be signed with (tools/set-secrets.sh writes it)
-tools/                        the scripts underneath
+tools/                        the scripts underneath; tools/parity.py, the checks that keep the site, the docs, the
+                              README and the TV in step (run by every site build)
 tv/debloat-list.txt           for the Realme TV model only: its packages kept disabled (tools/tv.sh check)
 DESIGN.md                     Glass's design language: colour, type, motion, voice
 docs/design/installer.md      the installer's layout and behaviour
@@ -140,12 +147,12 @@ docs/RUNBOOK.md               releasing, undoing, when a workflow stops, keys, t
 .github/workflows/check.yml   every push: both apps build, the tests pass, the installer runs
 .github/workflows/release.yml a version tag: build, sign, check, publish, release page
 .github/workflows/site.yml    the website: built and put on Cloudflare when it changes
-site/                         the website (site/build.py), and docs/readme/ the README's pictures
+site/                         the website (site/build.py), and docs/readme/ the README's template and pictures
 ```
 
 Fonts, pictures and libraries that came from elsewhere are in [NOTICE.md](../NOTICE.md).
 
 ## The website
 
-`site/` builds the website (`python3 site/build.py`), and the Site workflow puts it on Cloudflare whenever it changes, with the same two Cloudflare secrets as the update service; the site's address is on that run's summary page. How it's made is in [design/site.md](design/site.md). The README's pictures in `readme/` come from the site's own (`site/assets`).
+`site/` builds the website (`python3 site/build.py`), and the Site workflow puts it on Cloudflare whenever it changes, with the same two Cloudflare secrets as the update service; the site's address is on that run's summary page. It deploys only what's released: while `CHANGELOG.md` has lines under `## Unreleased`, the run builds the site and leaves the live one as it is, and the release puts it out. Every build also runs `tools/parity.py`, so a picture older than its screen, a README that isn't its template, or anything private stops it. How it's made is in [design/site.md](design/site.md). The README is made from `readme/README.template.md` (`tools/readme.py`), and its pictures from the site's own (`tools/readme_pictures.py`).
 

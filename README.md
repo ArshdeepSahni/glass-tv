@@ -66,6 +66,10 @@ Measured on the same TV, against its own home screen.
 <sub>A 720p TV with 1 GB of memory and Android TV 9; each home started the same way, the middle of five runs.
 <a href="https://www.glass-83eb5066.workers.dev/docs#performance">Every number</a>.</sub>
 
+On a slow TV, **Settings › Speed & memory** frees more: it closes the apps waiting in the background, makes the TV's
+animations quicker, keeps the apps you choose from running in the background, and turns off the TV's own extras you
+don't use. Nothing is uninstalled, and `./glass restore` turns it all back on.
+
 ## Made of glass
 
 Every pane bends the wallpaper behind it. Light by day, dark by night.
@@ -98,9 +102,9 @@ Every pane bends the wallpaper behind it. Light by day, dark by night.
     <td width="50%" valign="top">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/readme/settings-dark.webp">
-        <img src="docs/readme/settings-light.webp" alt="Settings: sections on the left, Display and text on the right">
+        <img src="docs/readme/settings-light.webp" alt="Settings: the sections on the left, and Speed and memory on the right: free up memory, quicker animations, and which apps keep running in the background">
       </picture>
-      <b>Settings</b><br>Every setting in one window, with search.
+      <b>Settings</b><br>Every setting in one window, with search. Speed &amp; memory frees up a slow TV.
     </td>
   </tr>
   <tr>
@@ -136,7 +140,7 @@ The remote's spare buttons do more.
 | Menu | Control Center, in any app |
 | Hold Home | The apps that are open |
 | Input | The TV's sources |
-| Assistant | Ask Glass |
+| Assistant, or the mic | Ask Glass, listening |
 
 Your phone becomes a remote too: scan the code on the TV, and it opens in the phone's browser. Nothing to install,
 and only on your home network.

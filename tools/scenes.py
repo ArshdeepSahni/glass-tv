@@ -13,9 +13,15 @@ design px and drawn at twice that, so they stay sharp on any screen. The content
 (Sample.java), the same in both looks: by day in the light look, in the evening in the dark one. Nothing comes from a
 TV, so nothing private is in them, and no stray keyboard, volume bar or label.
 
+Each picture's entry in site/data/pictures.json says what it was drawn from: the launcher's files its scene mirrors
+(SOURCES) and the scenes' own code, by SHA-256. When one of them changes, tools/parity.py (run by site/build.py, so by
+every Check and Site run) says which pictures to draw again, so the site never shows a screen the TV no longer has.
+Then python3 tools/readme_pictures.py makes the README's from them.
+
 Needs Python 3 with Pillow, numpy and segno, and Playwright for Python with its Chromium.
 """
 import functools
+import hashlib
 import http.server
 import io
 import json
@@ -44,8 +50,9 @@ NOTE, WIDGET = [820, 32, 1280, 126], [24, 56, 372, 240]
 SHOTS = {
     "desktop": {"parts": {"part-bar": [0, 0, 1280, 34]}},
     "dock": {"full": False, "parts": {"part-dock": [180, 556, 1100, 716]}},
-    "controls": {"parts": {"part-appearance": [862, 418, 1262, 486]}},
-    "settings": {}, "weather": {}, "search": {}, "keyboard": {}, "apps": {}, "files": {}, "inputs": {}, "switcher": {},
+    "controls": {"parts": {"part-appearance": [862, 418, 1262, 486]}}, "controls-wifi": {},
+    "settings": {}, "settings-speed": {}, "weather": {}, "search": {}, "keyboard": {}, "apps": {}, "files": {}, "inputs": {},
+    "switcher": {},
     "phone": {},
     "ask-volume": {}, "ask-watch": {}, "ask-cast": {}, "ask-remind": {}, "ask-sleep": {},
     "note-reminder": {"full": False, "parts": {"part-reminder": NOTE}},
@@ -62,6 +69,63 @@ SHOTS = {
     "saver-clock": {"one": True}, "saver-drift": {"one": True}, "saver-glass": {"one": True}, "saver-glow": {"one": True},
     "saver-photos": {"one": True}, "saver-night": {"one": True},
 }
+
+
+# What each picture mirrors on the TV: the launcher's (and the assistant's) files its scene is laid out from. With the
+# scenes' own code, the sample content, the glyphs and the wallpapers, they're what site/data/pictures.json records.
+L, A = "launcher/app/src/main/java/com/gathin/tvhome/", "assistant/app/src/main/java/com/gathin/glass/assistant/"
+SOURCES = {
+    "desktop": [L + "Bar.java", L + "Dock.java", L + "Widgets.java"], "dock": [L + "Dock.java", L + "Bar.java"],
+    "controls": [L + "ControlsSheet.java"], "controls-wifi": [L + "ControlsSheet.java", L + "Net.java"],
+    "settings": [L + "SettingsSheet.java", L + "Backlight.java"], "settings-speed": [L + "SettingsSheet.java", L + "Extras.java"],
+    "weather": [L + "WeatherSheet.java"], "search": [L + "SearchSheet.java"], "keyboard": [L + "GlassKeyboard.java"],
+    "apps": [L + "AppsSheet.java"], "files": [L + "FilesSheet.java"], "inputs": [L + "Sheet.java", L + "GlassInputs.java"],
+    "switcher": [L + "SwitcherSheet.java"], "phone": [L + "PhoneSheet.java"], "volume": [L + "Hud.java"],
+}
+for _n in SHOTS:
+    if _n.startswith("ask-"):
+        SOURCES[_n] = [A + "AskActivity.java"]
+    elif _n.startswith("note-"):
+        SOURCES[_n] = [L + "Hud.java"]
+    elif _n.startswith(("widgets-", "solo-")):
+        SOURCES[_n] = [L + "Widgets.java"]
+    elif _n.startswith("saver-"):
+        SOURCES[_n] = [L + "Saver.java"]
+COMMON = ["tools/scenes.py", "tools/scenes/tv.js", "tools/scenes/tv.css", "tools/scenes/tv.html", L + "Sample.java",
+          L + "Glyph.java", "launcher/app/src/main/assets/walls/silk-d.jpg", "launcher/app/src/main/assets/walls/silk-n.jpg",
+          "launcher/app/src/main/assets/walls/orbs-n.jpg"]
+RECORD = os.path.join(ROOT, "site", "data", "pictures.json")
+
+
+def fingerprint(paths):
+    """One SHA-256 for files (each by its path and its bytes), the way tools/parity.py checks it."""
+    h = hashlib.sha256()
+    for rel in sorted(set(paths)):
+        with open(os.path.join(ROOT, rel), "rb") as f:
+            h.update(rel.encode() + b"\0" + hashlib.sha256(f.read()).hexdigest().encode() + b"\n")
+    return h.hexdigest()
+
+
+def record(drawn):
+    """site/data/pictures.json: what each picture just drawn was drawn from (the others keep what they had)."""
+    try:
+        with open(RECORD, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        data = {}
+    data["about"] = ("What each picture of the TV was drawn from, by SHA-256: the launcher's files its scene mirrors and the "
+                     "scenes' own code (tools/scenes.py writes it as it draws), and the README's pictures from the site's "
+                     "(tools/readme_pictures.py). tools/parity.py, run by every site build, fails when one of them changed "
+                     "after its picture was made: draw it again and look at it.")
+    pics = data.setdefault("pictures", {})
+    for name in drawn:
+        files = sorted(set(SOURCES.get(name, []) + COMMON))
+        pics[name] = {"from": files, "sha256": fingerprint(files)}
+    data["pictures"] = dict(sorted(pics.items()))
+    data.setdefault("readme", {})
+    with open(RECORD, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=1, ensure_ascii=False)
+        f.write("\n")
 
 
 # The films (tools/scenes/films.js), drawn frame by frame at 60 a second and 1920 x 1080 (sharp in the page's frame,
@@ -228,7 +292,7 @@ def main():
     prepare()
     from playwright.sync_api import sync_playwright
     url = serve()
-    made = 0
+    made, drawn = 0, []
     with sync_playwright() as p:
         browser = p.chromium.launch()
         ctx = browser.new_context(viewport={"width": 1280, "height": 720}, device_scale_factor=2)
@@ -256,6 +320,8 @@ def main():
                     save(im, part, look, box)
                     made += 1
             say(name)
+            if not os.environ.get("SCENES_OUT") and len(looks) == len(LOOKS):
+                drawn.append(name)
         tmp = tempfile.mkdtemp(prefix="glass-films-")
         if films:
             page = browser.new_context(viewport={"width": 1280, "height": 720}, device_scale_factor=FILM_SCALE).new_page()
@@ -271,7 +337,9 @@ def main():
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
         browser.close()
-    print(f"✓ {made} pictures and films in site/assets/tv")
+    if drawn:
+        record(drawn)
+    print(f"✓ {made} pictures and films in site/assets/tv" + (" (site/data/pictures.json says what from)" if drawn else ""))
 
 
 if __name__ == "__main__":

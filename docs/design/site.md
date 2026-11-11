@@ -134,3 +134,8 @@ no stray keyboard or volume bar, and the same clock everywhere. The films (`tool
 frame at 60 a second with Glass's own springs and timings, and they write their timelines, so the cues and the
 phone's touches land as the TV answers. The installer recordings are `./glass demo`, at 100 × 30 and at 44 × 30 for
 phones. The phone remote's screens are its real page, with the TV's answers stood in.
+
+Each picture of the TV records what it was drawn from (`site/data/pictures.json`), and the build stops when a screen
+changed after its picture, so the site never shows a screen the TV no longer has. The README's pictures are made from
+the site's (`tools/readme_pictures.py`) and its words from `docs/readme/README.template.md`. And the site goes live
+only with what's released: never ahead of the TVs, never behind them.
